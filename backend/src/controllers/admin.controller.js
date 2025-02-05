@@ -599,5 +599,5 @@ export {
   update,
   resetPassword,
   getClientDets,
-  updateBilldets,
+  updateBilldets
 };
