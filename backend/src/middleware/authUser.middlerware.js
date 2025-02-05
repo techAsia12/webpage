@@ -6,7 +6,7 @@ export const verifyJWT = asyncHandler(async (req, res, next) => {
   try {
     // Log the incoming request details for debugging
     console.log('Verifying JWT...');
-    const token = req.cookies?.authToken || req.header("Authorization")?.replace("Bearer ", "");
+    const token = req.cookies?.authToken || req.header("authToken")?.replace("Bearer ", "");
 
     // Check if token is not provided
     if (!token) {
