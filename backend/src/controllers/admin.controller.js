@@ -511,7 +511,7 @@ const resetPassword = asyncHandler(async (req, res, next) => {
 
 const getClientDets = asyncHandler(async (req, res, next) => {
   const query = `
-    SELECT u.phoneno, u.name, u.email, u.role, c.MACadd, c.quantity, c.voltage, c.current, c.watt, c.date_time, c.state
+    SELECT u.phoneno, u.name, u.email, u.role, c.MACadd, c.voltage, c.current, c.watt, c.date_time, c.state
     FROM users u
     JOIN client_dets c ON u.phoneno = c.phoneno
     WHERE u.role = 'Client'

@@ -156,32 +156,26 @@ const addPhoneno = asyncHandler(async (req, res, next) => {
 const getData = asyncHandler(async (req, res, next) => {
   const user = req?.user;
 
-  // Check if user is authenticated
   if (!user) {
     return next(new ApiError(400, "User not authenticated"));
   }
 
   console.log("Fetching data for user:", user.id);
 
-  // Query to retrieve client details based on the user's phone number
   try {
     const [result] = await db.promise().query(
-      "SELECT phoneno, MACadd, quantity, voltage, current, watt, date_time, state FROM client_dets WHERE phoneno = ?",
+      "SELECT phoneno, MACadd, voltage, current, watt, date_time, state FROM client_dets WHERE phoneno = ?",
       [user.id]
     );
-
-    // Check if data exists for the given user
     if (result.length === 0) {
       console.log("No data found for user:", user.id);
       return next(new ApiError(404, "No Data Found"));
     }
 
-    // Respond with the fetched data
     return res.status(200).json(
       new ApiResponse(200, result[0], "Data successfully fetched")
     );
   } catch (err) {
-    // Log any database errors
     console.error("Database error:", err);
     return next(new ApiError(500, "Database Error"));
   }
@@ -476,12 +470,13 @@ const retiveYearlyUsage = asyncHandler(async (req, res, next) => {
 });
 
 const sentData = asyncHandler(async (req, res, next) => {
-  const { phoneno, voltage, current, MACadd, quantity, date_time } = req.query;
-
-  console.log("Received data:", { phoneno, voltage, current, MACadd, quantity, date_time });
+  const { phoneno, voltage, current, MACadd } = req.query;
+  const currentDate = new Date();
+  const mysqlTimestamp = `${currentDate.getFullYear()}-${(currentDate.getMonth() + 1).toString().padStart(2, '0')}-${currentDate.getDate().toString().padStart(2, '0')} ${currentDate.getHours().toString().padStart(2, '0')}:${currentDate.getMinutes().toString().padStart(2, '0')}:${currentDate.getSeconds().toString().padStart(2, '0')}`;
+  
+  console.log("Received data:", { phoneno, voltage, current, MACadd });
 
   try {
-    // Fetch the current watt value
     const [result] = await db.promise().query("SELECT watt FROM client_dets WHERE phoneno = ?", [phoneno]);
 
     if (result.length === 0) {
@@ -490,23 +485,19 @@ const sentData = asyncHandler(async (req, res, next) => {
     }
 
     const watt = result[0].watt;
-
-    // Calculate new watt value (voltage * current)
     const newWatt = (voltage * current) + watt;
     console.log(`Calculated new watt value for phoneno ${phoneno}:`, newWatt);
 
-    // Update the client data with new values
     const updateQuery = `
       UPDATE client_dets SET
         voltage = ?,
         current = ?,
         MACadd = ?,
         watt = ?, 
-        quantity = ?,
         date_time = ?
       WHERE phoneno = ?
     `;
-    const updateParams = [voltage, current, MACadd, newWatt, quantity, date_time, phoneno];
+    const updateParams = [voltage, current, MACadd, newWatt, mysqlTimestamp, phoneno];
 
     const [updateResult] = await db.promise().query(updateQuery, updateParams);
 
