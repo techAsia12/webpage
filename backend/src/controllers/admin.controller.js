@@ -165,8 +165,11 @@ const getDets = asyncHandler(async (req, res, next) => {
       new ApiResponse(
         200,
         {
-          bill_details: billDetails,
-          cost_details: costDetails,
+           billDetails,
+           costdet:costDetails[0],
+           costdet1:costDetails[1],
+           costdet2:costDetails[2],
+           costdet3:costDetails[3],
         },
         "Details Fetched"
       )
