@@ -15,6 +15,12 @@ app.use(express.static("public"))
 app.use(cookieParser())
 app.set("trust proxy",1);
 
+app.use((req, res, next) => {
+  res.setHeader("Cross-Origin-Opener-Policy", "same-origin");
+  res.setHeader("Cross-Origin-Embedder-Policy", "require-corp");
+  next();
+});
+
 import  userRoute from "./routes/user.routes.js";
 import  adminRoute from "./routes/admin.routes.js";
 import {errorHandler} from "./middleware/errorHandling.middleware.js"
