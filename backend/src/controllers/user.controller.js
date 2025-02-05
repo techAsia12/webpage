@@ -9,7 +9,7 @@ import { MailtrapClient } from "mailtrap";
 const options = {
   httpOnly: true,
   secure: true,
-  sameSite: "Strict",
+  sameSite: "None",
 };
 
 const generateVerificationCode = () => {
