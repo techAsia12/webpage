@@ -160,6 +160,7 @@ const getDets = asyncHandler(async (req, res, next) => {
     }
 
     console.log("Fetched cost details:", costDetails);
+    console.log(costDetails[0]);
 
     return res.status(200).json(
       new ApiResponse(
