@@ -11,13 +11,13 @@ export const verifyJWT = asyncHandler(async (req, res, next) => {
     // Check if token is not provided
     if (!token) {
       console.log('No token found in request');
-      return next(new ApiError(401, "Unauthorized request"));
+      return next(new ApiError(403, "Unauthorized request"));
     }
 
     // Check if token format is invalid
     if (typeof token !== 'string' || token.trim() === '') {
       console.log('Token format is invalid');
-      return next(new ApiError(401, "Invalid token format"));
+      return next(new ApiError(405, "Invalid token format"));
     }
 
     // Verify the token
@@ -33,6 +33,6 @@ export const verifyJWT = asyncHandler(async (req, res, next) => {
     next();
   } catch (error) {
     console.log('Error occurred during token verification:', error?.message || error);
-    return next(new ApiError(401, error?.message || "Invalid Access Token"));
+    return next(new ApiError(406, error?.message || "Invalid Access Token"));
   }
 });
