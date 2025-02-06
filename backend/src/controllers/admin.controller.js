@@ -275,57 +275,44 @@ const login = asyncHandler(async (req, res, next) => {
 });
 
 const googleLogin = asyncHandler(async (req, res, next) => {
+  const { token } = req.body;
+
   try {
-    const { token } = req.body;
-    console.log("Received token:", token);
+    const decoded = jwt.decode(token, { complete: true });
+    const { name, email } = decoded.payload;
 
-    // Use jwt.verify instead of decode to verify the token's authenticity
-    const decoded = jwt.verify(token, process.env.GOOGLE_CLIENT_SECRET);
-    console.log("Decoded Token:", decoded);
+    const user = await dbQuery("SELECT * FROM users WHERE email = ?", [email]);
 
-    const { name, email } = decoded;
-
-    console.log("User details - Name:", name, "Email:", email);
-
-    const [userResult] = await db
-      .promise()
-      .query("SELECT * FROM users WHERE email=?", [email]);
-
-    if (userResult.length > 0) {
-      console.log("User found in the database. Logging in.");
-      const { phoneno, name, role } = userResult[0];
-      const user = { email, name, phoneno, role };
-      const token = generateToken(user);
-
-      // Set cookie options securely
-      const options = {
-        httpOnly: true,
-        secure: process.env.NODE_ENV === 'production',  // Only set secure cookies in production
-        maxAge: 3600000,  // 1 hour
-      };
-
-      console.log("Generated token, setting auth token in cookies");
+    if (user.length > 0) {
+      const { phoneno, role } = user[0];
+      const token = generateToken(user[0]);
 
       res.cookie("authToken", token, options);
-
       return res.status(200).json(
-        new ApiResponse(200, { ...user, token }, "Successfully logged in")
+        new ApiResponse(
+          200,
+          { email, name, phoneno, role, token },
+          "Successfully logged in"
+        )
       );
     } else {
-      console.log("User not found in the database. Registering.");
-
-      // Instead of setting phoneno to 0, prompt for the phone number (validation needed)
+      await dbQuery(
+        "INSERT INTO users (phoneno, name, email) VALUES (?, ?, ?)",
+        [0, name, email]
+      );
       return res.status(201).json(
         new ApiResponse(
           201,
           { email, name },
-          "Successfully registered. Add your phone number."
+          "Successfully registered. Add phone number"
         )
       );
     }
   } catch (error) {
-    console.error("Error during Google login:", error);
-    return next(new ApiError(500, "Error during Google login"));
+    if (error.name === 'JsonWebTokenError') {
+      return next(new ApiError(400, "Invalid token"));
+    }
+    return next(new ApiError(500, "Google login error"));
   }
 });
 
