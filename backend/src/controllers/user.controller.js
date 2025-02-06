@@ -44,7 +44,9 @@ const register = asyncHandler(async (req, res, next) => {
   }
 
   if (phoneno.length !== 10 || isNaN(phoneno)) {
-    return next(new ApiError(400, "Please enter a valid 10-digit phone number"));
+    return next(
+      new ApiError(400, "Please enter a valid 10-digit phone number")
+    );
   }
 
   const emailRegex = /^[a-zA-Z0-9._-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,6}$/;
@@ -53,8 +55,10 @@ const register = asyncHandler(async (req, res, next) => {
   }
 
   try {
-    const existingUser = await dbQuery("SELECT * FROM users WHERE email = ?", [email]);
-    
+    const existingUser = await dbQuery("SELECT * FROM users WHERE email = ?", [
+      email,
+    ]);
+
     if (existingUser.length > 0) {
       return next(new ApiError(400, "Email is already in use"));
     }
@@ -74,22 +78,31 @@ const register = asyncHandler(async (req, res, next) => {
       [phoneno, state, null]
     );
     if (!insertClientResult.affectedRows) {
-      dbQuery("DELETE FROM users WHERE phoeno=?",[phoneno]);
-      throw new Error("Failed to insert client details into 'client_dets' table");
+      dbQuery("DELETE FROM users WHERE phoeno=?", [phoneno]);
+      throw new Error(
+        "Failed to insert client details into 'client_dets' table"
+      );
     }
 
-    return res.status(200).json(
-      new ApiResponse(200, { phoneno, email, name }, "User Registered Successfully")
-    );
-    
+    return res
+      .status(200)
+      .json(
+        new ApiResponse(
+          200,
+          { phoneno, email, name },
+          "User Registered Successfully"
+        )
+      );
   } catch (err) {
-    if (err.code === 'ER_DUP_ENTRY') {
+    if (err.code === "ER_DUP_ENTRY") {
       return next(new ApiError(400, "Email is already in use"));
     } else if (err.message.includes("Failed to insert")) {
       return next(new ApiError(500, "Database Error: " + err.message));
     }
 
-    return next(new ApiError(500, "An unexpected error occurred during registration"));
+    return next(
+      new ApiError(500, "An unexpected error occurred during registration")
+    );
   }
 });
 
@@ -114,15 +127,16 @@ const login = asyncHandler(async (req, res, next) => {
     const token = generateToken(user[0]);
 
     res.cookie("authToken", token, options);
-    return res.status(200).json(
-      new ApiResponse(200, { ...user[0], token }, "Successfully logged in")
-    );
-    
+    return res
+      .status(200)
+      .json(
+        new ApiResponse(200, { ...user[0], token }, "Successfully logged in")
+      );
   } catch (err) {
     if (err.code === "ER_BAD_DB_ERROR") {
       return next(new ApiError(500, "Database connection error"));
     }
-    
+
     if (err.code === "ER_PARSE_ERROR") {
       return next(new ApiError(500, "Error parsing the query"));
     }
@@ -145,28 +159,32 @@ const googleLogin = asyncHandler(async (req, res, next) => {
       const token = generateToken(user[0]);
 
       res.cookie("authToken", token, options);
-      return res.status(200).json(
-        new ApiResponse(
-          200,
-          { email, name, phoneno, role, token },
-          "Successfully logged in"
-        )
-      );
+      return res
+        .status(200)
+        .json(
+          new ApiResponse(
+            200,
+            { email, name, phoneno, role, token },
+            "Successfully logged in"
+          )
+        );
     } else {
       await dbQuery(
         "INSERT INTO users (phoneno, name, email) VALUES (?, ?, ?)",
         [0, name, email]
       );
-      return res.status(201).json(
-        new ApiResponse(
-          201,
-          { email, name },
-          "Successfully registered. Add phone number"
-        )
-      );
+      return res
+        .status(201)
+        .json(
+          new ApiResponse(
+            201,
+            { email, name },
+            "Successfully registered. Add phone number"
+          )
+        );
     }
   } catch (error) {
-    if (error.name === 'JsonWebTokenError') {
+    if (error.name === "JsonWebTokenError") {
       return next(new ApiError(400, "Invalid token"));
     }
     return next(new ApiError(500, "Google login error"));
@@ -189,27 +207,29 @@ const addPhoneno = asyncHandler(async (req, res, next) => {
 
     if (role === "Client") {
       try {
-        await dbQuery("INSERT INTO client_dets (phoneno, state) VALUES (?, ?)", [
-          phone,
-          state,
-        ])
+        await dbQuery(
+          "INSERT INTO client_dets (phoneno, state) VALUES (?, ?)",
+          [phone, state]
+        );
       } catch (error) {
-        await dbQuery("DELETE FROM client_dets WHERE phoneno=?",[phone]);
-        await dbQuery("DELETE FROM users WHERE phoneno=?",[phone]);
-        return next(new ApiError(500,"Something went wrong while try again"));
+        await dbQuery("DELETE FROM client_dets WHERE phoneno=?", [phone]);
+        await dbQuery("DELETE FROM users WHERE phoneno=?", [phone]);
+        return next(new ApiError(500, "Something went wrong while try again"));
       }
     }
 
     const token = generateToken({ id: phone, email });
     res.cookie("authToken", token, options);
 
-    return res.status(200).json(
-      new ApiResponse(
-        200,
-        { user: { id: phone, email }, token },
-        "Registered successfully"
-      )
-    );
+    return res
+      .status(200)
+      .json(
+        new ApiResponse(
+          200,
+          { user: { id: phone, email }, token },
+          "Registered successfully"
+        )
+      );
   } catch (error) {
     if (error.code === "ER_DUP_ENTRY") {
       return next(new ApiError(400, "User already exists"));
@@ -336,7 +356,9 @@ const resetPassword = asyncHandler(async (req, res, next) => {
 
     const isMatch = await bcrypt.compare(password, storedPassword);
     if (isMatch) {
-      return next(new ApiError(400, "New password cannot be the same as the old password"));
+      return next(
+        new ApiError(400, "New password cannot be the same as the old password")
+      );
     }
 
     const hashedPassword = await bcrypt.hash(password, 10);
@@ -349,7 +371,9 @@ const resetPassword = asyncHandler(async (req, res, next) => {
       .status(200)
       .json(new ApiResponse(200, "Password reset successfully"));
   } catch (err) {
-    return next(new ApiError(500, "An error occurred while resetting the password"));
+    return next(
+      new ApiError(500, "An error occurred while resetting the password")
+    );
   }
 });
 
@@ -607,7 +631,13 @@ const getUserData = asyncHandler(async (req, res, next) => {
 
       return res
         .status(200)
-        .json(new ApiResponse(200, { name, email, phoneno, state, role }, "Data retrieved successfully"));
+        .json(
+          new ApiResponse(
+            200,
+            { name, email, phoneno, state, role },
+            "Data retrieved successfully"
+          )
+        );
     }
 
     return res
@@ -635,6 +665,35 @@ const retriveState = asyncHandler(async (req, res, next) => {
   }
 });
 
+const deleteUser = asyncHandler(async (req, res, next) => {
+  const userId = req.user.id;
+
+  try {
+    console.log('Starting transaction...');
+    await db.promise().query("START TRANSACTION");
+
+    const [userResult] = await db.promise().query("SELECT * FROM users WHERE phoneno=?", [userId]);
+
+    if (userResult.length === 0) {
+      return next(new ApiError(404, "User not found"));
+    }
+
+    if (req.user.role === "Client") {
+      const [result] = await db.promise().query("SELECT MACadd FROM client_dets WHERE phoneno=?", [userId]);
+      console.log(`User is a client. Deleting client details from 'client_dets' table.`);
+      await db.promise().query("DELETE FROM client_dets WHERE MACadd=?", [result[0]]);
+    }
+
+    await db.promise().query("DELETE FROM users WHERE phoneno=?", [userId]);
+    await db.promise().query("COMMIT");
+    return res.status(200).json(new ApiResponse(200, "Account Deleted Successfully"));
+  } catch (error) {
+    await db.promise().query("ROLLBACK");
+    console.error('Error occurred during deletion:', error);
+    return next(new ApiError(400, "Something went wrong while Deleting"));
+  }
+});
+
 export {
   getData,
   register,
@@ -654,4 +713,5 @@ export {
   retiveYearlyUsage,
   getUserData,
   retriveState,
+  deleteUser,
 };
