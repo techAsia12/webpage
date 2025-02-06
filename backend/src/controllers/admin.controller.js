@@ -288,7 +288,7 @@ const googleLogin = asyncHandler(async (req, res, next) => {
 
     const [userResult] = await db
       .promise()
-      .query(SELECT * FROM users WHERE email=?, [email]);
+      .query(`SELECT * FROM users WHERE email=?`, [email]);
 
     if (userResult.length > 0) {
       console.log("User found in the database. Logging in.");
@@ -310,7 +310,7 @@ const googleLogin = asyncHandler(async (req, res, next) => {
       console.log("User not found in the database. Registering.");
       await db
         .promise()
-        .query(INSERT INTO users (phoneno, name, email) VALUES (?, ?, ?), [
+        .query("INSERT INTO users (phoneno, name, email) VALUES (?, ?, ?)", [
           0,
           name,
           email,
