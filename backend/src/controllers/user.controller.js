@@ -249,7 +249,7 @@ const getData = asyncHandler(async (req, res, next) => {
 });
 
 const update = asyncHandler(async (req, res, next) => {
-  const { name, email } = req.body;
+  const { name, email, state } = req.body;
   const user = req?.user;
 
   if (!user) {
@@ -262,6 +262,16 @@ const update = asyncHandler(async (req, res, next) => {
       [name, email, user.id]
     );
 
+    if (state) {
+      try {
+        await dbQuery("UPDATE client_dets SET state WHERE phoneno=?", [
+          state,
+          user.id,
+        ]);
+      } catch (error) {
+        return next(new ApiError(400, "Database Error"));
+      }
+    }
     return res
       .status(200)
       .json(new ApiResponse(200, result[0], "Updated Successfully"));
@@ -641,6 +651,7 @@ const sentData = asyncHandler(async (req, res, next) => {
 
 const getUserData = asyncHandler(async (req, res, next) => {
   try {
+    console.log(req.user.id);
     const [result] = await db
       .promise()
       .query("SELECT name, email, phoneno, role FROM users WHERE phoneno = ?", [
@@ -650,6 +661,22 @@ const getUserData = asyncHandler(async (req, res, next) => {
     if (result.length === 0) {
       console.log("No user data found for the specified user");
       return next(new ApiError(404, "User not found"));
+    }
+
+    if (result[0].role === "Client") {
+      const resl = await db
+        .promise()
+        .query("SELECT state FROM client_dets WHERE phoneno = ?", [
+          req.user.id,
+        ]);
+        const role=result[0].role;
+        const name=result[0].name;
+        const email=result[0].email;
+        const phoneno=result[0].phoneno;
+        const [{state}]=resl[0];
+      return res
+        .status(200)
+        .json(new ApiResponse(200, {name,email,phoneno,state,role}, "Data retrieved successfully"));
     }
 
     return res
@@ -672,13 +699,9 @@ const retriveState = asyncHandler(async (req, res, next) => {
 
   console.log("Fetched state details:", stateDetails);
 
-  return res.status(200).json(
-    new ApiResponse(
-      200,
-      state,
-      "Details Fetched"
-    )
-  );
+  return res
+    .status(200)
+    .json(new ApiResponse(200, stateDetails, "Details Fetched"));
 });
 
 export {

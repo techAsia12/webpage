@@ -105,7 +105,6 @@ const getDets = asyncHandler(async (req, res, next) => {
     }
 
     try {
-      console.log(`Fetching bill details for state: ${state}`);
       const billDetailsQuery = "SELECT * FROM bill_details WHERE state=?";
       const [billDetails] = await db.promise().query(billDetailsQuery, [state]);
 
@@ -113,21 +112,12 @@ const getDets = asyncHandler(async (req, res, next) => {
         console.log(`No bill details found for state: ${state}`);
         return next(new ApiError(404, "No Bill Details Found"));
       }
-
-      console.log("Fetched bill details:", billDetails[0]);
-
-      console.log(`Fetching cost details for state: ${state}`);
       const costDetailsQuery = "SELECT * FROM cost_per_unit WHERE state=?";
       const [costDetails] = await db.promise().query(costDetailsQuery, [state]);
 
       if (!costDetails || costDetails.length === 0) {
-        console.log(`No cost details found for state: ${state}`);
         return next(new ApiError(404, "No Cost Details Found"));
       }
-
-      console.log("Fetched cost details:", costDetails);
-
-      // Prepare the response data based on role
       const responseData = isClient
         ? { billDetails: billDetails[0], costDetails }
         : { billDetails, costDetails };
@@ -146,20 +136,15 @@ const getDets = asyncHandler(async (req, res, next) => {
     const [billDetails] = await db.promise().query(billDetailsQuery);
 
     if (!billDetails || billDetails.length === 0) {
-      console.log("No bill details found.");
       return next(new ApiError(404, "No Bill Details Found"));
     }
 
-    console.log("Fetched bill details:", billDetails);
     const costDetailsQuery = "SELECT * FROM cost_per_unit";
     const [costDetails] = await db.promise().query(costDetailsQuery);
 
     if (!costDetails || costDetails.length === 0) {
-      console.log("No cost details found.");
       return next(new ApiError(404, "No Cost Details Found"));
     }
-
-    console.log("Fetched cost details:", costDetails);
 
     return res.status(200).json(
       new ApiResponse(
