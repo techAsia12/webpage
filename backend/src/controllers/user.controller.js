@@ -679,13 +679,18 @@ const deleteUser = asyncHandler(async (req, res, next) => {
     }
 
     if (req.user.role === "Client") {
-      const [result] = await db.promise().query("SELECT MACadd FROM client_dets WHERE phoneno=?", [userId]);
-      console.log(`User is a client. Deleting client details from 'client_dets' table.`);
-      await db.promise().query("DELETE FROM client_dets WHERE MACadd=?", [result[0]]);
+      const [clientDetResult] = await db.promise().query("SELECT MACadd FROM client_dets WHERE phoneno=?", [userId]);
+
+      if (clientDetResult.length > 0) {
+        console.log(`User is a client. Deleting client details from 'client_dets' table.`);
+        await db.promise().query("DELETE FROM client_dets WHERE phoneno=?", [userId]); 
+      }
     }
 
     await db.promise().query("DELETE FROM users WHERE phoneno=?", [userId]);
+
     await db.promise().query("COMMIT");
+
     return res.status(200).json(new ApiResponse(200, "Account Deleted Successfully"));
   } catch (error) {
     await db.promise().query("ROLLBACK");
@@ -693,6 +698,7 @@ const deleteUser = asyncHandler(async (req, res, next) => {
     return next(new ApiError(400, "Something went wrong while Deleting"));
   }
 });
+
 
 export {
   getData,
