@@ -12,6 +12,15 @@ const options = {
   sameSite: "Strict",
 };
 
+const dbQuery = async (query, params) => {
+  try {
+    const [results] = await db.promise().query(query, params);
+    return results;
+  } catch (error) {
+    throw new ApiError(500, "Database Error");
+  }
+};
+
 const addDets = asyncHandler(async (req, res, next) => {
   const { base, percentPerUnit, totalTaxPercent, tax, state, provider } = req.body;
 
@@ -148,45 +157,31 @@ const register = asyncHandler(async (req, res, next) => {
 
   console.log("Request body:", req.body);
 
-  // Trim fields to remove unwanted spaces
   name = name.trim();
   email = email.trim();
   phoneno = phoneno.trim();
   role = role.trim();
 
   if (!name || !password || !email || !role) {
-    console.log("Missing required fields");
     return next(new ApiError(400, "All fields are required"));
   }
 
   const trimmedPassword = password.trim();
   if (!trimmedPassword) {
-    console.log("Invalid password entered");
     return next(new ApiError(400, "Enter a valid password"));
   }
 
   if (phoneno.length !== 10 || isNaN(phoneno)) {
-    console.log("Invalid phone number entered");
     return next(new ApiError(400, "Enter a valid phone number"));
   }
 
-  // Validate role
-  const validRoles = ['Client', 'Admin']; // Example roles, adjust as needed
+  const validRoles = ['Client', 'Admin']; 
   if (!validRoles.includes(role)) {
     console.log("Invalid role entered");
     return next(new ApiError(400, "Invalid role"));
   }
 
   try {
-    const [existingUser] = await db
-      .promise()
-      .query("SELECT * FROM users WHERE email = ?", [email]);
-
-    if (existingUser.length > 0) {
-      console.log("Email already in use:", email);
-      return next(new ApiError(400, "Email Already in Use"));
-    }
-
     const hashPassword = await bcrypt.hash(trimmedPassword, 10);
     console.log("Hashed password successfully");
 
@@ -206,12 +201,9 @@ const register = asyncHandler(async (req, res, next) => {
     if (role === "Client") {
       await db.promise().query(
         "INSERT INTO client_dets (phoneno, state, MACadd) VALUES (?, ?, ?)",
-        [phoneno, null, null] // Assuming `state` is null for now
+        [phoneno, null, null] 
       );
     }
-
-    console.log("User registered successfully:", user);
-
     return res
       .status(200)
       .json(new ApiResponse(200, user, "User Registered Successfully"));
@@ -275,46 +267,45 @@ const login = asyncHandler(async (req, res, next) => {
 });
 
 const googleLogin = asyncHandler(async (req, res, next) => {
+  const { token } = req.body;
+
   try {
-    const { token } = req.body;
-    console.log("Received token:", token);
+    console.log("Received token:", token);  
 
     const decoded = jwt.decode(token, { complete: true });
-    console.log("Decoded Token:", decoded);
+    console.log("Decoded token:", decoded); 
 
     const { name, email } = decoded.payload;
+    console.log("User info from decoded token - Name:", name, "Email:", email);
 
-    console.log("User details - Name:", name, "Email:", email);
+    const user = await dbQuery("SELECT * FROM users WHERE email = ?", [email]);
+    console.log("User found in database:", user);  
+    console.log(user.length);
+    if (user.length > 0) {
+      const { phoneno, role } = user[0];
+      console.log(`Existing user found: phoneno: ${phoneno}, role: ${role}`);
 
-    const [userResult] = await db
-      .promise()
-      .query(`SELECT * FROM users WHERE email=?`, [email]);
-
-    if (userResult.length > 0) {
-      console.log("User found in the database. Logging in.");
-      const { phoneno, name, role } = userResult[0];
-      const user = { email, name, phoneno, role };
-      const token = generateToken(user);
-
-      console.log("Generated token:", token);
-      console.log("Setting auth token in cookies");
+      const token = generateToken(user[0]);
+      console.log("Generated JWT token:", token);  
 
       res.cookie("authToken", token, options);
-
       return res
         .status(200)
         .json(
-          new ApiResponse(200, { ...user, token }, "Successfully logged In")
+          new ApiResponse(
+            200,
+            { email, name, phoneno, role, token },
+            "Successfully logged in"
+          )
         );
     } else {
-      console.log("User not found in the database. Registering.");
-      await db
-        .promise()
-        .query("INSERT INTO users (phoneno, name, email) VALUES (?, ?, ?)", [
-          0,
-          name,
-          email,
-        ]);
+      console.log("No existing user found, registering new user");
+
+      await dbQuery(
+        "INSERT INTO users (phoneno, name, email) VALUES (?, ?, ?)",
+        [0, name, email]
+      );
+      console.log("User successfully registered");
 
       return res
         .status(201)
@@ -322,13 +313,16 @@ const googleLogin = asyncHandler(async (req, res, next) => {
           new ApiResponse(
             201,
             { email, name },
-            "Successfully registered. Add phone no."
+            "Successfully registered. Add phone number"
           )
         );
     }
   } catch (error) {
-    console.error("Error during Google login:", error);
-    return next(new ApiError(500, "Error during Google login"));
+    console.error("Error during Google login:", error);  // Log the error details
+    if (error.name === "JsonWebTokenError") {
+      return next(new ApiError(400, "Invalid token"));
+    }
+    return next(new ApiError(500, "Google login error"));
   }
 });
 

@@ -55,14 +55,6 @@ const register = asyncHandler(async (req, res, next) => {
   }
 
   try {
-    const existingUser = await dbQuery("SELECT * FROM users WHERE email = ?", [
-      email,
-    ]);
-
-    if (existingUser.length > 0) {
-      return next(new ApiError(400, "Email is already in use"));
-    }
-
     const hashPassword = await bcrypt.hash(password, 10);
 
     const insertUserResult = await dbQuery(
@@ -669,21 +661,56 @@ const deleteUser = asyncHandler(async (req, res, next) => {
   const userId = req.user.id;
 
   try {
-    console.log('Starting transaction...');
+    console.log("Starting transaction...");
     await db.promise().query("START TRANSACTION");
 
-    const [userResult] = await db.promise().query("SELECT * FROM users WHERE phoneno=?", [userId]);
+    const [userResult] = await db
+      .promise()
+      .query("SELECT * FROM users WHERE phoneno=?", [userId]);
 
     if (userResult.length === 0) {
       return next(new ApiError(404, "User not found"));
     }
 
     if (req.user.role === "Client") {
-      const [clientDetResult] = await db.promise().query("SELECT MACadd FROM client_dets WHERE phoneno=?", [userId]);
+      const [clientDetResult] = await db
+        .promise()
+        .query("SELECT MACadd FROM client_dets WHERE phoneno=?", [userId]);
 
       if (clientDetResult.length > 0) {
-        console.log(`User is a client. Deleting client details from 'client_dets' table.`);
-        await db.promise().query("DELETE FROM client_dets WHERE phoneno=?", [userId]); 
+        console.log(
+          `User is a client. Deleting client details from 'client_dets' table.`
+        );
+        await db
+          .promise()
+          .query("DELETE FROM client_dets WHERE phoneno=?", [userId]);
+      }
+
+      const [DailyDetResult] = await db
+        .promise()
+        .query("SELECT * FROM daily_usage WHERE phoneno=?", [userId]);
+      if (DailyDetResult.length > 0) {
+        await db
+          .promise()
+          .query("DELETE FROM daily_usage WHERE phoneno=?", [userId]);
+      }
+
+      const [WeeklyDetResult] = await db
+        .promise()
+        .query("SELECT * FROM weekly_usage WHERE phoneno=?", [userId]);
+      if (WeeklyDetResult.length > 0) {
+        await db
+          .promise()
+          .query("DELETE FROM weekly_usage WHERE phoneno=?", [userId]);
+      }
+
+      const [YearlyDetResult] = await db
+        .promise()
+        .query("SELECT * FROM yearly_usage WHERE phoneno=?", [userId]);
+      if (YearlyDetResult.length > 0) {
+        await db
+          .promise()
+          .query("DELETE FROM yearly_usage WHERE phoneno=?", [userId]);
       }
     }
 
@@ -691,14 +718,15 @@ const deleteUser = asyncHandler(async (req, res, next) => {
 
     await db.promise().query("COMMIT");
 
-    return res.status(200).json(new ApiResponse(200, "Account Deleted Successfully"));
+    return res
+      .status(200)
+      .json(new ApiResponse(200, "Account Deleted Successfully"));
   } catch (error) {
     await db.promise().query("ROLLBACK");
-    console.error('Error occurred during deletion:', error);
+    console.error("Error occurred during deletion:", error);
     return next(new ApiError(400, "Something went wrong while Deleting"));
   }
 });
-
 
 export {
   getData,
