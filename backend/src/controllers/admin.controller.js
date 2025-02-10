@@ -22,7 +22,8 @@ const dbQuery = async (query, params) => {
 };
 
 const addDets = asyncHandler(async (req, res, next) => {
-  const { base, percentPerUnit, totalTaxPercent, tax, state, provider } = req.body;
+  const { base, percentPerUnit, totalTaxPercent, tax, state, provider } =
+    req.body;
 
   if (!base || !percentPerUnit || !totalTaxPercent || !tax || !state) {
     return next(new ApiError(400, "All fields are required"));
@@ -88,42 +89,89 @@ const getDets = asyncHandler(async (req, res, next) => {
   const isClient = role === "Client";
   const { state } = req.query;
 
+  console.log(`Role: ${role}, Is Client: ${isClient}, State: ${state}`);
+
   if (isClient && !state) {
+    console.log("State is missing for client request.");
     return next(new ApiError(400, "State is required"));
   }
 
-  try {
-    // Fetching bill details based on state (for both clients and non-clients)
-    const billDetailsQuery = isClient
-      ? "SELECT * FROM bill_details WHERE state=?"
-      : "SELECT * FROM bill_details";
-    const [billDetails] = await db.promise().query(billDetailsQuery, isClient ? [state] : []);
+  if (isClient) {
+    try {
+      console.log("Client request: Fetching bill and cost details for state:", state);
 
-    if (!billDetails || billDetails.length === 0) {
-      return next(new ApiError(404, "No Bill Details Found"));
+      const billDetailsQuery = "SELECT * FROM bill_details WHERE state=?";
+      console.log("Executing bill details query:", billDetailsQuery);
+      const [billDetails] = await db
+        .promise()
+        .query(billDetailsQuery, [state]);
+
+      if (!billDetails || billDetails.length === 0) {
+        console.log("No Bill Details found for the provided state.");
+        return next(new ApiError(404, "No Bill Details Found"));
+      }
+
+      const costDetailsQuery = "SELECT * FROM cost_per_unit WHERE state=?";
+      console.log("Executing cost details query:", costDetailsQuery);
+      const [costDetails] = await db
+        .promise()
+        .query(costDetailsQuery, [state]);
+
+      if (!costDetails || costDetails.length === 0) {
+        console.log("No Cost Details found for the provided state.");
+        return next(new ApiError(404, "No Cost Details Found"));
+      }
+
+      console.log("Data retrieved successfully for client.");
+
+      const responseData = { billDetails: billDetails[0], costDetails };
+
+      return res
+        .status(200)
+        .json(new ApiResponse(200, responseData, "Data retrieved successfully"));
+
+    } catch (err) {
+      console.error("Error retrieving data:", err);
+      return next(new ApiError(500, "Database Error"));
     }
+  } else {
+    console.log("Non-client request: Fetching all bill and cost details.");
 
-    // Fetching cost details (for both clients and non-clients)
-    const costDetailsQuery = isClient
-      ? "SELECT * FROM cost_per_unit WHERE state=?"
-      : "SELECT * FROM cost_per_unit";
-    const [costDetails] = await db.promise().query(costDetailsQuery, isClient ? [state] : []);
+    try {
+      const billDetailsQuery = "SELECT * FROM bill_details";
+      console.log("Executing bill details query for non-client:", billDetailsQuery);
+      const [billDetails] = await db
+        .promise()
+        .query(billDetailsQuery);
 
-    if (!costDetails || costDetails.length === 0) {
-      return next(new ApiError(404, "No Cost Details Found"));
+      if (!billDetails || billDetails.length === 0) {
+        console.log("No Bill Details found for non-client.");
+        return next(new ApiError(404, "No Bill Details Found"));
+      }
+
+      const costDetailsQuery = "SELECT * FROM cost_per_unit";
+      console.log("Executing cost details query for non-client:", costDetailsQuery);
+      const [costDetails] = await db
+        .promise()
+        .query(costDetailsQuery);
+
+      if (!costDetails || costDetails.length === 0) {
+        console.log("No Cost Details found for non-client.");
+        return next(new ApiError(404, "No Cost Details Found"));
+      }
+
+      console.log("Data retrieved successfully for non-client.");
+
+      const responseData = { billDetails, costDetails };
+
+      return res
+        .status(200)
+        .json(new ApiResponse(200, responseData, "Data retrieved successfully"));
+
+    } catch (err) {
+      console.error("Error retrieving data:", err);
+      return next(new ApiError(500, "Database Error"));
     }
-
-    // Construct the response data based on the role (Client or Admin)
-    const responseData = isClient
-      ? { billDetails: billDetails[0], costDetails }
-      : { billDetails, costDetails };
-
-    return res.status(200).json(
-      new ApiResponse(200, responseData, "Data retrieved successfully")
-    );
-  } catch (err) {
-    console.error("Error retrieving data:", err);
-    return next(new ApiError(500, "Database Error"));
   }
 });
 
@@ -175,7 +223,7 @@ const register = asyncHandler(async (req, res, next) => {
     return next(new ApiError(400, "Enter a valid phone number"));
   }
 
-  const validRoles = ['Client', 'Admin']; 
+  const validRoles = ["Client", "Admin"];
   if (!validRoles.includes(role)) {
     console.log("Invalid role entered");
     return next(new ApiError(400, "Invalid role"));
@@ -199,10 +247,12 @@ const register = asyncHandler(async (req, res, next) => {
     const user = { id: phoneno, email, name };
 
     if (role === "Client") {
-      await db.promise().query(
-        "INSERT INTO client_dets (phoneno, state, MACadd) VALUES (?, ?, ?)",
-        [phoneno, null, null] 
-      );
+      await db
+        .promise()
+        .query(
+          "INSERT INTO client_dets (phoneno, state, MACadd) VALUES (?, ?, ?)",
+          [phoneno, null, null]
+        );
     }
     return res
       .status(200)
@@ -241,13 +291,13 @@ const login = asyncHandler(async (req, res, next) => {
 
     // Generate token
     const token = generateToken(user);
-    console.log("Generated token for user:", user.phoneno);  // Do not log the full token
+    console.log("Generated token for user:", user.phoneno); // Do not log the full token
 
     // Cookie options
     const options = {
       httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',  // Only set secure cookies in production
-      maxAge: 3600000,  // 1 hour
+      secure: process.env.NODE_ENV === "production", // Only set secure cookies in production
+      maxAge: 3600000, // 1 hour
     };
 
     // Set auth token in cookies
@@ -257,9 +307,11 @@ const login = asyncHandler(async (req, res, next) => {
     // Exclude password and other sensitive data from response
     const { password: _, ...userData } = user;
 
-    return res.status(200).json(
-      new ApiResponse(200, { ...userData, token }, "Successfully logged in")
-    );
+    return res
+      .status(200)
+      .json(
+        new ApiResponse(200, { ...userData, token }, "Successfully logged in")
+      );
   } catch (err) {
     console.error("Error in login:", err);
     return next(new ApiError(500, "Database Error"));
@@ -270,23 +322,23 @@ const googleLogin = asyncHandler(async (req, res, next) => {
   const { token } = req.body;
 
   try {
-    console.log("Received token:", token);  
+    console.log("Received token:", token);
 
     const decoded = jwt.decode(token, { complete: true });
-    console.log("Decoded token:", decoded); 
+    console.log("Decoded token:", decoded);
 
     const { name, email } = decoded.payload;
     console.log("User info from decoded token - Name:", name, "Email:", email);
 
     const user = await dbQuery("SELECT * FROM users WHERE email = ?", [email]);
-    console.log("User found in database:", user);  
+    console.log("User found in database:", user);
     console.log(user.length);
     if (user.length > 0) {
       const { phoneno, role } = user[0];
       console.log(`Existing user found: phoneno: ${phoneno}, role: ${role}`);
 
       const token = generateToken(user[0]);
-      console.log("Generated JWT token:", token);  
+      console.log("Generated JWT token:", token);
 
       res.cookie("authToken", token, options);
       return res
@@ -318,7 +370,7 @@ const googleLogin = asyncHandler(async (req, res, next) => {
         );
     }
   } catch (error) {
-    console.error("Error during Google login:", error);  // Log the error details
+    console.error("Error during Google login:", error); // Log the error details
     if (error.name === "JsonWebTokenError") {
       return next(new ApiError(400, "Invalid token"));
     }
@@ -344,7 +396,7 @@ const addPhoneno = asyncHandler(async (req, res, next) => {
   }
 
   // Validate role (only certain roles allowed)
-  const validRoles = ['Admin', 'Client'];  // Adjust this list based on your needs
+  const validRoles = ["Admin", "Client"]; // Adjust this list based on your needs
   if (!validRoles.includes(role)) {
     console.log("Invalid role provided");
     return next(new ApiError(400, "Invalid role"));
@@ -352,19 +404,21 @@ const addPhoneno = asyncHandler(async (req, res, next) => {
 
   try {
     // Update the phone number and role for the user in 'users' table
-    await db.promise().query(`UPDATE users SET phoneno = ?, role=? WHERE email = ?`, [
-      phone,
-      role,
-      email,
-    ]);
+    await db
+      .promise()
+      .query(`UPDATE users SET phoneno = ?, role=? WHERE email = ?`, [
+        phone,
+        role,
+        email,
+      ]);
 
     console.log("Phone number updated successfully for user:", email);
 
     // If the user is a client, insert into 'client_dets' table
-    if (role === 'Client') {
+    if (role === "Client") {
       console.log("Inserting client details into client_dets table");
       await db.promise().query(
-        `INSERT INTO client_dets (phoneno, state) VALUES (?, ?)`, 
+        `INSERT INTO client_dets (phoneno, state) VALUES (?, ?)`,
         [phone, null] // Assuming `state` is null initially
       );
     }
@@ -375,7 +429,7 @@ const addPhoneno = asyncHandler(async (req, res, next) => {
 
     const options = {
       httpOnly: true, // Ensure the cookie is only accessible via HTTP (not JS)
-      secure: process.env.NODE_ENV === 'production', // Only set secure cookies in production
+      secure: process.env.NODE_ENV === "production", // Only set secure cookies in production
       maxAge: 3600000, // 1 hour
     };
 
@@ -496,7 +550,10 @@ const sendMail = asyncHandler(async (req, res, next) => {
     console.error("Error sending email:", error);
 
     return next(
-      new ApiError(400, "Something went wrong while sending mail, please try again")
+      new ApiError(
+        400,
+        "Something went wrong while sending mail, please try again"
+      )
     );
   }
 });
@@ -511,7 +568,9 @@ const resetPassword = asyncHandler(async (req, res, next) => {
 
   // Validate password length or other criteria
   if (password.length < 8) {
-    return next(new ApiError(400, "Password must be at least 8 characters long"));
+    return next(
+      new ApiError(400, "Password must be at least 8 characters long")
+    );
   }
 
   const storedPasswordQuery = "SELECT password FROM users WHERE email=?";
@@ -530,7 +589,9 @@ const resetPassword = asyncHandler(async (req, res, next) => {
     const isMatch = await bcrypt.compare(password, storedPassword);
 
     if (isMatch) {
-      return next(new ApiError(400, "New password cannot be the same as the old password"));
+      return next(
+        new ApiError(400, "New password cannot be the same as the old password")
+      );
     }
 
     // Hash and update the password
@@ -541,10 +602,11 @@ const resetPassword = asyncHandler(async (req, res, next) => {
     return res
       .status(200)
       .json(new ApiResponse(200, "Password reset successfully"));
-
   } catch (err) {
     console.error("Error resetting password:", err);
-    return next(new ApiError(500, "An error occurred while resetting the password"));
+    return next(
+      new ApiError(500, "An error occurred while resetting the password")
+    );
   }
 });
 
@@ -561,11 +623,15 @@ const getClientDets = asyncHandler(async (req, res, next) => {
 
     if (result.length === 0) {
       console.log("No client users found.");
-      return res.status(200).json(new ApiResponse(200, [], "No Client Users Found"));
+      return res
+        .status(200)
+        .json(new ApiResponse(200, [], "No Client Users Found"));
     }
 
     console.log("User and client details fetched successfully");
-    return res.status(200).json(new ApiResponse(200, result, "Data Retrieved Successfully"));
+    return res
+      .status(200)
+      .json(new ApiResponse(200, result, "Data Retrieved Successfully"));
   } catch (err) {
     console.error("Error fetching client details:", err.message);
     return next(new ApiError(500, "Database Error"));
@@ -643,5 +709,5 @@ export {
   update,
   resetPassword,
   getClientDets,
-  updateBilldets
+  updateBilldets,
 };
