@@ -5,6 +5,7 @@ import { ApiError } from "../utils/ApiError.js";
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 import { MailtrapClient } from "mailtrap";
+import { uploadOnCloudinary } from "../utils/cloudinary.js";
 
 const options = {
   httpOnly: true,
@@ -89,87 +90,60 @@ const getDets = asyncHandler(async (req, res, next) => {
   const isClient = role === "Client";
   const { state } = req.query;
 
-  console.log(`Role: ${role}, Is Client: ${isClient}, State: ${state}`);
-
   if (isClient && !state) {
-    console.log("State is missing for client request.");
     return next(new ApiError(400, "State is required"));
   }
 
   if (isClient) {
     try {
-      console.log("Client request: Fetching bill and cost details for state:", state);
-
       const billDetailsQuery = "SELECT * FROM bill_details WHERE state=?";
-      console.log("Executing bill details query:", billDetailsQuery);
-      const [billDetails] = await db
-        .promise()
-        .query(billDetailsQuery, [state]);
+      const [billDetails] = await db.promise().query(billDetailsQuery, [state]);
 
       if (!billDetails || billDetails.length === 0) {
-        console.log("No Bill Details found for the provided state.");
         return next(new ApiError(404, "No Bill Details Found"));
       }
 
       const costDetailsQuery = "SELECT * FROM cost_per_unit WHERE state=?";
-      console.log("Executing cost details query:", costDetailsQuery);
-      const [costDetails] = await db
-        .promise()
-        .query(costDetailsQuery, [state]);
+      const [costDetails] = await db.promise().query(costDetailsQuery, [state]);
 
       if (!costDetails || costDetails.length === 0) {
-        console.log("No Cost Details found for the provided state.");
         return next(new ApiError(404, "No Cost Details Found"));
       }
-
-      console.log("Data retrieved successfully for client.");
 
       const responseData = { billDetails: billDetails[0], costDetails };
 
       return res
         .status(200)
-        .json(new ApiResponse(200, responseData, "Data retrieved successfully"));
-
+        .json(
+          new ApiResponse(200, responseData, "Data retrieved successfully")
+        );
     } catch (err) {
-      console.error("Error retrieving data:", err);
       return next(new ApiError(500, "Database Error"));
     }
   } else {
-    console.log("Non-client request: Fetching all bill and cost details.");
-
     try {
       const billDetailsQuery = "SELECT * FROM bill_details";
-      console.log("Executing bill details query for non-client:", billDetailsQuery);
-      const [billDetails] = await db
-        .promise()
-        .query(billDetailsQuery);
+      const [billDetails] = await db.promise().query(billDetailsQuery);
 
       if (!billDetails || billDetails.length === 0) {
-        console.log("No Bill Details found for non-client.");
         return next(new ApiError(404, "No Bill Details Found"));
       }
 
       const costDetailsQuery = "SELECT * FROM cost_per_unit";
-      console.log("Executing cost details query for non-client:", costDetailsQuery);
-      const [costDetails] = await db
-        .promise()
-        .query(costDetailsQuery);
+      const [costDetails] = await db.promise().query(costDetailsQuery);
 
       if (!costDetails || costDetails.length === 0) {
-        console.log("No Cost Details found for non-client.");
         return next(new ApiError(404, "No Cost Details Found"));
       }
-
-      console.log("Data retrieved successfully for non-client.");
 
       const responseData = { billDetails, costDetails };
 
       return res
         .status(200)
-        .json(new ApiResponse(200, responseData, "Data retrieved successfully"));
-
+        .json(
+          new ApiResponse(200, responseData, "Data retrieved successfully")
+        );
     } catch (err) {
-      console.error("Error retrieving data:", err);
       return next(new ApiError(500, "Database Error"));
     }
   }
@@ -454,12 +428,10 @@ const update = asyncHandler(async (req, res, next) => {
     return next(new ApiError(400, "User not authenticated"));
   }
 
-  // Validate required fields
   if (!name || !email) {
     return next(new ApiError(400, "Name and email are required"));
   }
 
-  // Validate email format
   const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
   if (!emailRegex.test(email)) {
     return next(new ApiError(400, "Invalid email format"));
@@ -468,7 +440,6 @@ const update = asyncHandler(async (req, res, next) => {
   console.log("Updating user details for phoneno:", user.id);
 
   try {
-    // Check if the new email already exists
     const [existingUser] = await db
       .promise()
       .query("SELECT * FROM users WHERE email = ? AND phoneno != ?", [
@@ -480,7 +451,6 @@ const update = asyncHandler(async (req, res, next) => {
       return next(new ApiError(400, "Email is already in use"));
     }
 
-    // Perform the update
     const [result] = await db
       .promise()
       .query("UPDATE users SET name=?, email=? WHERE phoneno=?", [
@@ -612,7 +582,7 @@ const resetPassword = asyncHandler(async (req, res, next) => {
 
 const getClientDets = asyncHandler(async (req, res, next) => {
   const query = `
-    SELECT u.phoneno, u.name, u.email, u.role, c.MACadd, c.voltage, c.current, c.watt, c.date_time, c.state
+    SELECT u.phoneno, u.name, u.email, u.role,c.MACadd, c.voltage, c.current, c.watt, c.date_time, c.state
     FROM users u
     JOIN client_dets c ON u.phoneno = c.phoneno
     WHERE u.role = 'Client'
@@ -697,6 +667,52 @@ const updateBilldets = asyncHandler(async (req, res, next) => {
   }
 });
 
+const updateProfile = asyncHandler(async (req, res, next) => {
+  const user = req?.user;
+  const profilePath = req?.file?.path;
+  console.log("Profile Path: ", profilePath);  
+
+  if (!user) {
+    console.log("No user found in request");
+    return next(new ApiError(400, "Invalid Access"));
+  }
+
+  if (!profilePath) {
+    console.log("No profile file uploaded");
+    return next(new ApiError(400, "No file uploaded"));
+  }
+
+  try {
+    const profile = await uploadOnCloudinary(profilePath);
+    console.log("Profile uploaded to Cloudinary:", profile);
+
+    console.log("Updating user profile for phoneno:", user.phoneno);
+
+    const [result] = await db
+      .promise()
+      .query("UPDATE users SET profile=? WHERE phoneno = ?", [
+        profile.secure_url,
+        user.phoneno,
+      ]);
+
+    console.log("Update result:", result);  
+
+    if (result.affectedRows === 0) {
+      console.log("No user found for phoneno:", user.phoneno);
+      return next(new ApiError(404, "User not found"));
+    }
+
+    console.log("User updated successfully with new profile URL:", profile.secure_url);
+
+    return res
+      .status(200)
+      .json(new ApiResponse(200, result, "Profile updated successfully"));
+  } catch (error) {
+    console.error("Error during profile update:", error);
+    return next(new ApiError(500, "Server error during profile update"));
+  }
+});
+
 export {
   addDets,
   addRangeDets,
@@ -710,4 +726,5 @@ export {
   resetPassword,
   getClientDets,
   updateBilldets,
+  updateProfile,
 };

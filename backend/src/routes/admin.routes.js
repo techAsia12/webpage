@@ -12,9 +12,11 @@ import {
   update,
   getClientDets,
   updateBilldets,
+  updateProfile,
 } from "../controllers/admin.controller.js";
 import { verifyJWT } from "../middleware/authUser.middlerware.js";
 import { verifyCode } from "../middleware/authCode.middleware.js";
+import { upload } from "../middleware/multer.middleware.js";
 
 const router = express.Router();
 
@@ -32,7 +34,7 @@ router.route("/google-login").post(googleLogin);
 
 router.route("/add-phoneno").post(addPhoneno);
 
-router.route("/update").post(verifyJWT, update);
+router.route("/update").post(verifyJWT,update);
 
 router.route("/send-mail").get(sendMail);
 
@@ -41,5 +43,7 @@ router.route("/reset-password").post(verifyCode, resetPassword);
 router.route("/getClientDets").get(getClientDets);
 
 router.route("/update-bill").put(updateBilldets)
+
+router.route("/profileUpdate").post(verifyJWT,upload.single('profile') ,updateProfile);
 
 export default router;

@@ -18,9 +18,11 @@ import {
   getUserData,
   retriveState,
   deleteUser,
+  retrieveProfile,
 } from "../controllers/user.controller.js";
 import { verifyJWT } from "../middleware/authUser.middlerware.js";
 import { verifyCode } from "../middleware/authCode.middleware.js";
+import { upload } from "../middleware/multer.middleware.js";
 
 const router = express.Router();
 
@@ -34,7 +36,7 @@ router.route("/google-login").post(googleLogin);
 
 router.route("/add-phoneno").post(addPhoneno);
   
-router.route("/update").post(verifyJWT, update);
+router.route("/update").post(verifyJWT,upload.single('profile') ,update);
 
 router.route("/send-mail").get(sendMail);
 
@@ -59,5 +61,7 @@ router.route("/retrive-user").get(verifyJWT,getUserData);
 router.route("/retrive-stateDets").get(retriveState);
 
 router.route("/delete").delete(verifyJWT,deleteUser);
+
+router.route("/profile").get(verifyJWT,retrieveProfile);
 
 export default router;

@@ -5,6 +5,8 @@ import { ApiError } from "../utils/ApiError.js";
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 import { MailtrapClient } from "mailtrap";
+import { verifyJWT } from "../middleware/authUser.middlerware.js";
+import { uploadOnCloudinary } from "../utils/cloudinary.js";
 
 const options = {
   httpOnly: true,
@@ -260,6 +262,7 @@ const getData = asyncHandler(async (req, res, next) => {
 
 const update = asyncHandler(async (req, res, next) => {
   const { name, email, state } = req.body;
+  const { profilePath } = req?.files;
   const user = req?.user;
 
   if (!user) {
@@ -267,9 +270,11 @@ const update = asyncHandler(async (req, res, next) => {
   }
 
   try {
+    const profile=await uploadOnCloudinary(profilePath);
+    
     const result = await dbQuery(
-      "UPDATE users SET name=?, email=? WHERE phoneno=?",
-      [name, email, user.id]
+      "UPDATE users SET name=?, email=?,profile=? WHERE phoneno=?",
+      [name, email,profile, user.id]
     );
 
     if (state) {
@@ -369,10 +374,8 @@ const resetPassword = asyncHandler(async (req, res, next) => {
   }
 });
 
-const insertHourly = asyncHandler(async (req, res, next) => {
-  const { phoneno, unit } = req.body;
+const insertHourly = asyncHandler(async (phoneno, unit) => {
   const currentDate = new Date();
-
   try {
     await db
       .promise()
@@ -381,47 +384,138 @@ const insertHourly = asyncHandler(async (req, res, next) => {
         unit,
         currentDate,
       ]);
+    console.log("Hourly data inserted successfully");
 
-    return res.status(200).json(new ApiResponse(200, "Inserted successfully"));
+    // Optionally reset the daily usage table for the specific user
+    await db
+      .promise()
+      .query(`DELETE FROM daily_usage WHERE phoneno = ?`, [phoneno]);
+
+    console.log("Hourly data reset after insert");
   } catch (err) {
-    return next(new ApiError(500, "Database error"));
+    console.error("Error inserting hourly data:", err);
   }
 });
 
-const insertWeekly = asyncHandler(async (req, res, next) => {
-  const { phoneno, unit } = req.body;
+const insertWeekly = asyncHandler(async (phoneno, unit) => {
   const currentDate = new Date();
+  try {
+    await db
+      .promise()
+      .query(`INSERT INTO daily_usage (phoneno, unit, time) VALUES (?, ?, ?)`, [
+        phoneno,
+        unit,
+        currentDate,
+      ]);
+    console.log("Daily data inserted for weekly tracking");
 
+    await db
+      .promise()
+      .query(`DELETE FROM weekly_usage WHERE phoneno = ?`, [phoneno]);
+
+    console.log("Weekly data reset after insert");
+  } catch (err) {
+    console.error("Error inserting weekly data:", err);
+  }
+});
+
+const insertYearly = asyncHandler(async (phoneno, unit) => {
+  const currentDate = new Date();
   try {
     await db
       .promise()
       .query(
-        `INSERT INTO weekly_usage (phoneno, unit, time) VALUES (?, ?, ?)`,
+        `INSERT INTO monthly_usage (phoneno, unit, time) VALUES (?, ?, ?)`,
         [phoneno, unit, currentDate]
       );
+    console.log("Monthly data inserted for yearly tracking");
 
-    return res.status(200).json(new ApiResponse(200, "Inserted successfully"));
+    await db
+      .promise()
+      .query(`DELETE FROM yearly_usage WHERE phoneno = ?`, [phoneno]);
+
+    console.log("Yearly data reset after insert");
   } catch (err) {
-    return next(new ApiError(500, "Database error"));
+    console.error("Error inserting yearly data:", err);
   }
 });
 
-const insertYearly = asyncHandler(async (req, res, next) => {
-  const { phoneno, unit } = req.body;
-  const currentDate = new Date();
+const resetDailyAtMidnight = asyncHandler(async (req, res, next) => {
+  const now = new Date();
+  const timeUntilMidnight =
+    new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1, 0, 0, 0) -
+    now;
 
-  try {
-    await db
-      .promise()
-      .query(
-        `INSERT INTO yearly_usage (phoneno, unit, time) VALUES (?, ?, ?)`,
-        [phoneno, unit, currentDate]
-      );
+  setTimeout(() => {
+    db.promise()
+      .query(`DELETE FROM daily_usage`)
+      .then(() => console.log("Daily usage table reset at midnight"))
+      .catch((err) => console.error("Error resetting daily usage:", err));
 
-    return res.status(200).json(new ApiResponse(200, "Inserted successfully"));
-  } catch (err) {
-    return next(new ApiError(500, "Database error"));
+    resetDailyAtMidnight();
+  }, timeUntilMidnight);
+});
+
+const resetWeeklyAtMidnight = asyncHandler(async (req, res, next) => {
+  const now = new Date();
+  const timeUntilNextWeek =
+    new Date(now.getFullYear(), now.getMonth(), now.getDate() + 7, 0, 0, 0) -
+    now;
+
+  setTimeout(() => {
+    db.promise()
+      .query(`DELETE FROM weekly_usage`)
+      .then(() => console.log("Weekly usage table reset after a week"))
+      .catch((err) => console.error("Error resetting weekly usage:", err));
+
+    resetWeeklyAtMidnight();
+  }, timeUntilNextWeek);
+});
+
+const resetYearlyAtMidnight = asyncHandler(async (req, res, next) => {
+  const now = new Date();
+  const timeUntilNextYear =
+    new Date(now.getFullYear() + 1, 0, 1, 0, 0, 0) - now;
+
+  setTimeout(() => {
+    db.promise()
+      .query(`DELETE FROM yearly_usage`)
+      .then(() => console.log("Yearly usage table reset after a year"))
+      .catch((err) => console.error("Error resetting yearly usage:", err));
+
+    resetYearlyAtMidnight();
+  }, timeUntilNextYear);
+});
+
+const startPeriodicUpdates = asyncHandler(async (req, res, next) => {
+  const user = req?.user;
+  const phoneno = user?.id;
+
+  const [result] = await db
+    .promise()
+    .query("SELECT watt FROM client_dets WHERE phoneno = ?", [user.id]);
+
+  if (result.length === 0) {
+    return next(new ApiError(404, "No data found"));
   }
+
+  const unit = result[0];
+
+  setInterval(() => {
+    insertHourly(phoneno, unit);
+  }, 60 * 60 * 1000);
+
+  setInterval(() => {
+    insertWeekly(phoneno, unit);
+  }, 7 * 24 * 60 * 60 * 1000);
+
+  setInterval(() => {
+    insertYearly(phoneno, unit);
+  }, 365 * 24 * 60 * 60 * 1000);
+
+  resetDailyAtMidnight();
+  resetWeeklyAtMidnight();
+  resetYearlyAtMidnight();
 });
 
 const retiveHourlyUsage = asyncHandler(async (req, res, next) => {
@@ -430,8 +524,6 @@ const retiveHourlyUsage = asyncHandler(async (req, res, next) => {
   if (!user) {
     return next(new ApiError(400, "User not authenticated"));
   }
-
-  console.log(`Hourly Retrieval: ${user.id}`);
 
   try {
     const [result] = await db
@@ -442,30 +534,20 @@ const retiveHourlyUsage = asyncHandler(async (req, res, next) => {
       );
 
     if (result.length === 0) {
-      console.log("No data found for the specified user");
       return next(new ApiError(404, "No hourly data found"));
     }
 
     let unitsPerHour = new Array(24).fill(0);
 
-    // Log the raw result
-    console.log("Raw hourly data retrieved:", result);
-
     result.forEach((entry) => {
       const hour = new Date(entry.time).getHours();
-      console.log(
-        `For time: ${entry.time}, updating hour ${hour} with unit: ${entry.unit}`
-      );
       unitsPerHour[hour] = entry.unit;
     });
-
-    console.log("Units per hour:", unitsPerHour);
 
     return res
       .status(200)
       .json(new ApiResponse(200, unitsPerHour, "Data Sent"));
   } catch (err) {
-    console.error("Error retrieving hourly usage:", err);
     return next(new ApiError(500, "Database Error"));
   }
 });
@@ -539,6 +621,7 @@ const retiveYearlyUsage = asyncHandler(async (req, res, next) => {
 const sentData = asyncHandler(async (req, res, next) => {
   const { phoneno, voltage, current, MACadd } = req.query;
   const currentDate = new Date();
+
   const mysqlTimestamp = `${currentDate.getFullYear()}-${(
     currentDate.getMonth() + 1
   )
@@ -554,17 +637,27 @@ const sentData = asyncHandler(async (req, res, next) => {
     .toString()
     .padStart(2, "0")}:${currentDate.getSeconds().toString().padStart(2, "0")}`;
 
+  console.log(
+    `Received data: phoneno=${phoneno}, voltage=${voltage}, current=${current}, MACadd=${MACadd}`
+  );
+
   try {
+    console.log("Fetching current watt value from database...");
     const [result] = await db
       .promise()
       .query("SELECT watt FROM client_dets WHERE phoneno = ?", [phoneno]);
 
     if (result.length === 0) {
+      console.log("Client not found in database");
       return next(new ApiError(404, "Client not found"));
     }
 
-    const watt = result[0].watt;
+    const watt = result[0].watt === null ? 0 : result[0].watt;
+    console.log(`Current watt: ${watt}, calculating new watt...`);
+
     const newWatt = voltage * current + watt;
+
+    console.log(`New watt value calculated: ${newWatt}`);
 
     const updateQuery = `
       UPDATE client_dets SET
@@ -584,18 +677,22 @@ const sentData = asyncHandler(async (req, res, next) => {
       phoneno,
     ];
 
+    console.log("Executing update query...");
     const [updateResult] = await db.promise().query(updateQuery, updateParams);
 
     if (updateResult.affectedRows === 0) {
+      console.log("No rows affected, client data update failed.");
       return next(new ApiError(404, "No matching client found"));
     }
 
+    console.log("Client data updated successfully.");
     return res.status(200).json({
       status: 200,
       message: "Client data updated successfully",
       data: updateResult,
     });
   } catch (err) {
+    console.error("Database error:", err);
     return next(new ApiError(500, "Database error"));
   }
 });
@@ -728,6 +825,29 @@ const deleteUser = asyncHandler(async (req, res, next) => {
   }
 });
 
+const retrieveProfile = asyncHandler(async (req, res, next) => {
+  const user = req?.user;
+
+  if (!user) {
+    return next(new ApiError(400, "Invalid Access"));
+  }
+
+  try {
+    const userProfile = await User.findById(user._id).select('-password');
+
+    if (!userProfile) {
+      return next(new ApiError(404, "User not found"));
+    }
+
+    res.status(200).json({
+      success: true,
+      data: userProfile,
+    });
+  } catch (error) {
+    return next(new ApiError(500, "Internal Server Error"));
+  }
+});
+
 export {
   getData,
   register,
@@ -748,4 +868,6 @@ export {
   getUserData,
   retriveState,
   deleteUser,
+  startPeriodicUpdates,
+  retrieveProfile
 };
