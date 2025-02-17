@@ -2,7 +2,7 @@ import React, { useEffect, useState, useRef } from "react";
 import { NavLink } from "react-router-dom";
 import Avatar from "@mui/material/Avatar";
 import { Drawer } from "@mui/material";
-import Sidebar from "./Sidebar.jsx"
+import Sidebar from "./Sidebar.jsx";
 import { useSelector, useDispatch } from "react-redux";
 import { drawerToogle } from "../../Features/pages/pages.slice.js";
 import { motion } from "motion/react";
@@ -77,7 +77,7 @@ const Cursor = ({ position }) => {
 
 const Navbar = ({ navLinks }) => {
   const [open, setOpen] = React.useState(false);
-
+  const user = useSelector((state) => state.auth?.userData);
   const isOpen = useSelector((state) => state.pages?.drawer);
   const dispatch = useDispatch();
 
@@ -110,7 +110,11 @@ const Navbar = ({ navLinks }) => {
 
         <div className="lg:translate-x-12 lg:pt-3 pt-2 -translate-x-10 flex space-x-3">
           <ThemeToggle />
-          <Avatar alt="User Avatar" src="" onClick={toggleDrawer} />
+          <Avatar
+            alt="User Avatar"
+            src={`${user.profile}` || ""}
+            onClick={toggleDrawer}
+          />
         </div>
       </nav>
       <Drawer

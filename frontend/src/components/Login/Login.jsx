@@ -31,8 +31,9 @@ const Login = () => {
           toast.success(res.data.message || "Login successful!", {
             position: "top-right",
           });
-          const { user } = res.data.data;
+          const  user  = res.data.data;
           setTimeout(() => {
+            console.log(user);
             dispatch(login(user));
             navigate("/dashboard");
           }, 2000);

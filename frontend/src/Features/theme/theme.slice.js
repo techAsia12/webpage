@@ -12,6 +12,9 @@ const themeSlice = createSlice({
         state.mode = state.mode === "light" ? "dark" : "light";
         localStorage.setItem("theme", state.mode);
         document.documentElement.classList.toggle("dark", state.mode === "dark");
+        if(state.mode==="dark"){
+          document.body.style.backgroundColor = "#1f2937";
+        }
       },
     },
   });

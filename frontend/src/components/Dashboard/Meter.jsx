@@ -38,7 +38,7 @@ const Meter = ({ color, value, maxValue, unit,initial,animate,transition }) => {
 
   return (
     <>
-      <motion.Card className={`w-full sm:w-4/5 shadow-lg rounded-3xl p-4 mb-8`}
+      <motion.Card className={`w-full sm:w-4/5 shadow-lg rounded-3xl p-4 mb-8 dark:bg-gray-800 dark:text-neutral-400`}
       initial={initial}
       animate={animate}
       transition={transition}

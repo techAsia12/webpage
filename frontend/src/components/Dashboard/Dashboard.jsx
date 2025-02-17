@@ -4,6 +4,8 @@ import CardTemp from "./CardView";
 import axios from "axios";
 import Barchart from "./Barchart";
 import { motion } from "motion/react";
+import { login } from "../../Features/auth/auth.slice";
+import { useDispatch } from "react-redux";
 
 const Dashboard = () => {
   const [user, setUser] = useState("");
@@ -12,6 +14,7 @@ const Dashboard = () => {
   const [cost, setCost] = useState(0);
   const [costPerMonth, setPerMonth] = useState(0);
   const [maxKwh, setMaxKwh] = useState(parseFloat(kwh * 10).toFixed(0));
+  const dispatch = useDispatch();
   const [data, setData] = useState({
     labels: [
       "00:00",
@@ -156,8 +159,7 @@ const Dashboard = () => {
         .get(`${import.meta.env.VITE_BACKEND_URL}/api/user/data`, options)
         .then((res) => {
           const userData = res.data.data;
-          setUser(userData);
-
+          dispatch(login(userData));
           const time = (new Date() - new Date(userData.date_time)) / (1000 * 60 * 60); 
           const newKwh = parseFloat(((userData.watt * time) / 1000).toFixed(3)); 
           setKwh(newKwh); 

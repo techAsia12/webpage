@@ -668,48 +668,38 @@ const updateBilldets = asyncHandler(async (req, res, next) => {
 });
 
 const updateProfile = asyncHandler(async (req, res, next) => {
-  const user = req?.user;
   const profilePath = req?.file?.path;
-  console.log("Profile Path: ", profilePath);  
-
-  if (!user) {
-    console.log("No user found in request");
-    return next(new ApiError(400, "Invalid Access"));
-  }
-
-  if (!profilePath) {
-    console.log("No profile file uploaded");
-    return next(new ApiError(400, "No file uploaded"));
-  }
+  const user = req?.user;
 
   try {
+    console.log(result);
+    console.log(profilePath);
     const profile = await uploadOnCloudinary(profilePath);
-    console.log("Profile uploaded to Cloudinary:", profile);
+    console.log(profile);
+    const updateQuery = `
+      UPDATE users SET
+        profile=?
+      WHERE phoneno = ?
+    `;
+    const updateParams = [profile.secure_url, user.id];
 
-    console.log("Updating user profile for phoneno:", user.phoneno);
+    console.log("Executing update query...");
+    const [updateResult] = await db.promise().query(updateQuery, updateParams);
 
-    const [result] = await db
-      .promise()
-      .query("UPDATE users SET profile=? WHERE phoneno = ?", [
-        profile.secure_url,
-        user.phoneno,
-      ]);
-
-    console.log("Update result:", result);  
-
-    if (result.affectedRows === 0) {
-      console.log("No user found for phoneno:", user.phoneno);
-      return next(new ApiError(404, "User not found"));
+    if (updateResult.affectedRows === 0) {
+      console.log("No rows affected, client data update failed.");
+      return next(new ApiError(404, "No matching client found"));
     }
 
-    console.log("User updated successfully with new profile URL:", profile.secure_url);
-
-    return res
-      .status(200)
-      .json(new ApiResponse(200, result, "Profile updated successfully"));
-  } catch (error) {
-    console.error("Error during profile update:", error);
-    return next(new ApiError(500, "Server error during profile update"));
+    console.log("Client data updated successfully.");
+    return res.status(200).json({
+      status: 200,
+      message: "Client data updated successfully",
+      data: updateResult,
+    });
+  } catch (err) {
+    console.error("Database error:", err);
+    return next(new ApiError(500, "Database error"));
   }
 });
 

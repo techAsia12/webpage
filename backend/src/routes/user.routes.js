@@ -18,7 +18,7 @@ import {
   getUserData,
   retriveState,
   deleteUser,
-  retrieveProfile,
+  updateProfile,
 } from "../controllers/user.controller.js";
 import { verifyJWT } from "../middleware/authUser.middlerware.js";
 import { verifyCode } from "../middleware/authCode.middleware.js";
@@ -62,6 +62,6 @@ router.route("/retrive-stateDets").get(retriveState);
 
 router.route("/delete").delete(verifyJWT,deleteUser);
 
-router.route("/profile").get(verifyJWT,retrieveProfile);
+router.route("/profileUpdate").post(verifyJWT,upload.single('profile') ,updateProfile);
 
 export default router;

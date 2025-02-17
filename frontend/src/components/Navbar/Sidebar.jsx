@@ -5,13 +5,13 @@ import axios from "axios";
 import { useCookies } from "react-cookie";
 import { useNavigate } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
-import { logout } from "../../../frontend/src/Features/auth/auth.slice.js";
+import { logout } from "../../Features/auth/auth.slice.js";
 import {
   billDetsPage,
   costRangePage,
   drawerToogle,
   updatePage,
-} from "../../../frontend/src/Features/pages/pages.slice.js";
+} from "../../Features/pages/pages.slice.js";
 import { Edit as EditIcon } from "@mui/icons-material";
 import DeleteIcon from "@mui/icons-material/Delete";
 import LogoutIcon from "@mui/icons-material/Logout";
@@ -22,6 +22,7 @@ import {
   DialogContent,
   DialogTitle,
 } from "@mui/material";
+import { IoCameraOutline } from "react-icons/io5";
 
 const MessageDialog = ({ open, handleClose, message, role }) => {
   const navigate = useNavigate();
@@ -74,6 +75,7 @@ const Sidebar = () => {
   const [role, setRole] = useState();
   const [phoneno, setPhonenno] = useState();
   const [state, setState] = useState();
+  const [profile, setProfile] = useState();
   const [open, setOpen] = useState(false);
   const [message, setMessage] = useState("");
   const dispatch = useDispatch();
@@ -82,7 +84,6 @@ const Sidebar = () => {
   const isDrawer = useSelector((state) => state.pages?.drawer);
   const isbill = useSelector((state) => state.pages?.isbill);
   const isCostRange = useSelector((state) => state.pages?.isCostRange);
-
   const [cookies, setcookie, removeCookie] = useCookies(["authToken"]);
 
   const handleLogout = () => {
@@ -128,6 +129,56 @@ const Sidebar = () => {
     dispatch(drawerToogle());
   };
 
+  const handleUploadProfile = (e) => {
+    const profile = e.target.files[0]; 
+    const form = new FormData();
+    form.append("profile", profile);
+    console.log(profile);
+    if (profile) { 
+      const endpoint = role === "Admin" 
+        ? `${import.meta.env.VITE_BACKEND_URL}/api/admin/profileUpdate` 
+        : `${import.meta.env.VITE_BACKEND_URL}/api/user/profileUpdate`;
+  
+      axios
+        .post(endpoint, form,options)
+        .then((res) => {
+          setProfile(res.data.data.profile); 
+          toast.success("Profile updated successfully!", {
+            position: "top-right",
+            autoClose: 5000,
+            hideProgressBar: false,
+            closeOnClick: true,
+            pauseOnHover: true,
+            draggable: true,
+            progress: undefined,
+          });
+        })
+        .catch((err) => {
+          const errorMessage = err.response?.data?.message || "Failed to update profile. Please try again.";
+          toast.error(errorMessage, {
+            position: "top-right",
+            autoClose: 5000,
+            hideProgressBar: false,
+            closeOnClick: true,
+            pauseOnHover: true,
+            draggable: true,
+            progress: undefined,
+          });
+          setProfile(null);
+        });
+    } else {
+      toast.error("Please select a profile image to upload.", {
+        position: "top-right",
+        autoClose: 5000,
+        hideProgressBar: false,
+        closeOnClick: true,
+        pauseOnHover: true,
+        draggable: true,
+        progress: undefined,
+      });
+    }
+  };
+
   useEffect(() => {
     axios
       .get(`${import.meta.env.VITE_BACKEND_URL}/api/user/retrive-user`, options)
@@ -143,7 +194,7 @@ const Sidebar = () => {
 
   if (role === "Client") {
     return (
-      <Box className="flex flex-col items-center justify-center space-y-10 h-full lg:w-80 w-64 dark:bg-gray-800 lg:overflow-hidden dark:text-white">
+      <Box className="flex flex-col items-center justify-center space-y-10 h-full lg:w-80 w-64 dark:bg-gray-800 lg:overflow-hidden dark:text-white ">
         <ToastContainer />
         <MessageDialog
           open={open}
@@ -153,8 +204,26 @@ const Sidebar = () => {
         />
 
         <div className="flex space-x-6 ml-8 dark:bg-gray-800">
-          <Avatar alt="User Avatar" src="" className="mt-10" />
-          <EditIcon onClick={handleEdit} className="mt-11" />
+          <Avatar
+            alt="User Avatar"
+            src={`${profile}`}
+            className="mt-10 z-0"
+            sx={{ width: 100, height: 100 }}
+          />
+          <label className="z-30 absolute mt-12 transform -translate-x-4 hover:cursor-pointer overflow-hidden">
+            <IoCameraOutline
+              className="backdrop-blur-[2px] opacity-0 hover:opacity-100 transition-opacity rounded-full"
+              size={85}
+            />
+
+            <input
+              type="file"
+              className="absolute z-40 rounded-full mt-20 transform -translate-x-6 opacity-0 cursor-pointer"
+              accept="image/*"
+              onChange={handleUploadProfile}
+            />
+          </label>
+          <EditIcon onClick={handleEdit} className="mt-16" />
         </div>
 
         {/* Role */}
@@ -393,34 +462,33 @@ const Sidebar = () => {
 
         {/* Delete Button */}
         <Button
-            variant="contained"
-            className="border border-neutral-900 w-44 h-9 text-xl bg-red-500 text-white hover:bg-white hover:text-black dark:bg-red-700 dark:hover:bg-red-600"
-            color="error"
-            readOnly
-            onClick={() =>
-              handleClickOpen("Are you sure you want to delete your account?")
-            }
-          >
-            <DeleteIcon />
-            Delete
-          </Button>
+          variant="contained"
+          className="border border-neutral-900 w-44 h-9 text-xl bg-red-500 text-white hover:bg-white hover:text-black dark:bg-red-700 dark:hover:bg-red-600"
+          color="error"
+          readOnly
+          onClick={() =>
+            handleClickOpen("Are you sure you want to delete your account?")
+          }
+        >
+          <DeleteIcon />
+          Delete
+        </Button>
 
-          <Button
-            variant="contained"
-            className="border border-neutral-900 w-44 h-9 text-xl hover:bg-white hover:text-black dark:hover:bg-gray-600 dark:hover:text-white"
-            onClick={handleLogout}
-          >
-            <LogoutIcon />
-            Logout
-          </Button>
+        <Button
+          variant="contained"
+          className="border border-neutral-900 w-44 h-9 text-xl hover:bg-white hover:text-black dark:hover:bg-gray-600 dark:hover:text-white"
+          onClick={handleLogout}
+        >
+          <LogoutIcon />
+          Logout
+        </Button>
 
         <div></div>
       </Box>
     );
   } else {
     return (
-      <>
-        <Box className="flex flex-col items-center h-full justify-center space-y-12 lg:w-80 w-64 dark:bg-gray-800 overflow-hidden">
+      <Box className="flex flex-col items-center justify-center space-y-10 h-full lg:w-80 w-64 dark:bg-gray-800 lg:overflow-hidden dark:text-white ">
           <ToastContainer />
           <MessageDialog
             open={open}
@@ -428,10 +496,28 @@ const Sidebar = () => {
             message={message}
             role={role}
           />
-          <div className="flex space-x-6 ml-8 dark:bg-gray-800">
-            <Avatar alt="User Avatar" src="" className="mt-10" />
-            <EditIcon onClick={handleEdit} className="mt-11" />
-          </div>
+         <div className="flex space-x-6 ml-8 dark:bg-gray-800">
+          <Avatar
+            alt="User Avatar"
+            src={`${profile}`}
+            className="mt-10 z-0"
+            sx={{ width: 100, height: 100 }}
+          />
+          <label className="z-30 absolute mt-12 transform -translate-x-4 hover:cursor-pointer overflow-hidden">
+            <IoCameraOutline
+              className="backdrop-blur-[2px] opacity-0 hover:opacity-100 transition-opacity rounded-full"
+              size={85}
+            />
+
+            <input
+              type="file"
+              className="absolute z-40 rounded-full mt-20 transform -translate-x-6 opacity-0 cursor-pointer"
+              accept="image/*"
+              onClick={handleUploadProfile}
+            />
+          </label>
+          <EditIcon onClick={handleEdit} className="mt-16" />
+        </div>
 
           <TextField
             variant="outlined"
@@ -469,7 +555,8 @@ const Sidebar = () => {
               "& .MuiOutlinedInput-notchedOutline": {
                 borderColor: "black",
               },
-            }}            value={role}
+            }}
+            value={role}
             slotProps={{
               input: {
                 readOnly: true,
@@ -513,7 +600,8 @@ const Sidebar = () => {
               "& .MuiOutlinedInput-notchedOutline": {
                 borderColor: "black",
               },
-            }}            value={name}
+            }}
+            value={name}
             slotProps={{
               input: {
                 readOnly: true,
@@ -557,7 +645,8 @@ const Sidebar = () => {
               "& .MuiOutlinedInput-notchedOutline": {
                 borderColor: "black",
               },
-            }}            value={email}
+            }}
+            value={email}
             slotProps={{
               input: {
                 readOnly: true,
@@ -601,7 +690,8 @@ const Sidebar = () => {
               "& .MuiOutlinedInput-notchedOutline": {
                 borderColor: "black",
               },
-            }}            value={phoneno}
+            }}
+            value={phoneno}
             slotProps={{
               input: {
                 readOnly: true,
@@ -631,7 +721,6 @@ const Sidebar = () => {
             Logout
           </Button>
         </Box>
-      </>
     );
   }
 };

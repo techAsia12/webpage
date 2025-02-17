@@ -41,11 +41,21 @@ const dbQuery = async (query, params) => {
 const register = asyncHandler(async (req, res, next) => {
   const { name, password, email, phoneno, state, role } = req.body;
 
+  console.log("Received registration data:", {
+    name,
+    email,
+    phoneno,
+    state,
+    role,
+  });
+
   if (!name || !password || !email || !state || !role) {
+    console.log("Missing required fields");
     return next(new ApiError(400, "All fields are required"));
   }
 
   if (phoneno.length !== 10 || isNaN(phoneno)) {
+    console.log("Invalid phone number:", phoneno);
     return next(
       new ApiError(400, "Please enter a valid 10-digit phone number")
     );
@@ -53,30 +63,42 @@ const register = asyncHandler(async (req, res, next) => {
 
   const emailRegex = /^[a-zA-Z0-9._-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,6}$/;
   if (!emailRegex.test(email)) {
+    console.log("Invalid email format:", email);
     return next(new ApiError(400, "Invalid email format"));
   }
 
   try {
+    console.log("Hashing password...");
     const hashPassword = await bcrypt.hash(password, 10);
 
+    console.log("Inserting user into 'users' table...");
     const insertUserResult = await dbQuery(
       "INSERT INTO users (phoneno, name, password, email, role) VALUES (?, ?, ?, ?, ?)",
       [phoneno, name, hashPassword, email, role]
     );
+
     if (!insertUserResult.affectedRows) {
+      console.log("Failed to insert user into 'users' table");
       throw new Error("Failed to insert user into 'users' table");
     }
 
+    console.log("Inserting client details into 'client_dets' table...");
     const insertClientResult = await dbQuery(
       "INSERT INTO client_dets (phoneno, state, MACadd) VALUES (?, ?, ?)",
       [phoneno, state, null]
     );
+
     if (!insertClientResult.affectedRows) {
-      dbQuery("DELETE FROM users WHERE phoeno=?", [phoneno]);
+      console.log(
+        "Failed to insert client details. Rolling back user insert..."
+      );
+      dbQuery("DELETE FROM users WHERE phoneno=?", [phoneno]);
       throw new Error(
         "Failed to insert client details into 'client_dets' table"
       );
     }
+
+    console.log("User registration successful:", { phoneno, email, name });
 
     return res
       .status(200)
@@ -88,12 +110,17 @@ const register = asyncHandler(async (req, res, next) => {
         )
       );
   } catch (err) {
+    console.error("Error during registration:", err);
+
     if (err.code === "ER_DUP_ENTRY") {
+      console.log("Duplicate entry found for email");
       return next(new ApiError(400, "Email is already in use"));
     } else if (err.message.includes("Failed to insert")) {
+      console.log("Database error:", err.message);
       return next(new ApiError(500, "Database Error: " + err.message));
     }
 
+    console.log("Unexpected error during registration");
     return next(
       new ApiError(500, "An unexpected error occurred during registration")
     );
@@ -124,7 +151,7 @@ const login = asyncHandler(async (req, res, next) => {
     return res
       .status(200)
       .json(
-        new ApiResponse(200, { ...user[0], token }, "Successfully logged in")
+        new ApiResponse(200, { ...user[0],token}, "Successfully logged in")
       );
   } catch (err) {
     if (err.code === "ER_BAD_DB_ERROR") {
@@ -270,11 +297,11 @@ const update = asyncHandler(async (req, res, next) => {
   }
 
   try {
-    const profile=await uploadOnCloudinary(profilePath);
-    
+    const profile = await uploadOnCloudinary(profilePath);
+
     const result = await dbQuery(
       "UPDATE users SET name=?, email=?,profile=? WHERE phoneno=?",
-      [name, email,profile, user.id]
+      [name, email, profile, user.id]
     );
 
     if (state) {
@@ -825,26 +852,39 @@ const deleteUser = asyncHandler(async (req, res, next) => {
   }
 });
 
-const retrieveProfile = asyncHandler(async (req, res, next) => {
+const updateProfile = asyncHandler(async (req, res, next) => {
+  const profilePath = req?.file?.path;
   const user = req?.user;
 
-  if (!user) {
-    return next(new ApiError(400, "Invalid Access"));
-  }
-
   try {
-    const userProfile = await User.findById(user._id).select('-password');
+    console.log(result);
+    console.log(profilePath);
+    const profile = await uploadOnCloudinary(profilePath);
+    console.log(profile);
+    const updateQuery = `
+      UPDATE users SET
+        profile=?
+      WHERE phoneno = ?
+    `;
+    const updateParams = [profile.secure_url, user.id];
 
-    if (!userProfile) {
-      return next(new ApiError(404, "User not found"));
+    console.log("Executing update query...");
+    const [updateResult] = await db.promise().query(updateQuery, updateParams);
+
+    if (updateResult.affectedRows === 0) {
+      console.log("No rows affected, client data update failed.");
+      return next(new ApiError(404, "No matching client found"));
     }
 
-    res.status(200).json({
-      success: true,
-      data: userProfile,
+    console.log("Client data updated successfully.");
+    return res.status(200).json({
+      status: 200,
+      message: "Client data updated successfully",
+      data: updateResult,
     });
-  } catch (error) {
-    return next(new ApiError(500, "Internal Server Error"));
+  } catch (err) {
+    console.error("Database error:", err);
+    return next(new ApiError(500, "Database error"));
   }
 });
 
@@ -869,5 +909,5 @@ export {
   retriveState,
   deleteUser,
   startPeriodicUpdates,
-  retrieveProfile
+  updateProfile,
 };
