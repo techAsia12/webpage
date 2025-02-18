@@ -39,16 +39,14 @@ const Layout = () => {
   return (
     <div className="lg:overflow-hidden dark:bg-gray-800 top-0">
       <Navbar navLinks={navLinks} />
-      <div className="content-container dark:bg-gray-800 overflow-hidden ">
+      <div className="content-container dark:bg-gray-800  z-10 flex">
         <Outlet />
+        <div className={`z-20 absolute backdrop-blur-sm ${visibility}`}>
+          <Update />
+        </div>
         <div className="lg:hidden">
           <NavDial actions={actions} />
         </div>
-      </div>
-      <div
-        className={`z-10 h-full md:-translate-y-[850px] -translate-y-[300px] lg:-translate-y-[100px] flex justify-center items-center backdrop-blur-sm ${visibility} overflow-hidden `}
-      >
-        <Update />
       </div>
     </div>
   );

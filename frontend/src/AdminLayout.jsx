@@ -56,23 +56,21 @@ const AdminLayout = () => {
   return (
     <div className="lg:overflow-hidden dark:bg-gray-800 dark:text-white top-0">
       <Navbar navLinks={navLinks} />
-      <div className="content-container z-0 dark:bg-gray-800 dark:text-white  overflow-hidden">
+      <div className="content-container z-10 dark:bg-gray-800 dark:text-white justify-center  overflow-hidden flex">
         <Outlet />
-      </div>
-      <div
-        className={`z-10 lg:-translate-y-[750px] -translate-y-[650px] lg:translate-x-10  backdrop-blur-sm ${visibility}`}
-      >
-        <Update />  
-      </div>
-      <div
-        className={`z-20 -translate-y-80 lg:translate-x-10  backdrop-blur-sm ${billVisibility}`}
-      >
-        <AddDets />
-      </div>
-      <div
-        className={`z-30 -translate-y-80 lg:translate-x-10 bottom-0 backdrop-blur-sm ${costRangeVisibility}`}
-      >
-        <CostRangePage />
+        <div className={`z-20 absolute backdrop-blur-sm ${visibility}`}>
+          <Update />
+        </div>
+        <div
+          className={`z-20 absolute backdrop-blur-sm ${billVisibility}`}
+        >
+          <AddDets />
+        </div>
+        <div
+          className={`z-20 absolute backdrop-blur-sm ${costRangeVisibility}`}
+        >
+          <CostRangePage />
+        </div>
       </div>
       <div className="lg:hidden ">
         <NavDial actions={actions} />
