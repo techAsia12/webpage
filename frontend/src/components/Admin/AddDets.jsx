@@ -45,8 +45,8 @@ const AddDets = () => {
   };
 
   return (
-    <div className="w-screen h-screen flex justify-center pt-10">
-      <div className="lg:w-1/3 w-4/5 lg:h-3/4 h-4/5 border border-neutral-900 rounded-3xl transform -translate-y-12 bg-white dark:bg-gray-800 dark:border-white">
+    <div className="w-screen h-screen flex justify-center ">
+      <div className="lg:w-1/3 w-4/5 lg:h-5/6 border border-neutral-900 rounded-3xl bg-white dark:bg-gray-800 dark:border-white lg:ml-20">
         <h1 className="text-center text-4xl pt-20 text-black dark:text-white">
           Bill Details
         </h1>
@@ -56,7 +56,7 @@ const AddDets = () => {
           className="self-center space-y-4 flex flex-col justify-center items-center h-3/4"
         >
           <CancelIcon
-            className="ml-72 transform -translate-y-24 lg:-translate-y-24 lg:ml-96 right-0 text-black dark:text-white"
+            className="ml-52 transform lg:-translate-y-14 -translate-y-28 lg:ml-96 right-0 text-black dark:text-white"
             color="error"
             onClick={() => {
               dispatch(billDetsPage());

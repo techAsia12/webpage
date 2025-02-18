@@ -128,10 +128,10 @@ const Update = () => {
 
   if (role === "Client") {
     return (
-      <div className="w-screen h-screen flex justify-center items-center overflow-hidden bg-white dark:bg-gray-800">
-        <Box className="flex flex-col items-center justify-center lg:space-y-10 space-y-5 w-3/4 lg:w-1/3 h-5/6 border border-neutral-900 rounded-3xl transform -translate-y-10 dark:border-2 dark:border-white dark:text-white">
+      <div className="w-screen h-screen flex justify-center items-center overflow-hidden ">
+        <Box className="flex items-center justify-center lg:space-y-10 space-y-5 w-3/4 lg:w-1/3 h-5/6 border border-neutral-900 rounded-3xl dark:border-2 dark:border-white dark:text-white">
           <CancelIcon
-            className="transform md:ml-96 -translate-x-32 lg:-translate-x-10"
+            className="transform lg:-translate-x-10"
             color="error"
             onClick={() => {
               dispatch(updatePage());

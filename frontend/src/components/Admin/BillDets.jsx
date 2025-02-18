@@ -193,16 +193,8 @@ const BillDets = () => {
   };
 
   return (
-    <>
-      <Button
-        variant="contained"
-        className="absolute transform lg:translate-x-[1500%] translate-x-[370%] translate-y-8 dark:bg-gray-800 dark:text-white"
-        onClick={handleClick}
-      >
-        <AddBoxIcon />
-        Add
-      </Button>
-      <div className="flex justify-center pt-16 dark:bg-gray-800 dark:text-white h-lvh">
+    <div className="w-screen h-screen flex justify-center items-center">
+      <div className="flex justify-center dark:bg-gray-800 dark:text-white h-2/3 w-full transform translate-x-12">
         <ToastContainer
           position="top-right"
           autoClose={5000}
@@ -340,7 +332,15 @@ const BillDets = () => {
           />
         </Paper>
       </div>
-    </>
+      <Button
+        variant="contained"
+        className="z-10 absolute transform -translate-y-60 lg:-translate-y-72 -translate-x-20 dark:bg-gray-800 dark:text-white "
+        onClick={handleClick}
+      >
+        <AddBoxIcon />
+        Add
+      </Button>
+    </div>
   );
 };
 

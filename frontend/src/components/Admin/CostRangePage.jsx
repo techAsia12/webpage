@@ -83,7 +83,7 @@ const CostRangePage = () => {
   };
 
   return (
-    <div className="w-screen h-fit pt-20">
+    <div className="w-screen h-fit lg:ml-20">
     <ToastContainer position="top-right" autoClose={5000} hideProgressBar={false} newestOnTop closeButton />
     <TableContainer className="lg:flex lg:justify-center w-1/2">
       <Table
