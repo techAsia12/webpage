@@ -142,7 +142,8 @@ const Sidebar = () => {
       axios
         .post(endpoint, form,options)
         .then((res) => {
-          setProfile(res.data.data.profile); 
+          console.log(res.data.data);
+          setProfile(res.data.data); 
           toast.success("Profile updated successfully!", {
             position: "top-right",
             autoClose: 5000,
@@ -204,9 +205,9 @@ const Sidebar = () => {
         />
 
         <div className="flex space-x-6 ml-8 dark:bg-gray-800">
-          <Avatar
+          <img
             alt="User Avatar"
-            src={`${profile}`}
+            src={profile}
             className="mt-10 z-0"
             sx={{ width: 100, height: 100 }}
           />
