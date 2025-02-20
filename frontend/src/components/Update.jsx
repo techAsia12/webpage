@@ -83,7 +83,7 @@ const Update = () => {
   }, []);
 
   const handleSubmit = () => {
-    if(role==="Client"){
+    if (role === "Client") {
       axios
         .post(
           `${import.meta.env.VITE_BACKEND_URL}/api/user/update`,
@@ -94,7 +94,7 @@ const Update = () => {
           toast.success(res.data.message || "Updates successful!", {
             position: "top-right",
           });
-          dispatch(login(res.data.data))
+          dispatch(login(res.data.data));
           setTimeout(() => {
             dispatch(updatePage());
           }, 1000);
@@ -102,36 +102,36 @@ const Update = () => {
         .catch((err) => {
           console.log(err.response.data.message);
           toast.error(`Error: ${err.response.data.message}`);
-        })
-    }else{
-      axios
-      .post(
-        `${import.meta.env.VITE_BACKEND_URL}/api/admin/update`,
-        { name, email },
-        options
-      )
-      .then((res) => {
-        toast.success(res.data.message || "Updates successful!", {
-          position: "top-right",
         });
-        
-        setTimeout(() => {
-          dispatch(updatePage());
-        }, 1000);
-      })
-      .catch((err) => {
-        console.log(err.response.data.message);
-        toast.error(`Error: ${err.response.data.message}`);
-      })
+    } else {
+      axios
+        .post(
+          `${import.meta.env.VITE_BACKEND_URL}/api/admin/update`,
+          { name, email },
+          options
+        )
+        .then((res) => {
+          toast.success(res.data.message || "Updates successful!", {
+            position: "top-right",
+          });
+
+          setTimeout(() => {
+            dispatch(updatePage());
+          }, 1000);
+        })
+        .catch((err) => {
+          console.log(err.response.data.message);
+          toast.error(`Error: ${err.response.data.message}`);
+        });
     }
   };
 
   if (role === "Client") {
     return (
-      <div className="w-screen h-screen flex justify-center items-center overflow-hidden ">
-        <Box className="flex items-center justify-center lg:space-y-10 space-y-5 w-3/4 lg:w-1/3 h-5/6 border border-neutral-900 rounded-3xl dark:border-2 dark:border-white dark:text-white">
-          <CancelIcon
-            className="transform lg:-translate-x-10"
+      <div className="w-screen h-screen flex justify-center items-center dark:bg-gray-800 dark:text-white">
+        <Box className="flex flex-col items-center justify-center space-y-10 w-3/4 lg:w-1/3 h-3/4 border transform -translate-y-28 border-neutral-900 rounded-3xl dark:border-2 dark:border-white">
+        <CancelIcon
+            className="ml-64 lg:ml-96 right-0 "
             color="error"
             onClick={() => {
               dispatch(updatePage());

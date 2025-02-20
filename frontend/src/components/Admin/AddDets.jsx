@@ -50,12 +50,7 @@ const AddDets = () => {
         <h1 className="text-center text-4xl pt-20 text-black dark:text-white">
           Bill Details
         </h1>
-        <form
-          action=""
-          onSubmit={handleSubmit}
-          className="self-center space-y-4 flex flex-col justify-center items-center h-3/4"
-        >
-          <CancelIcon
+        <CancelIcon
             className="ml-52 transform lg:-translate-y-14 -translate-y-28 lg:ml-96 right-0 text-black dark:text-white"
             color="error"
             onClick={() => {
@@ -63,6 +58,11 @@ const AddDets = () => {
             }}
             fontSize="large"
           />
+        <form
+          action=""
+          onSubmit={handleSubmit}
+          className="self-center space-y-4 flex flex-col justify-center items-center h-3/4"
+        >
           <TextField
             label="Enter Fixed Tax"
             variant="outlined"

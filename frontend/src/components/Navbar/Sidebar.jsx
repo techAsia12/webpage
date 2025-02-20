@@ -130,20 +130,21 @@ const Sidebar = () => {
   };
 
   const handleUploadProfile = (e) => {
-    const profile = e.target.files[0]; 
+    const profile = e.target.files[0];
     const form = new FormData();
     form.append("profile", profile);
     console.log(profile);
-    if (profile) { 
-      const endpoint = role === "Admin" 
-        ? `${import.meta.env.VITE_BACKEND_URL}/api/admin/profileUpdate` 
-        : `${import.meta.env.VITE_BACKEND_URL}/api/user/profileUpdate`;
-  
+    if (profile) {
+      const endpoint =
+        role === "Admin"
+          ? `${import.meta.env.VITE_BACKEND_URL}/api/admin/profileUpdate`
+          : `${import.meta.env.VITE_BACKEND_URL}/api/user/profileUpdate`;
+
       axios
-        .post(endpoint, form,options)
+        .post(endpoint, form, options)
         .then((res) => {
           console.log(res.data.data);
-          setProfile(res.data.data); 
+          setProfile(res.data.data);
           toast.success("Profile updated successfully!", {
             position: "top-right",
             autoClose: 5000,
@@ -155,7 +156,9 @@ const Sidebar = () => {
           });
         })
         .catch((err) => {
-          const errorMessage = err.response?.data?.message || "Failed to update profile. Please try again.";
+          const errorMessage =
+            err.response?.data?.message ||
+            "Failed to update profile. Please try again.";
           toast.error(errorMessage, {
             position: "top-right",
             autoClose: 5000,
@@ -189,6 +192,7 @@ const Sidebar = () => {
         setPhonenno(res.data.data.phoneno);
         setRole(res.data.data.role);
         setState(res.data.data.state);
+        setProfile(res.data.data.profile);
       })
       .catch((err) => {});
   }, []);
@@ -205,10 +209,10 @@ const Sidebar = () => {
         />
 
         <div className="flex space-x-6 ml-8 dark:bg-gray-800">
-          <img
+          <Avatar
             alt="User Avatar"
-            src={profile}
-            className="mt-10 z-0"
+            src={`${profile}` || ""}
+            className="mt-10 z-0 "
             sx={{ width: 100, height: 100 }}
           />
           <label className="z-30 absolute mt-12 transform -translate-x-4 hover:cursor-pointer overflow-hidden">
@@ -227,7 +231,6 @@ const Sidebar = () => {
           <EditIcon onClick={handleEdit} className="mt-16" />
         </div>
 
-        {/* Role */}
         <TextField
           variant="outlined"
           value={role}
@@ -273,7 +276,6 @@ const Sidebar = () => {
           }}
         />
 
-        {/* Name */}
         <TextField
           type="text"
           variant="outlined"
@@ -320,7 +322,6 @@ const Sidebar = () => {
           }}
         />
 
-        {/* Email */}
         <TextField
           type="email"
           variant="outlined"
@@ -367,7 +368,6 @@ const Sidebar = () => {
           }}
         />
 
-        {/* Phone Number */}
         <TextField
           type="number"
           variant="outlined"
@@ -414,7 +414,6 @@ const Sidebar = () => {
           }}
         />
 
-        {/* State */}
         <TextField
           type="text"
           variant="outlined"
@@ -461,7 +460,6 @@ const Sidebar = () => {
           }}
         />
 
-        {/* Delete Button */}
         <Button
           variant="contained"
           className="border border-neutral-900 w-44 h-9 text-xl bg-red-500 text-white hover:bg-white hover:text-black dark:bg-red-700 dark:hover:bg-red-600"
@@ -490,18 +488,18 @@ const Sidebar = () => {
   } else {
     return (
       <Box className="flex flex-col items-center justify-center space-y-10 h-full lg:w-80 w-64 dark:bg-gray-800 lg:overflow-hidden dark:text-white ">
-          <ToastContainer />
-          <MessageDialog
-            open={open}
-            handleClose={handleClose}
-            message={message}
-            role={role}
-          />
-         <div className="flex space-x-6 ml-8 dark:bg-gray-800">
+        <ToastContainer />
+        <MessageDialog
+          open={open}
+          handleClose={handleClose}
+          message={message}
+          role={role}
+        />
+        <div className="flex space-x-6 ml-8 dark:bg-gray-800">
           <Avatar
             alt="User Avatar"
-            src={`${profile}`}
-            className="mt-10 z-0"
+            src={`${profile}` || ""}
+            className="mt-10 z-0 "
             sx={{ width: 100, height: 100 }}
           />
           <label className="z-30 absolute mt-12 transform -translate-x-4 hover:cursor-pointer overflow-hidden">
@@ -514,214 +512,214 @@ const Sidebar = () => {
               type="file"
               className="absolute z-40 rounded-full mt-20 transform -translate-x-6 opacity-0 cursor-pointer"
               accept="image/*"
-              onClick={handleUploadProfile}
+              onChange={handleUploadProfile}
             />
           </label>
           <EditIcon onClick={handleEdit} className="mt-16" />
         </div>
 
-          <TextField
-            variant="outlined"
-            className="w-4/5"
-            sx={{
-              "& .MuiInputBase-input": {
-                color: "black",
-                border: "2px solid white",
-                "&.Mui-focused": {
-                  color: "black",
-                  border: "2px solid white",
-                },
-              },
-              "&.Mui-focused .MuiInputBase-input": {
+        <TextField
+          variant="outlined"
+          className="w-4/5"
+          sx={{
+            "& .MuiInputBase-input": {
+              color: "black",
+              border: "2px solid white",
+              "&.Mui-focused": {
                 color: "black",
                 border: "2px solid white",
               },
-              ".dark & .MuiInputBase-input": {
-                color: "white",
-                border: "2px solid white",
-              },
-              ".dark & .MuiInputBase-input.Mui-focused": {
-                color: "white",
-                border: "2px solid white",
-              },
-              ".dark & .MuiSelect-icon": {
-                color: "white",
-              },
-              ".dark & .MuiOutlinedInput-notchedOutline": {
-                borderColor: "white",
-              },
-              "& .MuiSelect-icon": {
-                color: "black",
-              },
-              "& .MuiOutlinedInput-notchedOutline": {
-                borderColor: "black",
-              },
-            }}
-            value={role}
-            slotProps={{
-              input: {
-                readOnly: true,
-              },
-            }}
-          />
-          <TextField
-            type="text"
-            variant="outlined"
-            className="w-4/5"
-            sx={{
-              "& .MuiInputBase-input": {
-                color: "black",
-                border: "2px solid white",
-                "&.Mui-focused": {
-                  color: "black",
-                  border: "2px solid white",
-                },
-              },
-              "&.Mui-focused .MuiInputBase-input": {
-                color: "black",
-                border: "2px solid white",
-              },
-              ".dark & .MuiInputBase-input": {
-                color: "white",
-                border: "2px solid white",
-              },
-              ".dark & .MuiInputBase-input.Mui-focused": {
-                color: "white",
-                border: "2px solid white",
-              },
-              ".dark & .MuiSelect-icon": {
-                color: "white",
-              },
-              ".dark & .MuiOutlinedInput-notchedOutline": {
-                borderColor: "white",
-              },
-              "& .MuiSelect-icon": {
-                color: "black",
-              },
-              "& .MuiOutlinedInput-notchedOutline": {
-                borderColor: "black",
-              },
-            }}
-            value={name}
-            slotProps={{
-              input: {
-                readOnly: true,
-              },
-            }}
-          />
-          <TextField
-            type="email"
-            variant="outlined"
-            className="w-4/5"
-            sx={{
-              "& .MuiInputBase-input": {
-                color: "black",
-                border: "2px solid white",
-                "&.Mui-focused": {
-                  color: "black",
-                  border: "2px solid white",
-                },
-              },
-              "&.Mui-focused .MuiInputBase-input": {
+            },
+            "&.Mui-focused .MuiInputBase-input": {
+              color: "black",
+              border: "2px solid white",
+            },
+            ".dark & .MuiInputBase-input": {
+              color: "white",
+              border: "2px solid white",
+            },
+            ".dark & .MuiInputBase-input.Mui-focused": {
+              color: "white",
+              border: "2px solid white",
+            },
+            ".dark & .MuiSelect-icon": {
+              color: "white",
+            },
+            ".dark & .MuiOutlinedInput-notchedOutline": {
+              borderColor: "white",
+            },
+            "& .MuiSelect-icon": {
+              color: "black",
+            },
+            "& .MuiOutlinedInput-notchedOutline": {
+              borderColor: "black",
+            },
+          }}
+          value={role}
+          slotProps={{
+            input: {
+              readOnly: true,
+            },
+          }}
+        />
+        <TextField
+          type="text"
+          variant="outlined"
+          className="w-4/5"
+          sx={{
+            "& .MuiInputBase-input": {
+              color: "black",
+              border: "2px solid white",
+              "&.Mui-focused": {
                 color: "black",
                 border: "2px solid white",
               },
-              ".dark & .MuiInputBase-input": {
-                color: "white",
-                border: "2px solid white",
-              },
-              ".dark & .MuiInputBase-input.Mui-focused": {
-                color: "white",
-                border: "2px solid white",
-              },
-              ".dark & .MuiSelect-icon": {
-                color: "white",
-              },
-              ".dark & .MuiOutlinedInput-notchedOutline": {
-                borderColor: "white",
-              },
-              "& .MuiSelect-icon": {
+            },
+            "&.Mui-focused .MuiInputBase-input": {
+              color: "black",
+              border: "2px solid white",
+            },
+            ".dark & .MuiInputBase-input": {
+              color: "white",
+              border: "2px solid white",
+            },
+            ".dark & .MuiInputBase-input.Mui-focused": {
+              color: "white",
+              border: "2px solid white",
+            },
+            ".dark & .MuiSelect-icon": {
+              color: "white",
+            },
+            ".dark & .MuiOutlinedInput-notchedOutline": {
+              borderColor: "white",
+            },
+            "& .MuiSelect-icon": {
+              color: "black",
+            },
+            "& .MuiOutlinedInput-notchedOutline": {
+              borderColor: "black",
+            },
+          }}
+          value={name}
+          slotProps={{
+            input: {
+              readOnly: true,
+            },
+          }}
+        />
+        <TextField
+          type="email"
+          variant="outlined"
+          className="w-4/5"
+          sx={{
+            "& .MuiInputBase-input": {
+              color: "black",
+              border: "2px solid white",
+              "&.Mui-focused": {
                 color: "black",
+                border: "2px solid white",
               },
-              "& .MuiOutlinedInput-notchedOutline": {
-                borderColor: "black",
-              },
-            }}
-            value={email}
-            slotProps={{
-              input: {
-                readOnly: true,
-              },
-            }}
-          />
-          <TextField
-            type="number"
-            variant="outlined"
-            className="w-4/5"
-            sx={{
-              "& .MuiInputBase-input": {
+            },
+            "&.Mui-focused .MuiInputBase-input": {
+              color: "black",
+              border: "2px solid white",
+            },
+            ".dark & .MuiInputBase-input": {
+              color: "white",
+              border: "2px solid white",
+            },
+            ".dark & .MuiInputBase-input.Mui-focused": {
+              color: "white",
+              border: "2px solid white",
+            },
+            ".dark & .MuiSelect-icon": {
+              color: "white",
+            },
+            ".dark & .MuiOutlinedInput-notchedOutline": {
+              borderColor: "white",
+            },
+            "& .MuiSelect-icon": {
+              color: "black",
+            },
+            "& .MuiOutlinedInput-notchedOutline": {
+              borderColor: "black",
+            },
+          }}
+          value={email}
+          slotProps={{
+            input: {
+              readOnly: true,
+            },
+          }}
+        />
+        <TextField
+          type="number"
+          variant="outlined"
+          className="w-4/5"
+          sx={{
+            "& .MuiInputBase-input": {
+              color: "black",
+              border: "2px solid white",
+              "&.Mui-focused": {
                 color: "black",
                 border: "2px solid white",
-                "&.Mui-focused": {
-                  color: "black",
-                  border: "2px solid white",
-                },
               },
-              "&.Mui-focused .MuiInputBase-input": {
-                color: "black",
-                border: "2px solid white",
-              },
-              ".dark & .MuiInputBase-input": {
-                color: "white",
-                border: "2px solid white",
-              },
-              ".dark & .MuiInputBase-input.Mui-focused": {
-                color: "white",
-                border: "2px solid white",
-              },
-              ".dark & .MuiSelect-icon": {
-                color: "white",
-              },
-              ".dark & .MuiOutlinedInput-notchedOutline": {
-                borderColor: "white",
-              },
-              "& .MuiSelect-icon": {
-                color: "black",
-              },
-              "& .MuiOutlinedInput-notchedOutline": {
-                borderColor: "black",
-              },
-            }}
-            value={phoneno}
-            slotProps={{
-              input: {
-                readOnly: true,
-              },
-            }}
-          />
+            },
+            "&.Mui-focused .MuiInputBase-input": {
+              color: "black",
+              border: "2px solid white",
+            },
+            ".dark & .MuiInputBase-input": {
+              color: "white",
+              border: "2px solid white",
+            },
+            ".dark & .MuiInputBase-input.Mui-focused": {
+              color: "white",
+              border: "2px solid white",
+            },
+            ".dark & .MuiSelect-icon": {
+              color: "white",
+            },
+            ".dark & .MuiOutlinedInput-notchedOutline": {
+              borderColor: "white",
+            },
+            "& .MuiSelect-icon": {
+              color: "black",
+            },
+            "& .MuiOutlinedInput-notchedOutline": {
+              borderColor: "black",
+            },
+          }}
+          value={phoneno}
+          slotProps={{
+            input: {
+              readOnly: true,
+            },
+          }}
+        />
 
-          <Button
-            variant="contained"
-            className="border border-neutral-900 w-44 h-9 text-xl bg-red-500 text-white hover:bg-white hover:text-black dark:bg-red-700 dark:hover:bg-red-600"
-            color="error"
-            readOnly
-            onClick={() =>
-              handleClickOpen("Are you sure you want to delete your account?")
-            }
-          >
-            <DeleteIcon />
-            Delete
-          </Button>
+        <Button
+          variant="contained"
+          className="border border-neutral-900 w-44 h-9 text-xl bg-red-500 text-white hover:bg-white hover:text-black dark:bg-red-700 dark:hover:bg-red-600"
+          color="error"
+          readOnly
+          onClick={() =>
+            handleClickOpen("Are you sure you want to delete your account?")
+          }
+        >
+          <DeleteIcon />
+          Delete
+        </Button>
 
-          <Button
-            variant="contained"
-            className="border border-neutral-900 w-44 h-9 text-xl hover:bg-white hover:text-black dark:hover:bg-gray-600 dark:hover:text-white"
-            onClick={handleLogout}
-          >
-            <LogoutIcon />
-            Logout
-          </Button>
-        </Box>
+        <Button
+          variant="contained"
+          className="border border-neutral-900 w-44 h-9 text-xl hover:bg-white hover:text-black dark:hover:bg-gray-600 dark:hover:text-white"
+          onClick={handleLogout}
+        >
+          <LogoutIcon />
+          Logout
+        </Button>
+      </Box>
     );
   }
 };

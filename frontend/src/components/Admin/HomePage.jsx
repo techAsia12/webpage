@@ -84,7 +84,7 @@ const HomePage = () => {
                 ))}
               </TableRow>
             </TableHead>
-            {/* <TableBody>
+            <TableBody>
               {clientData === null ? (
                 <TableRow>
                   <TableCell colSpan={columns.length} align="center" className="dark:bg-gray-600 dark:text-white">
@@ -107,7 +107,7 @@ const HomePage = () => {
                     </TableRow>
                   ))
               )}
-            </TableBody> */}
+            </TableBody>
           </Table>
         </TableContainer>
         <TablePagination

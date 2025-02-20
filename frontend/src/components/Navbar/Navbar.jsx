@@ -4,9 +4,10 @@ import Avatar from "@mui/material/Avatar";
 import { Drawer } from "@mui/material";
 import Sidebar from "./Sidebar.jsx";
 import { useSelector, useDispatch } from "react-redux";
-import { drawerToogle } from "../../Features/pages/pages.slice.js";
+import { costRangePage, drawerToogle } from "../../Features/pages/pages.slice.js";
 import { motion } from "motion/react";
 import ThemeToggle from "../ThemeToogle.jsx";
+import axios from "axios";
 
 const SlideTabs = ({ navLinks }) => {
   const [position, setPosition] = useState({
@@ -77,13 +78,26 @@ const Cursor = ({ position }) => {
 
 const Navbar = ({ navLinks }) => {
   const [open, setOpen] = React.useState(false);
-  const user = useSelector((state) => state.auth?.userData);
+  const [profile,setProfile]=React.useState();
   const isOpen = useSelector((state) => state.pages?.drawer);
   const dispatch = useDispatch();
 
+  const options = {
+    withCredentials: true,
+  };
+  
   useEffect(() => {
     setOpen(isOpen);
   }, [isOpen]);
+
+  useEffect(() => {
+    axios
+      .get(`${import.meta.env.VITE_BACKEND_URL}/api/user/retrive-user`, options)
+      .then((res) => {
+        setProfile(res.data.data.profile);
+      })
+      .catch((err) => {});
+  }, []);
 
   const toggleDrawer = () => {
     dispatch(drawerToogle());
@@ -112,7 +126,7 @@ const Navbar = ({ navLinks }) => {
           <ThemeToggle />
           <Avatar
             alt="User Avatar"
-            src={`${user.profile}` || ""}
+            src={`${profile}` || ""}
             onClick={toggleDrawer}
           />
         </div>

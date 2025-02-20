@@ -66,7 +66,8 @@ const CostRangePage = () => {
       axios
         .post(`${import.meta.env.VITE_BACKEND_URL}/api/admin/range-dets`, rowData)
         .then((res) => {
-          if (res?.data?.success === true) {
+          console.log(res);
+          if (res?.status === 200) {
             console.log("Data for this row submitted successfully:", res.data);
             toast.success("Data submitted successfully!"); 
             dispatch(costRangePage()); 
