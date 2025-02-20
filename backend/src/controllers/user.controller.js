@@ -728,7 +728,7 @@ const getUserData = asyncHandler(async (req, res, next) => {
   try {
     const [result] = await db
       .promise()
-      .query("SELECT name, email, phoneno, role FROM users WHERE phoneno = ?", [
+      .query("SELECT name, email, phoneno, role,profile FROM users WHERE phoneno = ?", [
         req.user.id,
       ]);
 
@@ -742,7 +742,7 @@ const getUserData = asyncHandler(async (req, res, next) => {
         .query("SELECT state FROM client_dets WHERE phoneno = ?", [
           req.user.id,
         ]);
-      const { role, name, email, phoneno } = result[0];
+      const { role, name, email, phoneno,profile } = result[0];
       const { state } = resl[0];
 
       return res
@@ -750,7 +750,7 @@ const getUserData = asyncHandler(async (req, res, next) => {
         .json(
           new ApiResponse(
             200,
-            { name, email, phoneno, state, role },
+            { name, email, phoneno, state, role,profile },
             "Data retrieved successfully"
           )
         );

@@ -672,7 +672,7 @@ const updateProfile = asyncHandler(async (req, res, next) => {
   const user = req?.user;
 
   try {
-    console.log(result);
+    console.log(res);
     console.log(profilePath);
     const profile = await uploadOnCloudinary(profilePath);
     console.log(profile);
@@ -692,11 +692,7 @@ const updateProfile = asyncHandler(async (req, res, next) => {
     }
 
     console.log("Client data updated successfully.");
-    return res.status(200).json({
-      status: 200,
-      message: "Client data updated successfully",
-      data: updateResult,
-    });
+    return res.status(200).json(new ApiResponse(200, profile.secure_url, "Client data updated successfully"));
   } catch (err) {
     console.error("Database error:", err);
     return next(new ApiError(500, "Database error"));
