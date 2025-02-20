@@ -14,6 +14,8 @@ const themeSlice = createSlice({
         document.documentElement.classList.toggle("dark", state.mode === "dark");
         if(state.mode==="dark"){
           document.body.style.backgroundColor = "#1f2937";
+        }else{
+          document.body.style.backgroundColor="#FFFFFF"
         }
       },
     },
