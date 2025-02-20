@@ -479,20 +479,18 @@ const sendMail = asyncHandler(async (req, res, next) => {
 
   console.log(`Received request to send verification email to: ${email}`);
 
-  // Fetch the token securely from environment variables
   const TOKEN = process.env.MAILTRAP_API_TOKEN;
 
-  // Initialize the Mailtrap client with a secure token
   const client = new MailtrapClient({
     endpoint: "https://send.api.mailtrap.io/",
-    token: TOKEN, // Use the environment variable for the token
+    token: TOKEN, 
   });
 
   const verificationCode = generateVerificationCode();
   console.log(`Generated verification code: ${verificationCode}`);
 
   try {
-    // Send email using Mailtrap
+ 
     await client.send({
       from: { name: "TechAsia", email: "mailtrap@demomailtrap.com" },
       to: [{ email: email }],
@@ -511,10 +509,6 @@ const sendMail = asyncHandler(async (req, res, next) => {
 
     console.log(`Email successfully sent to: ${email}`);
 
-    // Store the verification code securely (e.g., in the database, or session store)
-    // Assuming a function storeVerificationCode exists:
-    await storeVerificationCode(email, verificationCode);
-
     return res.status(200).json(new ApiResponse(200, { email }, "Email Sent"));
   } catch (error) {
     console.error("Error sending email:", error);
@@ -531,13 +525,15 @@ const sendMail = asyncHandler(async (req, res, next) => {
 const resetPassword = asyncHandler(async (req, res, next) => {
   const { email, password } = req.body;
 
-  // Ensure password is provided
+  console.log("Reset password request received:", { email, password });
+
   if (!password || password.trim() === "") {
+    console.log("Password is required");
     return next(new ApiError(400, "Password is required"));
   }
 
-  // Validate password length or other criteria
   if (password.length < 8) {
+    console.log("Password is too short");
     return next(
       new ApiError(400, "Password must be at least 8 characters long")
     );
@@ -546,29 +542,40 @@ const resetPassword = asyncHandler(async (req, res, next) => {
   const storedPasswordQuery = "SELECT password FROM users WHERE email=?";
 
   try {
+    console.log("Querying the database for user:", email);
     const [rows] = await db.promise().query(storedPasswordQuery, [email]);
 
-    // Check if user exists
     if (rows.length === 0) {
+      console.log("User not found:", email);
       return next(new ApiError(404, "User not found"));
     }
 
     const storedPassword = rows[0].password;
 
-    // Check if the new password matches the current password
-    const isMatch = await bcrypt.compare(password, storedPassword);
+    console.log("Stored password retrieved for user:", email);
 
-    if (isMatch) {
-      return next(
-        new ApiError(400, "New password cannot be the same as the old password")
-      );
+    if (storedPassword != null) {
+      const isMatch = await bcrypt.compare(password, storedPassword);
+
+      if (isMatch) {
+        console.log("New password is the same as the old password");
+        return next(
+          new ApiError(
+            400,
+            "New password cannot be the same as the old password"
+          )
+        );
+      }
     }
 
-    // Hash and update the password
+    console.log("Hashing the new password");
     const hashedPassword = await bcrypt.hash(password, 10);
+
+    console.log("Updating password in the database");
     const updateQuery = "UPDATE users SET password=? WHERE email=?";
     await db.promise().query(updateQuery, [hashedPassword, email]);
 
+    console.log("Password reset successfully for user:", email);
     return res
       .status(200)
       .json(new ApiResponse(200, "Password reset successfully"));
@@ -692,7 +699,15 @@ const updateProfile = asyncHandler(async (req, res, next) => {
     }
 
     console.log("Client data updated successfully.");
-    return res.status(200).json(new ApiResponse(200, profile.secure_url, "Client data updated successfully"));
+    return res
+      .status(200)
+      .json(
+        new ApiResponse(
+          200,
+          profile.secure_url,
+          "Client data updated successfully"
+        )
+      );
   } catch (err) {
     console.error("Database error:", err);
     return next(new ApiError(500, "Database error"));

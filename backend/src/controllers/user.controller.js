@@ -4,8 +4,7 @@ import { ApiResponse } from "../utils/ApiResponse.js";
 import { ApiError } from "../utils/ApiError.js";
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
-import { MailtrapClient } from "mailtrap";
-import { verifyJWT } from "../middleware/authUser.middlerware.js";
+import nodemalier from "nodemailer"; 
 import { uploadOnCloudinary } from "../utils/cloudinary.js";
 
 const options = {
@@ -215,11 +214,15 @@ const googleLogin = asyncHandler(async (req, res, next) => {
 const addPhoneno = asyncHandler(async (req, res, next) => {
   const { email, phone, role, state } = req.body;
 
+  console.log("Received data:", { email, phone, role, state });
+
   if (!phone || !email || !role || !state) {
+    console.log("Missing required fields");
     return next(new ApiError(400, "Missing required fields"));
   }
 
   try {
+    console.log("Updating user with email:", email);
     await dbQuery("UPDATE users SET phoneno = ?, role = ? WHERE email = ?", [
       phone,
       role,
@@ -227,19 +230,24 @@ const addPhoneno = asyncHandler(async (req, res, next) => {
     ]);
 
     if (role === "Client") {
+      console.log("Inserting client details for phone:", phone);
       try {
-        await dbQuery(
-          "INSERT INTO client_dets (phoneno, state) VALUES (?, ?)",
-          [phone, state]
+        const insertClientResult = await dbQuery(
+          "INSERT INTO client_dets (phoneno, state, MACadd) VALUES (?, ?, ?)",
+          [phone, state, null]
         );
+    
       } catch (error) {
+        console.log("Error while inserting client details:", error.message);
         await dbQuery("DELETE FROM client_dets WHERE phoneno=?", [phone]);
         await dbQuery("DELETE FROM users WHERE phoneno=?", [phone]);
-        return next(new ApiError(500, "Something went wrong while try again"));
+        return next(new ApiError(500, "Something went wrong while trying again"));
       }
     }
 
     const token = generateToken({ id: phone, email });
+    console.log("Token generated for user:", { id: phone, email });
+
     res.cookie("authToken", token, options);
 
     return res
@@ -252,6 +260,8 @@ const addPhoneno = asyncHandler(async (req, res, next) => {
         )
       );
   } catch (error) {
+    console.log("Error occurred during database operation:", error.message);
+
     if (error.code === "ER_DUP_ENTRY") {
       return next(new ApiError(400, "User already exists"));
     }
@@ -321,36 +331,52 @@ const update = asyncHandler(async (req, res, next) => {
 
 const sendMail = asyncHandler(async (req, res, next) => {
   const { email } = req.query;
-  const TOKEN = process.env.TOKEN;
 
-  const client = new MailtrapClient({
-    endpoint: "https://send.api.mailtrap.io/",
-    token: "472e8e82d10c7ada7cd1be176daea98d",
+  console.log(`Received request to send verification email to: ${email}`);
+  const TOKEN = process.env.MAILTRAP_API_TOKEN;
+  console.log("Fetched Mailtrap API token from environment variables", TOKEN);
+
+  const  transporter = nodemailer.createTransport({
+    host: "live.smtp.mailtrap.io",
+    port: 587,
+    auth: {
+      user: "api",
+      pass: "504bcab5ac72aa8c01a2e34ff8ad2062"
+    }
   });
 
   const verificationCode = generateVerificationCode();
+  console.log(`Generated verification code: ${verificationCode}`);
+
+  const mailOptions = {
+    from: '"TechAsia" techasia.com',  
+    to: email,                                      
+    subject: "Password Verification Code",          
+    text: `Hello,
+
+    We received a request to reset your password. Please use the following code to verify your identity:
+
+    Verification Code: ${verificationCode}
+
+    If you did not request this, please ignore this email.
+
+    Best regards,
+    Your Team`                                      
+  };
 
   try {
-    await client.send({
-      from: { name: "TechAsia", email: "mailtrap@demomailtrap.com" },
-      to: [{ email: email }],
-      subject: "Password Verification Code",
-      text: `Hello,
+    console.log("Sending verification email...");
+    const info = await transporter.sendMail(mailOptions);
+    console.log(`Email successfully sent to: ${email}`, info.response);
 
-We received a request to reset your password. Please use the following code to verify your identity:
+    console.log("Storing verification code...");
+    await storeVerificationCode(email, verificationCode);
+    console.log(`Verification code stored for: ${email}`);
 
-Verification Code: ${verificationCode}
-
-If you did not request this, please ignore this email.
-
-Best regards,
-Your Team`,
-    });
-
-    return res
-      .status(200)
-      .json(new ApiResponse(200, { verificationCode, email }, "Email Sent"));
+    return res.status(200).json(new ApiResponse(200, { email }, "Email Sent"));
   } catch (error) {
+    console.error("Error sending email:", error);
+
     return next(
       new ApiError(
         400,

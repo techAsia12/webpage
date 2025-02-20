@@ -1,20 +1,17 @@
 import { ApiError } from "../utils/ApiError.js";
 import { asyncHandler } from "../utils/asyncHaldler.js";
 
-const verifyCode = asyncHandler(async (req, res, next) => {
-  const { code } = req.query;  
-  const { verifiedCode } = req.body;  
-  
+export const verifyCode=asyncHandler(async(req,res,next)=>{
   try {
-    if (code !== verifiedCode) {
-      return next(new ApiError(400, "Wrong verification code"));
+    const {code}=req.param;
+    const {veriferdCode}=req.body;
+
+    if(code!== veriferdCode){
+      next(new ApiError(400,"Invalid Verification code"));
     }
-  
-    return next();
-  } catch (err) {
-      console.error("Error during verification:", err);
-    return next(new ApiError(400, "An error occurred while verifying the code"));
+
+    next();
+  } catch (error) {
+     next(new ApiError(500,"Internal Server Error"));
   }
 });
-
-export {verifyCode};

@@ -8,7 +8,7 @@ const ForgotPassword = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [email, setEmail] = useState("");
   const [veriferdCode, setVerfiedCode] = useState("");
-  const [code, setCode] = useState(""); 
+  const [code, setCode] = useState("");
   const [password, setPassword] = useState("");
   const [confirm, setConfirmPassword] = useState("");
   const [label, setLabel] = useState("Forgot password");
@@ -35,6 +35,7 @@ const ForgotPassword = () => {
     if (value && index < 3) {
       document.getElementById(`input-${index + 1}`).focus();
     }
+    console.log(veriferdCode);
   };
 
   const handleKeyDown = (e, index) => {
@@ -67,14 +68,14 @@ const ForgotPassword = () => {
       setDesc("Enter the 4-digit code that you received on your email.");
       setInput(
         <div className="flex space-x-2 justify-center mt-8">
-          {Array(4) 
+          {Array(4)
             .fill("")
             .map((_, index) => (
               <input
                 key={index}
                 id={`input-${index}`}
                 type="text"
-                value={veriferdCode[index] || ""} 
+                value={veriferdCode[index] || ""}
                 onChange={(e) => handleChange(e, index)}
                 onKeyDown={(e) => handleKeyDown(e, index)}
                 maxLength="1"
@@ -119,13 +120,22 @@ const ForgotPassword = () => {
     if (isEmail && !isCode && !isPassword) {
       setIsCode(true);
       axios
-        .get(`${import.meta.env.VITE_BACKEND_URL}/api/user/send-mail?email=${email}`, options)
+        .get(
+          `${
+            import.meta.env.VITE_BACKEND_URL
+          }/api/user/send-mail?email=${email}`,
+          options
+        )
         .then((res) => {
-          toast.success("Verification code sent to your email!", { position: "top-right" });
+          toast.success("Verification code sent to your email!", {
+            position: "top-right",
+          });
           setCode(res.data.data.verificationCode);
         })
         .catch((error) => {
-          toast.error("Failed to send verification code. Please try again.", { position: "top-right" });
+          toast.error("Failed to send verification code. Please try again.", {
+            position: "top-right",
+          });
           console.log(error.response);
         });
       setIsLoading(false);
@@ -135,22 +145,35 @@ const ForgotPassword = () => {
     } else if (isEmail && isCode && isPassword) {
       if (confirm === password) {
         axios
-          .post(`${import.meta.env.VITE_BACKEND_URL}/api/user/reset-password?code=${code}`, {
-            email,
-            password,
-            veriferdCode,
-          }, options)
+          .post(
+            `${
+              import.meta.env.VITE_BACKEND_URL
+            }/api/user/reset-password?code=${code}`,
+            {
+              email,
+              password,
+              veriferdCode,
+            }
+          )
           .then((res) => {
-            toast.success("Password reset successfully!", { position: "top-right" });
-            navigate("/");
+            if (res.status === 200) {
+              toast.success("Password reset successfully!", {
+                position: "top-right",
+              });
+              navigate("/");
+            }
           })
           .catch((error) => {
-            toast.error("Failed to reset password. Please try again.", { position: "top-right" });
+            toast.error("Failed to reset password. Please try again.", {
+              position: "top-right",
+            });
             console.log(error.response.data.message);
           });
         setIsLoading(false);
       } else {
-        toast.error("Passwords do not match. Please check and try again.", { position: "top-right" });
+        toast.error("Passwords do not match. Please check and try again.", {
+          position: "top-right",
+        });
         setIsLoading(false);
       }
     }
