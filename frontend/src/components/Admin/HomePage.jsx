@@ -67,7 +67,7 @@ const HomePage = () => {
 
   return (
     <div className="flex justify-center pt-16 dark:bg-gray-800 dark:text-white h-lvh">
-      <Paper className="dark:bg-gray-800 dark:text-white w-full h-2/3 z-0 overflow-hidden">
+      <Paper className="dark:bg-gray-800 dark:text-white h-fit z-0 overflow-hidden">
         <TableContainer sx={{ maxHeight: 520 }}>
           <Table stickyHeader aria-label="sticky table">
             <TableHead>

@@ -4,7 +4,7 @@ import Avatar from "@mui/material/Avatar";
 import { Drawer } from "@mui/material";
 import Sidebar from "./Sidebar.jsx";
 import { useSelector, useDispatch } from "react-redux";
-import { costRangePage, drawerToogle } from "../../Features/pages/pages.slice.js";
+import {  drawerToogle } from "../../Features/pages/pages.slice.js";
 import { motion } from "motion/react";
 import ThemeToggle from "../ThemeToogle.jsx";
 import axios from "axios";
@@ -24,7 +24,7 @@ const SlideTabs = ({ navLinks }) => {
           opacity: 0,
         }));
       }}
-      className="relative flex w-fit bg-white p-1 dark:bg-gray-800"
+      className="relative flex w-fit rounded-full bg-white p-1 dark:bg-gray-800"
     >
       {navLinks.map((link) => (
         <Tabs setPosition={setPosition} link={link} key={link.path}>
@@ -144,3 +144,4 @@ const Navbar = ({ navLinks }) => {
 };
 
 export default Navbar;
+export { SlideTabs };

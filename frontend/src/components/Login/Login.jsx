@@ -2,20 +2,39 @@ import React, { useState } from "react";
 import axios from "axios";
 import { Link, useNavigate } from "react-router-dom";
 import { GoogleLogin } from "@react-oauth/google";
-import TextField from "@mui/material/TextField";
+import {
+  TextField,
+  IconButton,
+  InputAdornment,
+  Button,
+  ToggleButton,
+  ToggleButtonGroup,
+} from "@mui/material";
+import Visibility from "@mui/icons-material/Visibility";
+import VisibilityOff from "@mui/icons-material/VisibilityOff";
 import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
-import { Button } from "@mui/material";
 import { useDispatch } from "react-redux";
 import { login } from "../../Features/auth/auth.slice";
 import SideBarAnimation from "../SideBarAnimation";
+import { SlideTabs } from "../Navbar/Navbar.jsx";
 
 const Login = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [role, setRole] = useState("Client");
   const navigate = useNavigate();
   const dispatch = useDispatch();
+  const [showPassword, setShowPassword] = useState(false);
   const options = { withCredentials: true };
+
+  const handleClickShowPassword = () => setShowPassword(!showPassword);
+
+  const handleRoleChange = (event, newRole) => {
+    if (newRole) {
+      setRole(newRole);
+    }
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -31,7 +50,7 @@ const Login = () => {
           toast.success(res.data.message || "Login successful!", {
             position: "top-right",
           });
-          const  user  = res.data.data;
+          const user = res.data.data;
           setTimeout(() => {
             console.log(user);
             dispatch(login(user));
@@ -48,10 +67,47 @@ const Login = () => {
   return (
     <div className="w-screen h-screen flex justify-center items-center lg:flex-none bg-slate-200">
       <ToastContainer />
-      <SideBarAnimation/>
+      <SideBarAnimation />
       <div className="lg:w-3/4 w-4/5 h-3/4  lg:h-screen border border-neutral-900 rounded-3xl lg:border-none lg:pt-20 backdrop-blur-2xl bg-white/30 ">
-        <h1 className="text-center text-4xl pt-10 lg:pt-24">Client Login</h1>
-        <form className="self-center mx-10 mt-6 space-y-4 flex flex-col justify-center items-center lg:h-2/3 h-3/4">
+        <h1 className="text-center text-4xl pt-10 lg:pt-24"> Login</h1>
+        <form className="self-center mx-10 space-y-4 flex flex-col justify-center items-center lg:h-2/3 h-3/4">
+          <ToggleButtonGroup
+            value={role}
+            exclusive
+            onChange={handleRoleChange}
+            aria-label="Role selection"
+            className="mb-4 lg:w-5/6 mt-20 lg:mt-10"
+          >
+            <ToggleButton
+              value="Client"
+              className="w-1/2"
+              sx={{
+                backgroundColor: role === "Client" ? "black" : "", 
+                color: role === "Client" ? "white" : "", 
+                "&.Mui-selected": {
+                  backgroundColor: "black", 
+                  color: "white", 
+                },
+              }}
+            >
+              Client
+            </ToggleButton>
+            <ToggleButton
+              value="Admin"
+              className="w-1/2"
+              sx={{
+                backgroundColor: role === "Admin" ? "black" : "", 
+                color: role === "Admin" ? "white" : "", 
+                "&.Mui-selected": {
+                  backgroundColor: "black", 
+                  color: "white", 
+                },
+              }}
+            >
+              Admin
+            </ToggleButton>
+          </ToggleButtonGroup>
+
           <TextField
             label="Enter Email Id"
             variant="outlined"
@@ -61,9 +117,18 @@ const Login = () => {
           <TextField
             label="Enter Password"
             variant="outlined"
-            type="password"
+            type={showPassword ? "text" : "password"}
             className="lg:w-5/6"
             onChange={(e) => setPassword(e.target.value)}
+            InputProps={{
+              endAdornment: (
+                <InputAdornment position="end">
+                  <IconButton onClick={handleClickShowPassword} edge="end">
+                    {showPassword ? <VisibilityOff /> : <Visibility />}
+                  </IconButton>
+                </InputAdornment>
+              ),
+            }}
           />
           <div className="flex">
             <input type="checkbox" name="remember" />
@@ -72,7 +137,7 @@ const Login = () => {
               to="/reset-password"
               className="pl-10 text-neutral-400 text-xs lg:text-base"
             >
-              Forgot Password
+              Forgot Password ?
             </Link>
           </div>
           <Button
@@ -93,24 +158,24 @@ const Login = () => {
               }
 
               axios
-                .post(
-                  `${import.meta.env.VITE_BACKEND_URL}/api/user/google-login`,
-                  { token: idToken },
-                  options
-                )
-                .then((response) => {                  
+              .post(
+                `${role === "Client" 
+                  ? `${import.meta.env.VITE_BACKEND_URL}/api/user/google-login` 
+                  : `${import.meta.env.VITE_BACKEND_URL}/api/admin/google-login`}`,
+                { token: idToken },
+                options
+              )
+                .then((response) => {
                   toast.success("Google login successful!", {
                     position: "top-right",
                   });
                   setTimeout(() => {
                     if (response?.status === 201) {
-                      navigate(
-                        `/add-phone?email=${response.data.data.email}&name=${response.data.data.name}`
-                      );
+                      navigate(`${(role==="Client")?`/add-phone?email=${response.data.data.email}&name=${response.data.data.name}`:`/admin/add-phone?email=${response.data.data.email}&name=${response.data.data.name}`}`);
                     } else if (response?.status === 200) {
                       console.log(response.data.data);
                       dispatch(login(response.data.data));
-                      navigate("/dashboard");
+                      navigate(`${(role==="Client")?`/dashboard`:`/admin/home`}`);
                     }
                   }, 2000);
                 })

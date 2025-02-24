@@ -111,7 +111,7 @@ const AdminSignup = () => {
             Signup
           </Button>
           <Link
-            to={"/admin/login"}
+            to={"/"}
             className="text-sm text-blue-400 text-center"
           >
             Already Have An Account?

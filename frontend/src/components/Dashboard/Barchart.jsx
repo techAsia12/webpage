@@ -10,7 +10,7 @@ import {
   Legend,
 } from "chart.js";
 import { Card } from "@mui/material";
-import { delay, motion } from "motion/react";
+import { motion } from "motion/react";
 
 ChartJS.register(
   CategoryScale,
@@ -33,12 +33,12 @@ const BarChart = ({ data }) => {
   };
 
   return (
-    <motion.Card 
-      className="w-full lg:w-full shadow-lg rounded-2xl p-4 mb-8 lg:block hidden dark:bg-gray-800 "
-      initial={{y:100,opacity:0}}
-      animate={{y:0,opacity:1}}
-      transition={{duration:1,delay:1.2}}
-      >
+    <motion.Card
+      className="w-full lg:w-full shadow-lg rounded-2xl p-4 mb-8 lg:block hidden dark:bg-gray-800"
+      initial={{ y: 100, opacity: 0 }}
+      animate={{ y: 0, opacity: 1 }}
+      transition={{ duration: 1, delay: 1.2 }}
+    >
       <Bar data={data} options={options} className="w-full" />
     </motion.Card>
   );

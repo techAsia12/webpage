@@ -7,8 +7,6 @@ import { useNavigate } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
 import { logout } from "../../Features/auth/auth.slice.js";
 import {
-  billDetsPage,
-  costRangePage,
   drawerToogle,
   updatePage,
 } from "../../Features/pages/pages.slice.js";
@@ -53,6 +51,7 @@ const MessageDialog = ({ open, handleClose, message, role }) => {
         toast.error(err.response.data.message);
       });
   };
+  
   return (
     <Dialog open={open} onClose={handleClose}>
       <DialogTitle>Alert!</DialogTitle>
@@ -82,8 +81,6 @@ const Sidebar = () => {
   const navigate = useNavigate();
   const isUpdate = useSelector((state) => state.pages?.isUpdate);
   const isDrawer = useSelector((state) => state.pages?.drawer);
-  const isbill = useSelector((state) => state.pages?.isbill);
-  const isCostRange = useSelector((state) => state.pages?.isCostRange);
   const [cookies, setcookie, removeCookie] = useCookies(["authToken"]);
 
   const handleLogout = () => {
@@ -93,22 +90,10 @@ const Sidebar = () => {
     if (isDrawer === true) {
       dispatch(drawerToogle());
     }
-    if (role === "Client") {
-      removeCookie("authToken", { path: "/" });
-      dispatch(logout());
-      navigate("/");
-    } else {
-      removeCookie("authToken", { path: "/" });
-      dispatch(logout());
-      navigate("/admin/login");
 
-      if (isbill === true) {
-        dispatch(billDetsPage());
-      }
-      if (isCostRange === true) {
-        dispatch(costRangePage());
-      }
-    }
+    removeCookie("authToken", { path: "/" });
+    dispatch(logout());
+    navigate("/");
   };
 
   const options = {
@@ -714,7 +699,9 @@ const Sidebar = () => {
         <Button
           variant="contained"
           className="border border-neutral-900 w-44 h-9 text-xl hover:bg-white hover:text-black dark:hover:bg-gray-600 dark:hover:text-white"
-          onClick={handleLogout}
+          onClick={() => {
+            handleLogout, navigate("/");
+          }}
         >
           <LogoutIcon />
           Logout

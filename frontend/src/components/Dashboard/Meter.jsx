@@ -1,12 +1,21 @@
 import { React, useState, useEffect } from "react";
 import { PieChart, Pie, Cell, Tooltip, Legend } from "recharts";
-import { Box, Typography, Card, CardContent } from "@mui/material";
+import { Box, Typography, CardContent } from "@mui/material";
 import { motion } from "motion/react";
 
-const Meter = ({ color, value, maxValue, unit,initial,animate,transition }) => {
+const Meter = ({
+  color,
+  value,
+  maxValue,
+  unit,
+  initial,
+  animate,
+  transition,
+}) => {
   const data = [
     { name: "Used", value: value },
-    { name: "Remaining", value: Math.min(maxValue - value) },
+    { name: "Remaining", value: Math.min(maxValue - value) || 100 },
+    { name: "Zero", value: 0 },
   ];
 
   const COLORS = [color, "#e0e0e0"];
@@ -27,10 +36,10 @@ const Meter = ({ color, value, maxValue, unit,initial,animate,transition }) => {
 
   useEffect(() => {
     const delayTimer = setTimeout(() => {
-      setAnimationDelay(1200); 
-    }, 500); 
+      setAnimationDelay(1200);
+    }, 500);
 
-    return () => clearTimeout(delayTimer); 
+    return () => clearTimeout(delayTimer);
   }, []);
 
   const isSmallScreen = screenWidth < 600 ? true : false;
@@ -38,10 +47,11 @@ const Meter = ({ color, value, maxValue, unit,initial,animate,transition }) => {
 
   return (
     <>
-      <motion.Card className={`w-full sm:w-4/5 shadow-lg rounded-3xl p-4 mb-8 dark:bg-gray-800 dark:text-neutral-400`}
-      initial={initial}
-      animate={animate}
-      transition={transition}
+      <motion.Card
+        className={`w-full shadow-lg rounded-3xl  dark:bg-gray-800 dark:text-neutral-400 `}
+        initial={initial}
+        animate={animate}
+        transition={transition}
       >
         <CardContent>
           <Box
@@ -66,35 +76,25 @@ const Meter = ({ color, value, maxValue, unit,initial,animate,transition }) => {
                 innerRadius={isSmallScreen ? 50 : 130}
                 outerRadius={isSmallScreen ? 80 : 200}
                 fill="#8884d8"
-                paddingAngle={5}
+                paddingAngle={0}
                 dataKey="value"
                 animationDuration={3000}
                 animationEasing="ease-in-out"
-                isAnimationActive={animationDelay>0}
+                isAnimationActive={animationDelay > 0}
                 animationBegin={animationDelay}
+                minAngle={1}
               >
                 {data.map((entry, index) => (
                   <Cell key={`cell-${index}`} fill={COLORS[index]} />
                 ))}
               </Pie>
               <Tooltip />
-              <Legend
-                verticalAlign="bottom"
-                align="center"
-                layout={isSmallScreen ? "vertical" : "horizontal"}
-                wrapperStyle={{
-                  fontSize: isSmallScreen ? "0.6rem" : "1.2rem",
-                  display: "block",
-                  paddingTop: isSmallScreen ? "10px" : "10px",
-                  marginLeft: isSmallScreen ? "-10px" : "0px",
-                }}
-              />
             </PieChart>
 
             <Box
               sx={{
                 position: "absolute",
-                top: isSmallScreen ? "65%" : "70%",
+                top: "80%",
                 left: "50%",
                 transform: "translate(-50%, -50%)",
               }}
@@ -113,7 +113,7 @@ const Meter = ({ color, value, maxValue, unit,initial,animate,transition }) => {
               variant="body2"
               sx={{
                 position: "absolute",
-                top: isSmallScreen ? "75%" : "100%",
+                top: isSmallScreen ? "100%" : "110%",
                 left: isSmallScreen ? "15%" : "6%",
                 transform: "translate(-20%, -80%)",
                 fontSize: isSmallScreen ? "0.8rem" : "1.2rem",
@@ -126,7 +126,7 @@ const Meter = ({ color, value, maxValue, unit,initial,animate,transition }) => {
               variant="body2"
               sx={{
                 position: "absolute",
-                top: isSmallScreen ? "75%" : "100%",
+                top: isSmallScreen ? "100%" : "110%",
                 right: isSmallScreen ? "12%" : "2%",
                 transform: "translate(20%, -80%)",
                 fontSize: isSmallScreen ? "0.8rem" : "1.2rem",

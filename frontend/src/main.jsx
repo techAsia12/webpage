@@ -17,8 +17,6 @@ import Contact from "./components/Contact.jsx";
 import AdminPage from "./components/Admin/AdminPage.jsx";
 import CostRangePage from "./components/Admin/CostRangePage.jsx";
 import BillDets from "./components/Admin/BillDets.jsx";
-import AdminLogin from "./components/Admin/AdminLogin.jsx";
-import AddDets from "./components/Admin/AddDets.jsx";
 import Services from "./components/Services.jsx";
 import AdminSignup from "./components/Admin/AdminSignup.jsx";
 import AdminAddPhone from "./components/Admin/AdminAddPhone.jsx";
@@ -27,7 +25,6 @@ import HomePage from "./components/Admin/HomePage.jsx";
 import AuthLogin from "./AuthLogin.jsx";
 import { PersistGate } from "redux-persist/integration/react";
 import AdminAuth from "./AdminAuth.jsx";
-import Update from "./components/Update.jsx";
 import { ToastContainer } from "react-toastify";
 
 const router = createBrowserRouter([
@@ -98,15 +95,9 @@ const router = createBrowserRouter([
       {
         path: "/admin",
         element: (
-          <GoogleOAuthProvider clientId={import.meta.env.VITE_CLIENT_ID}>
               <AdminPage />
-          </GoogleOAuthProvider>
         ),
         children: [
-          {
-            path: "/admin/login",
-            element: <AdminLogin />,
-          },
           {
             path: "/admin/register",
             element: <AdminSignup />,

@@ -283,7 +283,7 @@ useEffect(() => {
         />
       </div>
       <div className="px-10 w-full dark:bg-gray-800 ">
-        <div className="lg:flex lg:space-x-10 w-full dark:bg-gray-800">
+        <div className="lg:flex lg:space-x-10 w-full dark:bg-gray-800 ">
           <Barchart data={data} />
           <div className="lg:w-1/3">
             <Meter
