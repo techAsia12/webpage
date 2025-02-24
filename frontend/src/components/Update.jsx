@@ -135,7 +135,7 @@ const Update = () => {
       <div className="w-screen h-screen flex justify-center items-center dark:bg-gray-800 dark:text-white">
         <Box className="flex flex-col items-center justify-center space-y-10 w-3/4 lg:w-1/3 h-3/4 border transform -translate-y-28 border-neutral-900 rounded-3xl dark:border-2 dark:border-white">
           <CancelIcon
-            className="ml-64 lg:ml-96 right-0"
+            className="ml-64 lg:ml-96 right-0 mt-2"
             color="error"
             onClick={() => {
               dispatch(updatePage());
