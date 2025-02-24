@@ -4,7 +4,7 @@ import { ApiResponse } from "../utils/ApiResponse.js";
 import { ApiError } from "../utils/ApiError.js";
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
-import nodemalier from "nodemailer"; 
+import nodemailer from "nodemailer"; 
 import { uploadOnCloudinary } from "../utils/cloudinary.js";
 
 const options = {
@@ -333,47 +333,57 @@ const sendMail = asyncHandler(async (req, res, next) => {
   const { email } = req.query;
 
   console.log(`Received request to send verification email to: ${email}`);
-  const TOKEN = process.env.MAILTRAP_API_TOKEN;
-  console.log("Fetched Mailtrap API token from environment variables", TOKEN);
 
-  const  transporter = nodemailer.createTransport({
-    host: "live.smtp.mailtrap.io",
-    port: 587,
+  const GMAIL_USER = process.env.GMAIL_USER;
+  const GMAIL_PASS = process.env.GMAIL_PASS;
+
+  console.log("Fetched Gmail credentials from environment variables");
+
+  const transporter = nodemailer.createTransport({
+    service: "gmail",
+    secure: true,
+    port: 465,
     auth: {
-      user: "api",
-      pass: "504bcab5ac72aa8c01a2e34ff8ad2062"
-    }
+      user: GMAIL_USER,
+      pass: GMAIL_PASS,
+    },
   });
 
   const verificationCode = generateVerificationCode();
   console.log(`Generated verification code: ${verificationCode}`);
 
   const mailOptions = {
-    from: '"TechAsia" techasia.com',  
-    to: email,                                      
-    subject: "Password Verification Code",          
-    text: `Hello,
+    from: `"TechAsia" <${GMAIL_USER}>`,
+    to: email,
+    subject: "Password Verification Code",
+    text: `
+      Hello,
 
-    We received a request to reset your password. Please use the following code to verify your identity:
+      We received a request to reset your password. Please use the following code to verify your identity:
 
-    Verification Code: ${verificationCode}
+      Verification Code: ${verificationCode}
 
-    If you did not request this, please ignore this email.
+      If you did not request this, please ignore this email.
 
-    Best regards,
-    Your Team`                                      
+      Best regards,
+      Your Team
+    `,
   };
 
   try {
     console.log("Sending verification email...");
     const info = await transporter.sendMail(mailOptions);
+    const code = jwt.sign({ verificationCode }, process.env.JWT_SECRET, {
+      expiresIn: 120,
+    });
     console.log(`Email successfully sent to: ${email}`, info.response);
 
-    console.log("Storing verification code...");
-    await storeVerificationCode(email, verificationCode);
     console.log(`Verification code stored for: ${email}`);
 
-    return res.status(200).json(new ApiResponse(200, { email }, "Email Sent"));
+    res.cookie("code", code, options);
+    return res
+      .status(200)
+      .json(new ApiResponse(200, { verificationCode }, "Email Sent"));
   } catch (error) {
     console.error("Error sending email:", error);
 
@@ -386,41 +396,113 @@ const sendMail = asyncHandler(async (req, res, next) => {
   }
 });
 
+const verifyCode = asyncHandler(async (req, res, next) => {
+  try {
+    const { verificationCode } = req.body;
+    console.log("Received verification code:", verificationCode);
+
+    const token =
+      req.cookies?.code || req.header("Authorization")?.replace("Bearer ", "");
+    console.log("Token extracted:", token);
+
+    if (!token) {
+      console.log("Token missing");
+      return next(
+        new ApiError(403, "Unauthorized request: Verification code missing")
+      );
+    }
+
+    if (token.trim() === "") {
+      console.log("Token cannot be empty");
+      return next(
+        new ApiError(405, "Invalid token format: Token cannot be empty")
+      );
+    }
+
+    let code;
+    try {
+      code = await jwt.verify(token, process.env.JWT_SECRET);
+      console.log("Decoded token:", code);
+    } catch (err) {
+      console.log("Token verification failed:", err.message);
+      return next(new ApiError(400, "Invalid request"));
+    }
+
+    if (!code) {
+      console.log("No code in the token after verification");
+      return next(new ApiError(400, "Invalid request"));
+    }
+
+    if (String(code.verificationCode) !== String(verificationCode)) {
+      console.log("Verification code mismatch:", {
+        tokenCode: code.verificationCode,
+        inputCode: verificationCode,
+      });
+      return next(new ApiError(400, "Invalid verification code"));
+    }    
+
+    console.log("Verification code matches successfully.");
+    return res.status(200).json(new ApiResponse(200, "Code Verified"));
+  } catch (error) {
+    console.log("Error during verification process:", error);
+    return next(new ApiError(500, "Internal Server Error"));
+  }
+});
+
 const resetPassword = asyncHandler(async (req, res, next) => {
   const { email, password } = req.body;
+  console.log("Request body:", req.body);
 
-  if (!email || !password) {
+  if (!email || !password ) {
+    console.log(
+      "Missing required fields: Email, password, or verificationCode"
+    );
     return next(new ApiError(400, "Email and password are required"));
   }
 
-  const storedPasswordQuery = "SELECT password FROM users WHERE email = ?";
+
+  const storedPasswordQuery = "SELECT password,role FROM users WHERE email = ?";
 
   try {
+    console.log("Executing query to get stored password for email:", email);
     const [rows] = await db.promise().query(storedPasswordQuery, [email]);
 
     if (rows.length === 0) {
+      console.log("User not found for email:", email);
       return next(new ApiError(404, "User not found"));
     }
 
     const storedPassword = rows[0].password;
+    const role = rows[0].role;
+    console.log("Stored password retrieved for email:", email);
 
-    const isMatch = await bcrypt.compare(password, storedPassword);
-    if (isMatch) {
-      return next(
-        new ApiError(400, "New password cannot be the same as the old password")
-      );
+    if (storedPassword !== null) {
+      const isMatch = await bcrypt.compare(password, storedPassword);
+
+      if (isMatch) {
+        console.log("New password matches the old password for email:", email);
+        return next(
+          new ApiError(
+            400,
+            "New password cannot be the same as the old password"
+          )
+        );
+      }
     }
-
+    console.log("Hashing new password for email:", email);
     const hashedPassword = await bcrypt.hash(password, 10);
 
     const updateQuery = "UPDATE users SET password = ? WHERE email = ?";
     const updateParams = [hashedPassword, email];
+    console.log("Executing query to update password for email:", email);
     await db.promise().query(updateQuery, updateParams);
 
+    console.log("Password reset successfully for email:", email);
     return res
       .status(200)
-      .json(new ApiResponse(200, "Password reset successfully"));
+      .json(new ApiResponse(200, { role }, "Password reset successfully"));
   } catch (err) {
+    console.error("Error occurred during password reset:", err);
     return next(
       new ApiError(500, "An error occurred while resetting the password")
     );
@@ -932,4 +1014,5 @@ export {
   deleteUser,
   startPeriodicUpdates,
   updateProfile,
+  verifyCode
 };

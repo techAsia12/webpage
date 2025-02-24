@@ -8,7 +8,7 @@ const ForgotPassword = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [email, setEmail] = useState("");
   const [veriferdCode, setVerfiedCode] = useState("");
-  const [code, setCode] = useState("");
+  const [role, setRole] = useState("");
   const [password, setPassword] = useState("");
   const [confirm, setConfirmPassword] = useState("");
   const [label, setLabel] = useState("Forgot password");
@@ -130,7 +130,7 @@ const ForgotPassword = () => {
           toast.success("Verification code sent to your email!", {
             position: "top-right",
           });
-          setCode(res.data.data.verificationCode);
+          setIsLoading(false);
         })
         .catch((error) => {
           toast.error("Failed to send verification code. Please try again.", {
@@ -138,36 +138,56 @@ const ForgotPassword = () => {
           });
           console.log(error.response);
         });
-      setIsLoading(false);
     } else if (isEmail && isCode && !isPassword) {
-      setIsPassword(true);
-      setIsLoading(false);
+      axios
+        .post(
+          `${import.meta.env.VITE_BACKEND_URL}/api/user/verifyCode`,
+          { verificationCode: veriferdCode },
+          options
+        )
+        .then((res) => {
+          toast.success("Code Verified Successfully", {
+            position: "top-right",
+          });
+          setRole(res.data.data.role);
+          setIsPassword(true);
+          setIsLoading(false);
+        })
+        .catch((error) => {
+          toast.error("Invalid Code. Please try again.", {
+            position: "top-right",
+          });
+          setIsLoading(false);
+          console.log(error.response);
+        });
     } else if (isEmail && isCode && isPassword) {
       if (confirm === password) {
         axios
           .post(
-            `${
-              import.meta.env.VITE_BACKEND_URL
-            }/api/user/reset-password?code=${code}`,
+            `${import.meta.env.VITE_BACKEND_URL}/api/user/reset-password`,
             {
               email,
               password,
-              veriferdCode,
-            }
+            },
+            options
           )
           .then((res) => {
             if (res.status === 200) {
               toast.success("Password reset successfully!", {
                 position: "top-right",
               });
-              navigate("/");
+              if (role == "Client") {
+                navigate("/");
+              }else{
+                navigate("/admin/login");
+              }
             }
           })
           .catch((error) => {
             toast.error("Failed to reset password. Please try again.", {
               position: "top-right",
             });
-            console.log(error.response.data.message);
+            console.log(error.response.data);
           });
         setIsLoading(false);
       } else {

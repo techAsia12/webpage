@@ -474,119 +474,6 @@ const update = asyncHandler(async (req, res, next) => {
   }
 });
 
-const sendMail = asyncHandler(async (req, res, next) => {
-  const { email } = req.query;
-
-  console.log(`Received request to send verification email to: ${email}`);
-
-  const TOKEN = process.env.MAILTRAP_API_TOKEN;
-
-  const client = new MailtrapClient({
-    endpoint: "https://send.api.mailtrap.io/",
-    token: TOKEN, 
-  });
-
-  const verificationCode = generateVerificationCode();
-  console.log(`Generated verification code: ${verificationCode}`);
-
-  try {
- 
-    await client.send({
-      from: { name: "TechAsia", email: "mailtrap@demomailtrap.com" },
-      to: [{ email: email }],
-      subject: "Password Verification Code",
-      text: `Hello,
-
-      We received a request to reset your password. Please use the following code to verify your identity:
-
-      Verification Code: ${verificationCode}
-
-      If you did not request this, please ignore this email.
-
-      Best regards,
-      Your Team`,
-    });
-
-    console.log(`Email successfully sent to: ${email}`);
-
-    return res.status(200).json(new ApiResponse(200, { email }, "Email Sent"));
-  } catch (error) {
-    console.error("Error sending email:", error);
-
-    return next(
-      new ApiError(
-        400,
-        "Something went wrong while sending mail, please try again"
-      )
-    );
-  }
-});
-
-const resetPassword = asyncHandler(async (req, res, next) => {
-  const { email, password } = req.body;
-
-  console.log("Reset password request received:", { email, password });
-
-  if (!password || password.trim() === "") {
-    console.log("Password is required");
-    return next(new ApiError(400, "Password is required"));
-  }
-
-  if (password.length < 8) {
-    console.log("Password is too short");
-    return next(
-      new ApiError(400, "Password must be at least 8 characters long")
-    );
-  }
-
-  const storedPasswordQuery = "SELECT password FROM users WHERE email=?";
-
-  try {
-    console.log("Querying the database for user:", email);
-    const [rows] = await db.promise().query(storedPasswordQuery, [email]);
-
-    if (rows.length === 0) {
-      console.log("User not found:", email);
-      return next(new ApiError(404, "User not found"));
-    }
-
-    const storedPassword = rows[0].password;
-
-    console.log("Stored password retrieved for user:", email);
-
-    if (storedPassword != null) {
-      const isMatch = await bcrypt.compare(password, storedPassword);
-
-      if (isMatch) {
-        console.log("New password is the same as the old password");
-        return next(
-          new ApiError(
-            400,
-            "New password cannot be the same as the old password"
-          )
-        );
-      }
-    }
-
-    console.log("Hashing the new password");
-    const hashedPassword = await bcrypt.hash(password, 10);
-
-    console.log("Updating password in the database");
-    const updateQuery = "UPDATE users SET password=? WHERE email=?";
-    await db.promise().query(updateQuery, [hashedPassword, email]);
-
-    console.log("Password reset successfully for user:", email);
-    return res
-      .status(200)
-      .json(new ApiResponse(200, "Password reset successfully"));
-  } catch (err) {
-    console.error("Error resetting password:", err);
-    return next(
-      new ApiError(500, "An error occurred while resetting the password")
-    );
-  }
-});
-
 const getClientDets = asyncHandler(async (req, res, next) => {
   const query = `
     SELECT u.phoneno, u.name, u.email, u.role,c.MACadd, c.voltage, c.current, c.watt, c.date_time, c.state
@@ -720,12 +607,11 @@ export {
   getDets,
   register,
   login,
-  sendMail,
   googleLogin,
   addPhoneno,
   update,
-  resetPassword,
   getClientDets,
   updateBilldets,
   updateProfile,
+
 };
