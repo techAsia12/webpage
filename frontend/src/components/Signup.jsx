@@ -19,8 +19,8 @@ const Signup = () => {
   const [confirm, setConfirm] = useState("");
   const [phoneno, setPhoneno] = useState("");
   const [email, setEmail] = useState("");
-  const [selectedState, setSelectedState] = useState();
-  const [selectedServiceProvider, setSelectedServiceProvider] = useState();
+  const [selectedState, setSelectedState] = useState("");
+  const [selectedServiceProvider, setSelectedServiceProvider] = useState("");
   const [states, setStates] = useState([]);
   const navigate = useNavigate();
 
@@ -31,7 +31,7 @@ const Signup = () => {
   const handleStateChange = (event) => {
     const state = event.target.value;
     setSelectedState(state);
-    setSelectedServiceProvider("");
+    setSelectedServiceProvider(""); 
   };
 
   const handleSubmit = async (e) => {
@@ -61,7 +61,8 @@ const Signup = () => {
           password,
           email,
           phoneno,
-          state: selectedServiceProvider,
+          state: selectedState,
+          serviceProvider: selectedServiceProvider, 
           role: "Client",
         },
         options
@@ -92,8 +93,10 @@ const Signup = () => {
   };
 
   const getServiceProvider = (stateString) => {
-    return stateString.split("_")[0];
+    return stateString.split("_")[0]; 
   };
+
+  const uniqueStates = Array.from(new Set(states.map(stateObj => getStateName(stateObj.state))));
 
   return (
     <div className="w-screen h-screen flex justify-center items-center bg-slate-200 ">
@@ -142,6 +145,7 @@ const Signup = () => {
             onChange={(e) => setEmail(e.target.value)}
             value={email}
           />
+
           <FormControl className="lg:w-5/6 w-full" margin="normal">
             <InputLabel>State</InputLabel>
             <Select
@@ -149,9 +153,9 @@ const Signup = () => {
               value={selectedState}
               onChange={handleStateChange}
             >
-              {states.map((stateObj) => (
-                <MenuItem key={stateObj.state} value={stateObj.state}>
-                  {getStateName(stateObj.state)}{" "}
+              {uniqueStates.map((stateName) => (
+                <MenuItem key={stateName} value={stateName}>
+                  {stateName}
                 </MenuItem>
               ))}
             </Select>
@@ -160,7 +164,7 @@ const Signup = () => {
           <FormControl
             className="lg:w-5/6 w-full"
             margin="normal"
-            disabled={!selectedState}
+            disabled={!selectedState} 
           >
             <InputLabel>Service Provider</InputLabel>
             <Select
@@ -169,14 +173,15 @@ const Signup = () => {
               onChange={(e) => setSelectedServiceProvider(e.target.value)}
             >
               {states
-                .filter((stateObj) => stateObj.state.includes(selectedState))
+                .filter((stateObj) => getStateName(stateObj.state) === selectedState)
                 .map((stateObj) => (
                   <MenuItem key={stateObj.state} value={stateObj.state}>
-                    {getServiceProvider(stateObj.state)}{" "}
+                    {getServiceProvider(stateObj.state)}
                   </MenuItem>
                 ))}
             </Select>
           </FormControl>
+
           <Button
             variant="contained"
             type="submit"

@@ -126,12 +126,16 @@ const Update = () => {
     }
   };
 
+  const uniqueStates = Array.from(
+    new Set(states.map((stateObj) => getStateName(stateObj.state)))
+  );
+
   if (role === "Client") {
     return (
       <div className="w-screen h-screen flex justify-center items-center dark:bg-gray-800 dark:text-white">
         <Box className="flex flex-col items-center justify-center space-y-10 w-3/4 lg:w-1/3 h-3/4 border transform -translate-y-28 border-neutral-900 rounded-3xl dark:border-2 dark:border-white">
-        <CancelIcon
-            className="ml-64 lg:ml-96 right-0 "
+          <CancelIcon
+            className="ml-64 lg:ml-96 right-0"
             color="error"
             onClick={() => {
               dispatch(updatePage());
@@ -139,6 +143,7 @@ const Update = () => {
             fontSize="large"
           />
           <Avatar alt="User Avatar" src="" sx={{ width: 60, height: 60 }} />
+
           <TextField
             variant="outlined"
             className="lg:w-5/6 w-3/4 dark:bg-gray-700 dark:text-white dark:border-white"
@@ -156,42 +161,9 @@ const Update = () => {
                 </InputAdornment>
               ),
             }}
-            sx={{
-              "& .MuiInputBase-input": {
-                color: "black",
-                border: "2px solid white",
-                "&.Mui-focused": {
-                  color: "black",
-                  border: "2px solid white",
-                },
-              },
-              "&.Mui-focused .MuiInputBase-input": {
-                color: "black",
-                border: "2px solid white",
-              },
-              ".dark & .MuiInputBase-input": {
-                color: "white",
-                border: "2px solid white",
-              },
-              ".dark & .MuiInputBase-input.Mui-focused": {
-                color: "white",
-                border: "2px solid white",
-              },
-              ".dark & .MuiSelect-icon": {
-                color: "white",
-              },
-              ".dark & .MuiOutlinedInput-notchedOutline": {
-                borderColor: "white",
-              },
-              "& .MuiSelect-icon": {
-                color: "black",
-              },
-              "& .MuiOutlinedInput-notchedOutline": {
-                borderColor: "black",
-              },
-            }}
             onFocus={() => setIsNameReadOnly(false)}
           />
+
           <TextField
             type="email"
             variant="outlined"
@@ -210,51 +182,11 @@ const Update = () => {
                 </InputAdornment>
               ),
             }}
-            sx={{
-              "& .MuiInputBase-input": {
-                color: "black",
-                border: "2px solid white",
-                "&.Mui-focused": {
-                  color: "black",
-                  border: "2px solid white",
-                },
-              },
-              "&.Mui-focused .MuiInputBase-input": {
-                color: "black",
-                border: "2px solid white",
-              },
-              ".dark & .MuiInputBase-input": {
-                color: "white",
-                border: "2px solid white",
-              },
-              ".dark & .MuiInputBase-input.Mui-focused": {
-                color: "white",
-                border: "2px solid white",
-              },
-              ".dark & .MuiSelect-icon": {
-                color: "white",
-              },
-              ".dark & .MuiOutlinedInput-notchedOutline": {
-                borderColor: "white",
-              },
-              "& .MuiSelect-icon": {
-                color: "black",
-              },
-              "& .MuiOutlinedInput-notchedOutline": {
-                borderColor: "black",
-              },
-            }}
             onFocus={() => setIsEmailReadOnly(false)}
           />
+
           <FormControl className="lg:w-5/6 w-3/4" margin="normal">
-            <InputLabel
-              sx={{
-                color: "black",
-                ".dark &": {
-                  color: "white",
-                },
-              }}
-            >
+            <InputLabel sx={{ color: "black", ".dark &": { color: "white" } }}>
               State
             </InputLabel>
             <Select
@@ -285,9 +217,9 @@ const Update = () => {
                 },
               }}
             >
-              {states.map((stateObj) => (
-                <MenuItem key={stateObj.state} value={stateObj.state}>
-                  {getStateName(stateObj.state)}
+              {uniqueStates.map((stateName) => (
+                <MenuItem key={stateName} value={stateName}>
+                  {stateName}
                 </MenuItem>
               ))}
             </Select>
@@ -298,14 +230,7 @@ const Update = () => {
             margin="normal"
             disabled={!selectedState}
           >
-            <InputLabel
-              sx={{
-                color: "black",
-                ".dark &": {
-                  color: "white",
-                },
-              }}
-            >
+            <InputLabel sx={{ color: "black", ".dark &": { color: "white" } }}>
               Service Provider
             </InputLabel>
             <Select
@@ -337,7 +262,9 @@ const Update = () => {
               }}
             >
               {states
-                .filter((stateObj) => stateObj.state.includes(selectedState))
+                .filter(
+                  (stateObj) => getStateName(stateObj.state) === selectedState
+                )
                 .map((stateObj) => (
                   <MenuItem key={stateObj.state} value={stateObj.state}>
                     {getServiceProvider(stateObj.state)}
@@ -345,6 +272,7 @@ const Update = () => {
                 ))}
             </Select>
           </FormControl>
+
           <Button
             variant="contained"
             className="border border-neutral-900 w-44 h-9 text-xl dark:bg-gray-700 dark:text-white dark:hover:bg-gray-600"
