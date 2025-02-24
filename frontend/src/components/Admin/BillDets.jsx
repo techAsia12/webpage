@@ -194,7 +194,7 @@ const BillDets = () => {
 
   return (
     <div className="w-screen h-screen flex justify-center items-center">
-      <div className="flex justify-center dark:bg-gray-800 dark:text-white h-2/3 w-full transform translate-x-12">
+      <div className="flex justify-center dark:bg-gray-800 dark:text-white h-fit w-full transform translate-x-12">
         <ToastContainer
           position="top-right"
           autoClose={5000}
