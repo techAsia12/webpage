@@ -194,7 +194,7 @@ const BillDets = () => {
 
   return (
     <div className="w-screen h-screen flex justify-center items-center">
-      <div className="flex justify-center dark:bg-gray-800 dark:text-white h-fit w-full transform translate-x-12">
+      <div className="flex justify-center dark:bg-gray-800 dark:text-white h-fit w-full transform translate-x-10 -translate-y-40">
         <ToastContainer
           position="top-right"
           autoClose={5000}
@@ -334,7 +334,7 @@ const BillDets = () => {
       </div>
       <Button
         variant="contained"
-        className="z-10 absolute transform -translate-y-60 lg:-translate-y-72 -translate-x-20 dark:bg-gray-800 dark:text-white "
+        className="z-10 absolute transform -translate-y-72 right-10 lg:right-2 dark:bg-gray-800 dark:text-white "
         onClick={handleClick}
       >
         <AddBoxIcon />
