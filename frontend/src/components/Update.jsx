@@ -274,7 +274,7 @@ const Update = () => {
           </Button>
         </Box>
         <CancelIcon
-            className="transform lg:-translate-y-[420px]"
+            className="transform lg:-translate-y-[420px] -translate-y-[400px]"
             color="error"
             onClick={() => {
               dispatch(updatePage());
