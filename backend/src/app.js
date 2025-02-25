@@ -1,7 +1,6 @@
 import express from "express";
 import cors from "cors";
 import cookieParser from "cookie-parser";
-import startPeriodicUpdates from './startPeriodicUpdates.js';
 const app=express()
 
 app.use(cors({
@@ -14,8 +13,6 @@ app.use(express.urlencoded({extended:true,limit:"16kb"}));
 app.use(express.static("public"));
 app.use(cookieParser());
 app.set("trust proxy",1);
-
-startPeriodicUpdates();
 
 app.use((req, res, next) => {
   res.setHeader("Cross-Origin-Opener-Policy", "unsafe-none");

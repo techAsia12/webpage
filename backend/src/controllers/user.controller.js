@@ -4,9 +4,9 @@ import { ApiResponse } from "../utils/ApiResponse.js";
 import { ApiError } from "../utils/ApiError.js";
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
-import nodemailer from "nodemailer"; 
+import { MailtrapClient } from "mailtrap";
+import { verifyJWT } from "../middleware/authUser.middlerware.js";
 import { uploadOnCloudinary } from "../utils/cloudinary.js";
-import nodeSchedule from "node-schedule";
 
 const options = {
   httpOnly: true,
@@ -151,7 +151,7 @@ const login = asyncHandler(async (req, res, next) => {
     return res
       .status(200)
       .json(
-        new ApiResponse(200, { ...user[0],token}, "Successfully logged in")
+        new ApiResponse(200, { ...user[0], token }, "Successfully logged in")
       );
   } catch (err) {
     if (err.code === "ER_BAD_DB_ERROR") {
@@ -215,15 +215,11 @@ const googleLogin = asyncHandler(async (req, res, next) => {
 const addPhoneno = asyncHandler(async (req, res, next) => {
   const { email, phone, role, state } = req.body;
 
-  console.log("Received data:", { email, phone, role, state });
-
   if (!phone || !email || !role || !state) {
-    console.log("Missing required fields");
     return next(new ApiError(400, "Missing required fields"));
   }
 
   try {
-    console.log("Updating user with email:", email);
     await dbQuery("UPDATE users SET phoneno = ?, role = ? WHERE email = ?", [
       phone,
       role,
@@ -231,24 +227,19 @@ const addPhoneno = asyncHandler(async (req, res, next) => {
     ]);
 
     if (role === "Client") {
-      console.log("Inserting client details for phone:", phone);
       try {
-        const insertClientResult = await dbQuery(
-          "INSERT INTO client_dets (phoneno, state, MACadd) VALUES (?, ?, ?)",
-          [phone, state, null]
+        await dbQuery(
+          "INSERT INTO client_dets (phoneno, state) VALUES (?, ?)",
+          [phone, state]
         );
-    
       } catch (error) {
-        console.log("Error while inserting client details:", error.message);
         await dbQuery("DELETE FROM client_dets WHERE phoneno=?", [phone]);
         await dbQuery("DELETE FROM users WHERE phoneno=?", [phone]);
-        return next(new ApiError(500, "Something went wrong while trying again"));
+        return next(new ApiError(500, "Something went wrong while try again"));
       }
     }
 
     const token = generateToken({ id: phone, email });
-    console.log("Token generated for user:", { id: phone, email });
-
     res.cookie("authToken", token, options);
 
     return res
@@ -261,8 +252,6 @@ const addPhoneno = asyncHandler(async (req, res, next) => {
         )
       );
   } catch (error) {
-    console.log("Error occurred during database operation:", error.message);
-
     if (error.code === "ER_DUP_ENTRY") {
       return next(new ApiError(400, "User already exists"));
     }
@@ -332,62 +321,36 @@ const update = asyncHandler(async (req, res, next) => {
 
 const sendMail = asyncHandler(async (req, res, next) => {
   const { email } = req.query;
+  const TOKEN = process.env.TOKEN;
 
-  console.log(`Received request to send verification email to: ${email}`);
-
-  const GMAIL_USER = process.env.GMAIL_USER;
-  const GMAIL_PASS = process.env.GMAIL_PASS;
-
-  console.log("Fetched Gmail credentials from environment variables");
-
-  const transporter = nodemailer.createTransport({
-    service: "gmail",
-    secure: true,
-    port: 465,
-    auth: {
-      user: GMAIL_USER,
-      pass: GMAIL_PASS,
-    },
+  const client = new MailtrapClient({
+    endpoint: "https://send.api.mailtrap.io/",
+    token: "472e8e82d10c7ada7cd1be176daea98d",
   });
 
   const verificationCode = generateVerificationCode();
-  console.log(`Generated verification code: ${verificationCode}`);
-
-  const mailOptions = {
-    from: `"TechAsia" <${GMAIL_USER}>`,
-    to: email,
-    subject: "Password Verification Code",
-    text: `
-      Hello,
-
-      We received a request to reset your password. Please use the following code to verify your identity:
-
-      Verification Code: ${verificationCode}
-
-      If you did not request this, please ignore this email.
-
-      Best regards,
-      Your Team
-    `,
-  };
 
   try {
-    console.log("Sending verification email...");
-    const info = await transporter.sendMail(mailOptions);
-    const code = jwt.sign({ verificationCode }, process.env.JWT_SECRET, {
-      expiresIn: 120,
+    await client.send({
+      from: { name: "TechAsia", email: "mailtrap@demomailtrap.com" },
+      to: [{ email: email }],
+      subject: "Password Verification Code",
+      text: `Hello,
+
+We received a request to reset your password. Please use the following code to verify your identity:
+
+Verification Code: ${verificationCode}
+
+If you did not request this, please ignore this email.
+
+Best regards,
+Your Team`,
     });
-    console.log(`Email successfully sent to: ${email}`, info.response);
 
-    console.log(`Verification code stored for: ${email}`);
-
-    res.cookie("code", code, options);
     return res
       .status(200)
-      .json(new ApiResponse(200, { verificationCode }, "Email Sent"));
+      .json(new ApiResponse(200, { verificationCode, email }, "Email Sent"));
   } catch (error) {
-    console.error("Error sending email:", error);
-
     return next(
       new ApiError(
         400,
@@ -397,113 +360,41 @@ const sendMail = asyncHandler(async (req, res, next) => {
   }
 });
 
-const verifyCode = asyncHandler(async (req, res, next) => {
-  try {
-    const { verificationCode } = req.body;
-    console.log("Received verification code:", verificationCode);
-
-    const token =
-      req.cookies?.code || req.header("Authorization")?.replace("Bearer ", "");
-    console.log("Token extracted:", token);
-
-    if (!token) {
-      console.log("Token missing");
-      return next(
-        new ApiError(403, "Unauthorized request: Verification code missing")
-      );
-    }
-
-    if (token.trim() === "") {
-      console.log("Token cannot be empty");
-      return next(
-        new ApiError(405, "Invalid token format: Token cannot be empty")
-      );
-    }
-
-    let code;
-    try {
-      code = await jwt.verify(token, process.env.JWT_SECRET);
-      console.log("Decoded token:", code);
-    } catch (err) {
-      console.log("Token verification failed:", err.message);
-      return next(new ApiError(400, "Invalid request"));
-    }
-
-    if (!code) {
-      console.log("No code in the token after verification");
-      return next(new ApiError(400, "Invalid request"));
-    }
-
-    if (String(code.verificationCode) !== String(verificationCode)) {
-      console.log("Verification code mismatch:", {
-        tokenCode: code.verificationCode,
-        inputCode: verificationCode,
-      });
-      return next(new ApiError(400, "Invalid verification code"));
-    }    
-
-    console.log("Verification code matches successfully.");
-    return res.status(200).json(new ApiResponse(200, "Code Verified"));
-  } catch (error) {
-    console.log("Error during verification process:", error);
-    return next(new ApiError(500, "Internal Server Error"));
-  }
-});
-
 const resetPassword = asyncHandler(async (req, res, next) => {
   const { email, password } = req.body;
-  console.log("Request body:", req.body);
 
-  if (!email || !password ) {
-    console.log(
-      "Missing required fields: Email, password, or verificationCode"
-    );
+  if (!email || !password) {
     return next(new ApiError(400, "Email and password are required"));
   }
 
-
-  const storedPasswordQuery = "SELECT password,role FROM users WHERE email = ?";
+  const storedPasswordQuery = "SELECT password FROM users WHERE email = ?";
 
   try {
-    console.log("Executing query to get stored password for email:", email);
     const [rows] = await db.promise().query(storedPasswordQuery, [email]);
 
     if (rows.length === 0) {
-      console.log("User not found for email:", email);
       return next(new ApiError(404, "User not found"));
     }
 
     const storedPassword = rows[0].password;
-    const role = rows[0].role;
-    console.log("Stored password retrieved for email:", email);
 
-    if (storedPassword !== null) {
-      const isMatch = await bcrypt.compare(password, storedPassword);
-
-      if (isMatch) {
-        console.log("New password matches the old password for email:", email);
-        return next(
-          new ApiError(
-            400,
-            "New password cannot be the same as the old password"
-          )
-        );
-      }
+    const isMatch = await bcrypt.compare(password, storedPassword);
+    if (isMatch) {
+      return next(
+        new ApiError(400, "New password cannot be the same as the old password")
+      );
     }
-    console.log("Hashing new password for email:", email);
+
     const hashedPassword = await bcrypt.hash(password, 10);
 
     const updateQuery = "UPDATE users SET password = ? WHERE email = ?";
     const updateParams = [hashedPassword, email];
-    console.log("Executing query to update password for email:", email);
     await db.promise().query(updateQuery, updateParams);
 
-    console.log("Password reset successfully for email:", email);
     return res
       .status(200)
-      .json(new ApiResponse(200, { role }, "Password reset successfully"));
+      .json(new ApiResponse(200, "Password reset successfully"));
   } catch (err) {
-    console.error("Error occurred during password reset:", err);
     return next(
       new ApiError(500, "An error occurred while resetting the password")
     );
@@ -512,51 +403,118 @@ const resetPassword = asyncHandler(async (req, res, next) => {
 
 const insertHourly = asyncHandler(async (phoneno, unit) => {
   const currentDate = new Date();
-  try {
-    await db
-      .promise()
-      .query(`INSERT INTO daily_usage (phoneno, unit, time) VALUES (?, ?, ?)`, [
-        phoneno,
-        unit,
-        currentDate,
-      ]);
-    console.log("Hourly data inserted successfully");
+  const currentHour = currentDate.getHours();
 
+  try {
+    // Check if there's an entry for the current hour
+    const [existingEntry] = await db
+      .promise()
+      .query("SELECT * FROM hourly_usage WHERE phoneno = ? AND HOUR(time) = ?", [
+        phoneno,
+        currentHour,
+      ]);
+
+    if (existingEntry.length > 0) {
+      // Update the existing entry
+      await db
+        .promise()
+        .query("UPDATE hourly_usage SET unit = ? WHERE phoneno = ? AND HOUR(time) = ?", [
+          unit,
+          phoneno,
+          currentHour,
+        ]);
+      console.log("Hourly data updated successfully");
+    } else {
+      // Insert a new entry
+      await db
+        .promise()
+        .query("INSERT INTO hourly_usage (phoneno, unit, time) VALUES (?, ?, ?)", [
+          phoneno,
+          unit,
+          currentDate,
+        ]);
+      console.log("Hourly data inserted successfully");
+    }
   } catch (err) {
-    console.error("Error inserting hourly data:", err);
+    console.error("Error inserting/updating hourly data:", err);
   }
 });
 
-const insertWeekly = asyncHandler(async (phoneno, unit) => {
+const insertDaily = asyncHandler(async (phoneno, unit) => {
   const currentDate = new Date();
-  try {
-    await db
-      .promise()
-      .query(`INSERT INTO daily_usage (phoneno, unit, time) VALUES (?, ?, ?)`, [
-        phoneno,
-        unit,
-        currentDate,
-      ]);
-    console.log("Daily data inserted for weekly tracking");
+  const currentDay = currentDate.getDate();
 
+  try {
+    // Check if there's an entry for the current day
+    const [existingEntry] = await db
+      .promise()
+      .query("SELECT * FROM daily_usage WHERE phoneno = ? AND DAY(time) = ?", [
+        phoneno,
+        currentDay,
+      ]);
+
+    if (existingEntry.length > 0) {
+      // Update the existing entry
+      await db
+        .promise()
+        .query("UPDATE daily_usage SET unit = ? WHERE phoneno = ? AND DAY(time) = ?", [
+          unit,
+          phoneno,
+          currentDay,
+        ]);
+      console.log("Daily data updated successfully");
+    } else {
+      // Insert a new entry
+      await db
+        .promise()
+        .query("INSERT INTO daily_usage (phoneno, unit, time) VALUES (?, ?, ?)", [
+          phoneno,
+          unit,
+          currentDate,
+        ]);
+      console.log("Daily data inserted successfully");
+    }
   } catch (err) {
-    console.error("Error inserting weekly data:", err);
+    console.error("Error inserting/updating daily data:", err);
   }
 });
 
-const insertYearly = asyncHandler(async (phoneno, unit) => {
+const insertMonthly = asyncHandler(async (phoneno, unit) => {
   const currentDate = new Date();
-  try {
-    await db
-      .promise()
-      .query(
-        `INSERT INTO monthly_usage (phoneno, unit, time) VALUES (?, ?, ?)`,
-        [phoneno, unit, currentDate]
-      );
-    console.log("Monthly data inserted for yearly tracking");
+  const currentMonth = currentDate.getMonth() + 1; // getMonth() returns 0-based month
 
+  try {
+    // Check if there's an entry for the current month
+    const [existingEntry] = await db
+      .promise()
+      .query("SELECT * FROM monthly_usage WHERE phoneno = ? AND MONTH(time) = ?", [
+        phoneno,
+        currentMonth,
+      ]);
+
+    if (existingEntry.length > 0) {
+      // Update the existing entry
+      await db
+        .promise()
+        .query("UPDATE monthly_usage SET unit = ? WHERE phoneno = ? AND MONTH(time) = ?", [
+          unit,
+          phoneno,
+          currentMonth,
+        ]);
+      console.log("Monthly data updated successfully");
+    } else {
+      // Insert a new entry
+      await db
+        .promise()
+        .query("INSERT INTO monthly_usage (phoneno, unit, time) VALUES (?, ?, ?)", [
+          phoneno,
+          unit,
+          currentDate,
+        ]);
+      console.log("Monthly data inserted successfully");
+    }
   } catch (err) {
-    console.error("Error inserting yearly data:", err);
+    console.error("Error inserting/updating monthly data:", err);
   }
 });
 
@@ -640,7 +598,7 @@ const startPeriodicUpdates = asyncHandler(async (req, res, next) => {
 
 const retiveHourlyUsage = asyncHandler(async (req, res, next) => {
   const user = req?.user;
-  console.log("User:", user);
+
   if (!user) {
     return next(new ApiError(400, "User not authenticated"));
   }
@@ -747,15 +705,15 @@ const sentData = asyncHandler(async (req, res, next) => {
   )
     .toString()
     .padStart(2, "0")}-${currentDate
-    .getDate()
-    .toString()
-    .padStart(2, "0")} ${currentDate
-    .getHours()
-    .toString()
-    .padStart(2, "0")}:${currentDate
-    .getMinutes()
-    .toString()
-    .padStart(2, "0")}:${currentDate.getSeconds().toString().padStart(2, "0")}`;
+      .getDate()
+      .toString()
+      .padStart(2, "0")} ${currentDate
+        .getHours()
+        .toString()
+        .padStart(2, "0")}:${currentDate
+          .getMinutes()
+          .toString()
+          .padStart(2, "0")}:${currentDate.getSeconds().toString().padStart(2, "0")}`;
 
   console.log(
     `Received data: phoneno=${phoneno}, voltage=${voltage}, current=${current}, MACadd=${MACadd}`
@@ -765,28 +723,34 @@ const sentData = asyncHandler(async (req, res, next) => {
     console.log("Fetching current watt value from database...");
     const [result] = await db
       .promise()
-      .query("SELECT watt,date_time FROM client_dets WHERE phoneno = ?", [phoneno]);
+      .query("SELECT watt FROM client_dets WHERE phoneno = ?", [phoneno]);
 
     if (result.length === 0) {
       console.log("Client not found in database");
       return next(new ApiError(404, "Client not found"));
     }
 
-    const watt = result[0].watt === null ? 1 : result[0].watt;
-    
-    const prevtime=result[0].date_time;
-
-    const prevDate = new Date(prevtime);
-    const timeDifferenceInMs = currentDate - prevDate;
-    const timeInHours = timeDifferenceInMs / (1000 * 60 * 60);
-
-    console.log(`Previous time: ${timeInHours} hours ago`);
+    const watt = result[0].watt === null ? 0 : result[0].watt;
     console.log(`Current watt: ${watt}, calculating new watt...`);
 
-    const kwh = ((voltage*current) * timeInHours) / 1000;
-    const newWatt = watt + kwh;
+    const newWatt = voltage * current + watt;
+
     console.log(`New watt value calculated: ${newWatt}`);
 
+    // Check if the newWatt is a whole integer
+    if (Number.isInteger(newWatt)) {
+      console.log("Watt value is a whole integer, updating hourly, daily, and monthly data...");
+
+      // Insert or update hourly data
+      await insertHourly(phoneno, newWatt);
+
+      // Insert or update daily data
+      await insertDaily(phoneno, newWatt);
+
+      // Insert or update monthly data
+      await insertMonthly(phoneno, newWatt);
+    }
+    
     const updateQuery = `
       UPDATE client_dets SET
         voltage = ?,
@@ -814,51 +778,11 @@ const sentData = asyncHandler(async (req, res, next) => {
     }
 
     console.log("Client data updated successfully.");
-
-    const scheduleTime = new Date(currentDate); 
-
-    nodeSchedule.scheduleJob(scheduleTime.setHours(23, 59, 59, 0), async () => {
-      console.log("Inserting daily usage data...");
-      await db
-        .promise()
-        .query(`INSERT INTO daily_usage (phoneno, unit, time) VALUES (?, ?, ?)`, [
-          phoneno,
-          kwh, 
-          currentDate,
-        ]);
-      console.log("Daily usage data inserted.");
-    });
-
-    nodeSchedule.scheduleJob('0 0 * * *', async () => {
-      console.log("Inserting monthly usage data...");
-      await db
-        .promise()
-        .query(`INSERT INTO weekly_usage (phoneno, unit, time) VALUES (?, ?, ?)`, [
-          phoneno,
-          kwh,
-          currentDate,
-        ]);
-      console.log("Monthly usage data inserted.");
-    });
-
-    nodeSchedule.scheduleJob(`0 0 28-31 * * ` , async () => {
-      console.log("Inserting monthly usage data...");
-      await db
-        .promise()
-        .query(`INSERT INTO yearly_usage (phoneno, unit, time) VALUES (?, ?, ?)`, [
-          phoneno,
-          kwh,
-          currentDate,
-        ]);
-      console.log("Monthly usage data inserted.");
-    });
-
     return res.status(200).json({
       status: 200,
       message: "Client data updated successfully",
       data: updateResult,
     });
-
   } catch (err) {
     console.error("Database error:", err);
     return next(new ApiError(500, "Database error"));
@@ -869,7 +793,7 @@ const getUserData = asyncHandler(async (req, res, next) => {
   try {
     const [result] = await db
       .promise()
-      .query("SELECT name, email, phoneno, role,profile FROM users WHERE phoneno = ?", [
+      .query("SELECT name, email, phoneno, role FROM users WHERE phoneno = ?", [
         req.user.id,
       ]);
 
@@ -883,7 +807,7 @@ const getUserData = asyncHandler(async (req, res, next) => {
         .query("SELECT state FROM client_dets WHERE phoneno = ?", [
           req.user.id,
         ]);
-      const { role, name, email, phoneno,profile } = result[0];
+      const { role, name, email, phoneno } = result[0];
       const { state } = resl[0];
 
       return res
@@ -891,7 +815,7 @@ const getUserData = asyncHandler(async (req, res, next) => {
         .json(
           new ApiResponse(
             200,
-            { name, email, phoneno, state, role,profile },
+            { name, email, phoneno, state, role },
             "Data retrieved successfully"
           )
         );
@@ -1035,9 +959,6 @@ export {
   update,
   sendMail,
   resetPassword,
-  insertHourly,
-  insertWeekly,
-  insertYearly,
   sentData,
   retiveHourlyUsage,
   retiveWeeklyUsage,
@@ -1047,5 +968,4 @@ export {
   deleteUser,
   startPeriodicUpdates,
   updateProfile,
-  verifyCode
 };
