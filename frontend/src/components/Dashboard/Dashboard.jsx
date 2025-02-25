@@ -13,7 +13,7 @@ const Dashboard = () => {
   const [totalCost, setTotalCost] = useState(0);
   const [cost, setCost] = useState(0);
   const [costPerMonth, setPerMonth] = useState(0);
-  const [maxKwh, setMaxKwh] = useState(parseFloat(kwh * 10).toFixed(0));
+  const [maxKwh, setMaxKwh] = useState(parseFloat(kwh).toFixed(0));
   const dispatch = useDispatch();
   const [data, setData] = useState({
     labels: [
@@ -102,7 +102,8 @@ const Dashboard = () => {
           setUser(res.data.data);
           const time =
             (new Date() - new Date(res.data.data.date_time)) / (1000 * 60 * 60);
-          setkwh(parseFloat(((user.watt * time) / 1000).toFixed(3)));
+            console.log(res.data.data.watt);
+          setkwh(parseFloat(((res.data.data.watt).toFixed(3))));
         })
         .catch((err) =>
           console.log("User data error:", err.response?.data?.message || err)

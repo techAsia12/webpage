@@ -780,18 +780,26 @@ const sentData = asyncHandler(async (req, res, next) => {
     console.log("Fetching current watt value from database...");
     const [result] = await db
       .promise()
-      .query("SELECT watt FROM client_dets WHERE phoneno = ?", [phoneno]);
+      .query("SELECT watt,date_time FROM client_dets WHERE phoneno = ?", [phoneno]);
 
     if (result.length === 0) {
       console.log("Client not found in database");
       return next(new ApiError(404, "Client not found"));
     }
 
-    const watt = result[0].watt === null ? 0 : result[0].watt;
+    const watt = result[0].watt === null ? 1 : result[0].watt;
+    
+    const prevtime=result[0].date_time;
+
+    const prevDate = new Date(prevtime);
+    const timeDifferenceInMs = currentDate - prevDate;
+    const timeInHours = timeDifferenceInMs / (1000 * 60 * 60);
+
+    console.log(`Previous time: ${timeInHours} hours ago`);
     console.log(`Current watt: ${watt}, calculating new watt...`);
 
-    const newWatt = voltage * current + watt;
-
+    const kwh = ((voltage*current) * timeInHours) / 1000;
+    const newWatt = watt + kwh;
     console.log(`New watt value calculated: ${newWatt}`);
 
     const updateQuery = `
