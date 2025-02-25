@@ -6,6 +6,7 @@ import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 import nodemailer from "nodemailer"; 
 import { uploadOnCloudinary } from "../utils/cloudinary.js";
+import nodeSchedule from "node-schedule";
 
 const options = {
   httpOnly: true,
@@ -521,12 +522,6 @@ const insertHourly = asyncHandler(async (phoneno, unit) => {
       ]);
     console.log("Hourly data inserted successfully");
 
-    // Optionally reset the daily usage table for the specific user
-    await db
-      .promise()
-      .query(`DELETE FROM daily_usage WHERE phoneno = ?`, [phoneno]);
-
-    console.log("Hourly data reset after insert");
   } catch (err) {
     console.error("Error inserting hourly data:", err);
   }
@@ -544,11 +539,6 @@ const insertWeekly = asyncHandler(async (phoneno, unit) => {
       ]);
     console.log("Daily data inserted for weekly tracking");
 
-    await db
-      .promise()
-      .query(`DELETE FROM weekly_usage WHERE phoneno = ?`, [phoneno]);
-
-    console.log("Weekly data reset after insert");
   } catch (err) {
     console.error("Error inserting weekly data:", err);
   }
@@ -565,11 +555,6 @@ const insertYearly = asyncHandler(async (phoneno, unit) => {
       );
     console.log("Monthly data inserted for yearly tracking");
 
-    await db
-      .promise()
-      .query(`DELETE FROM yearly_usage WHERE phoneno = ?`, [phoneno]);
-
-    console.log("Yearly data reset after insert");
   } catch (err) {
     console.error("Error inserting yearly data:", err);
   }
@@ -655,7 +640,7 @@ const startPeriodicUpdates = asyncHandler(async (req, res, next) => {
 
 const retiveHourlyUsage = asyncHandler(async (req, res, next) => {
   const user = req?.user;
-
+  console.log("User:", user);
   if (!user) {
     return next(new ApiError(400, "User not authenticated"));
   }
@@ -829,11 +814,51 @@ const sentData = asyncHandler(async (req, res, next) => {
     }
 
     console.log("Client data updated successfully.");
+
+    const scheduleTime = new Date(currentDate); 
+
+    nodeSchedule.scheduleJob(scheduleTime.setHours(23, 59, 59, 0), async () => {
+      console.log("Inserting daily usage data...");
+      await db
+        .promise()
+        .query(`INSERT INTO daily_usage (phoneno, unit, time) VALUES (?, ?, ?)`, [
+          phoneno,
+          kwh, 
+          currentDate,
+        ]);
+      console.log("Daily usage data inserted.");
+    });
+
+    nodeSchedule.scheduleJob('0 0 * * *', async () => {
+      console.log("Inserting monthly usage data...");
+      await db
+        .promise()
+        .query(`INSERT INTO weekly_usage (phoneno, unit, time) VALUES (?, ?, ?)`, [
+          phoneno,
+          kwh,
+          currentDate,
+        ]);
+      console.log("Monthly usage data inserted.");
+    });
+
+    nodeSchedule.scheduleJob(`0 0 28-31 * * ` , async () => {
+      console.log("Inserting monthly usage data...");
+      await db
+        .promise()
+        .query(`INSERT INTO yearly_usage (phoneno, unit, time) VALUES (?, ?, ?)`, [
+          phoneno,
+          kwh,
+          currentDate,
+        ]);
+      console.log("Monthly usage data inserted.");
+    });
+
     return res.status(200).json({
       status: 200,
       message: "Client data updated successfully",
       data: updateResult,
     });
+
   } catch (err) {
     console.error("Database error:", err);
     return next(new ApiError(500, "Database error"));

@@ -11,6 +11,7 @@ const options = {
   httpOnly: true,
   secure: true,
   sameSite: "Strict",
+  maxAge: 24 * 60 * 60 * 1000,
 };
 
 const dbQuery = async (query, params) => {
@@ -155,23 +156,9 @@ const generateToken = (user) => {
     role: user.role,
   };
 
-  // Ensure JWT_SECRET and JWT_EXPIRATION are present
-  if (!process.env.JWT_SECRET) {
-    throw new Error("JWT_SECRET is not defined in environment variables");
-  }
-
-  if (!process.env.JWT_EXPIRATION) {
-    throw new Error("JWT_EXPIRATION is not defined in environment variables");
-  }
-
-  try {
-    return jwt.sign(payload, process.env.JWT_SECRET, {
-      expiresIn: process.env.JWT_EXPIRATION,
-    });
-  } catch (err) {
-    console.error("Error generating JWT:", err);
-    throw new Error("Error generating JWT token");
-  }
+  return jwt.sign(payload, process.env.JWT_SECRET, {
+    expiresIn: process.env.JWT_EXPIRATION,
+  });
 };
 
 const register = asyncHandler(async (req, res, next) => {
@@ -240,55 +227,39 @@ const register = asyncHandler(async (req, res, next) => {
 const login = asyncHandler(async (req, res, next) => {
   const { email, password, role } = req.body;
 
-  console.log("Login attempt:", { email, role });
-
   try {
-    // Query user based on email and role
-    const [result] = await db
-      .promise()
-      .query("SELECT * FROM users WHERE email = ? AND role = ?", [email, role]);
+    const user = await dbQuery(
+      "SELECT * FROM users WHERE email = ? AND role = ?",
+      [email, role]
+    );
 
-    if (result.length === 0) {
-      console.log("Invalid credentials attempt (email/role mismatch).");
-      return next(new ApiError(402, "Invalid Credentials"));
+    if (user.length === 0) {
+      return next(new ApiError(401, "Invalid credentials: User not found"));
     }
 
-    const user = result[0];
-
-    // Check password match
-    const isMatch = await bcrypt.compare(password, user.password);
-    console.log("Password comparison result:", isMatch);
+    const isMatch = await bcrypt.compare(password, user[0].password);
     if (!isMatch) {
-      console.log("Password mismatch for user with email:", email);
-      return next(new ApiError(403, "Invalid Email or Password"));
+      return next(new ApiError(401, "Invalid credentials: Incorrect password"));
     }
 
-    // Generate token
-    const token = generateToken(user);
-    console.log("Generated token for user:", user.phoneno); // Do not log the full token
+    const token = generateToken(user[0]);
 
-    // Cookie options
-    const options = {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === "production", // Only set secure cookies in production
-      maxAge: 3600000, // 1 hour
-    };
-
-    // Set auth token in cookies
-    console.log("Setting auth token in cookies");
     res.cookie("authToken", token, options);
-
-    // Exclude password and other sensitive data from response
-    const { password: _, ...userData } = user;
-
     return res
       .status(200)
       .json(
-        new ApiResponse(200, { ...userData, token }, "Successfully logged in")
+        new ApiResponse(200, { ...user[0],token}, "Successfully logged in")
       );
   } catch (err) {
-    console.error("Error in login:", err);
-    return next(new ApiError(500, "Database Error"));
+    if (err.code === "ER_BAD_DB_ERROR") {
+      return next(new ApiError(500, "Database connection error"));
+    }
+
+    if (err.code === "ER_PARSE_ERROR") {
+      return next(new ApiError(500, "Error parsing the query"));
+    }
+
+    return next(new ApiError(500, "An unexpected error occurred during login"));
   }
 });
 
@@ -296,23 +267,14 @@ const googleLogin = asyncHandler(async (req, res, next) => {
   const { token } = req.body;
 
   try {
-    console.log("Received token:", token);
-
     const decoded = jwt.decode(token, { complete: true });
-    console.log("Decoded token:", decoded);
-
     const { name, email } = decoded.payload;
-    console.log("User info from decoded token - Name:", name, "Email:", email);
 
     const user = await dbQuery("SELECT * FROM users WHERE email = ?", [email]);
-    console.log("User found in database:", user);
-    console.log(user.length);
+
     if (user.length > 0) {
       const { phoneno, role } = user[0];
-      console.log(`Existing user found: phoneno: ${phoneno}, role: ${role}`);
-
       const token = generateToken(user[0]);
-      console.log("Generated JWT token:", token);
 
       res.cookie("authToken", token, options);
       return res
@@ -325,14 +287,10 @@ const googleLogin = asyncHandler(async (req, res, next) => {
           )
         );
     } else {
-      console.log("No existing user found, registering new user");
-
       await dbQuery(
         "INSERT INTO users (phoneno, name, email) VALUES (?, ?, ?)",
         [0, name, email]
       );
-      console.log("User successfully registered");
-
       return res
         .status(201)
         .json(
@@ -344,7 +302,6 @@ const googleLogin = asyncHandler(async (req, res, next) => {
         );
     }
   } catch (error) {
-    console.error("Error during Google login:", error); // Log the error details
     if (error.name === "JsonWebTokenError") {
       return next(new ApiError(400, "Invalid token"));
     }
