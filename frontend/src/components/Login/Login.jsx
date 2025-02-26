@@ -38,11 +38,12 @@ const Login = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-
+    let url;
+    (role === "Admin") ? url=`${import.meta.env.VITE_BACKEND_URL}/api/admin/login` : url=`${import.meta.env.VITE_BACKEND_URL}/api/user/login`;
     axios
       .post(
-        `${import.meta.env.VITE_BACKEND_URL}/api/user/login`,
-        { email, password, role: "Client" },
+        `${url}`,
+        { email, password,role},
         options
       )
       .then((res) => {
