@@ -3,6 +3,7 @@ import { React, useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
+import CircularProgress from '@mui/material/CircularProgress';
 
 const Addphone = () => {
   const [isLoading, setIsLoading] = useState(false);
@@ -23,14 +24,14 @@ const Addphone = () => {
     axios
       .post(
         `${import.meta.env.VITE_BACKEND_URL}/api/user/add-phoneno`,
-        { email, phone: phoneNumber, name, state, role:"Client" },
+        { email, phone: phoneNumber, name, state, role: "Client" },
         options
       )
       .then((res) => {
         toast.success(res.data.message || "Phone number added successfully!", { position: "top-right" });
         
         setTimeout(() => {
-          navigate( "/");
+          navigate("/");
         }, 2000); 
       })
       .catch((error) => {
@@ -45,6 +46,11 @@ const Addphone = () => {
   return (
     <div className="fixed inset-0 flex items-center justify-center bg-gray-500 bg-opacity-50 z-50">
       <ToastContainer />
+      {loading && (
+              <div className="fixed top-0 left-0 w-full h-full bg-black/50 flex justify-center items-center z-50">
+                <CircularProgress size={80} color="inherit" />
+              </div>
+            )}
       <div className="bg-white p-8 rounded-lg shadow-lg w-96">
         <div className="flex justify-between items-center mb-4">
           <h2 className="text-xl font-semibold text-gray-800">
@@ -85,13 +91,9 @@ const Addphone = () => {
         <button
           onClick={handleSubmit}
           disabled={isLoading || !phoneNumber}
-          className={`w-full py-2 px-4 rounded-lg text-white font-semibold ${
-            isLoading || !phoneNumber
-              ? "bg-gray-400"
-              : "bg-blue-500 hover:bg-blue-600"
-          }`}
+          className={`w-full py-2 px-4 rounded-lg text-white font-semibold ${isLoading || !phoneNumber ? "bg-gray-400" : "bg-blue-500 hover:bg-blue-600"}`}
         >
-          {isLoading ? "Submitting..." : "Submit"}
+          {isLoading ? <CircularProgress size={24} color="inherit" /> : "Submit"}
         </button>
 
         <div className="mt-4 text-center text-sm text-gray-500">

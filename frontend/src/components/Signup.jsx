@@ -8,6 +8,7 @@ import {
   MenuItem,
   InputLabel,
   FormControl,
+  CircularProgress,
 } from "@mui/material";
 import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
@@ -22,6 +23,7 @@ const Signup = () => {
   const [selectedState, setSelectedState] = useState("");
   const [selectedServiceProvider, setSelectedServiceProvider] = useState("");
   const [states, setStates] = useState([]);
+  const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
 
   const options = {
@@ -31,11 +33,13 @@ const Signup = () => {
   const handleStateChange = (event) => {
     const state = event.target.value;
     setSelectedState(state);
-    setSelectedServiceProvider(""); 
+    setSelectedServiceProvider("");
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    setLoading(true);
+
     if (
       !name ||
       !password ||
@@ -45,11 +49,13 @@ const Signup = () => {
       !selectedServiceProvider
     ) {
       toast.error("All fields are required.");
+      setLoading(false);
       return;
     }
 
     if (password !== confirm) {
       toast.error("Passwords do not match.");
+      setLoading(false);
       return;
     }
 
@@ -62,11 +68,13 @@ const Signup = () => {
           email,
           phoneno,
           state: selectedState,
-          serviceProvider: selectedServiceProvider, 
+          serviceProvider: selectedServiceProvider,
           role: "Client",
         },
         options
       );
+
+      setLoading(false);
 
       if (res?.data?.success === true) {
         toast.success("Registration successful!");
@@ -75,6 +83,7 @@ const Signup = () => {
         toast.error("Registration failed. Please try again.");
       }
     } catch (error) {
+      setLoading(false);
       toast.error(error?.response?.data?.message || "An error occurred.");
     }
   };
@@ -93,15 +102,21 @@ const Signup = () => {
   };
 
   const getServiceProvider = (stateString) => {
-    return stateString.split("_")[0]; 
+    return stateString.split("_")[0];
   };
 
   const uniqueStates = Array.from(new Set(states.map(stateObj => getStateName(stateObj.state))));
 
   return (
-    <div className="w-screen h-screen flex justify-center items-center bg-slate-200 ">
+    <div className="w-screen h-screen flex justify-center items-center bg-slate-200">
       <ToastContainer />
       <SideBarAnimation />
+      {loading && (
+        <div className="fixed top-0 left-0 w-full h-full bg-black/50 flex justify-center items-center z-50">
+          <CircularProgress size={80} color="secondary" />
+        </div>
+      )}
+
       <div className="lg:w-3/4 w-4/5 h-fit lg:h-screen border border-neutral-900 rounded-3xl lg:border-none lg:pt-16 backdrop-blur-2xl bg-white/30">
         <h1 className="text-center text-4xl pt-12">Client SignUp</h1>
         <form
@@ -114,6 +129,7 @@ const Signup = () => {
             className="lg:w-5/6"
             onChange={(e) => setName(e.target.value)}
             value={name}
+            disabled={loading}
           />
           <TextField
             label="Enter Password"
@@ -122,6 +138,7 @@ const Signup = () => {
             className="lg:w-5/6"
             onChange={(e) => setPassword(e.target.value)}
             value={password}
+            disabled={loading}
           />
           <TextField
             label="Confirm Password"
@@ -130,6 +147,7 @@ const Signup = () => {
             className="lg:w-5/6"
             onChange={(e) => setConfirm(e.target.value)}
             value={confirm}
+            disabled={loading}
           />
           <TextField
             label="Enter Phone Number"
@@ -137,6 +155,7 @@ const Signup = () => {
             className="lg:w-5/6"
             onChange={(e) => setPhoneno(e.target.value)}
             value={phoneno}
+            disabled={loading}
           />
           <TextField
             label="Enter E-mail"
@@ -144,6 +163,7 @@ const Signup = () => {
             className="lg:w-5/6"
             onChange={(e) => setEmail(e.target.value)}
             value={email}
+            disabled={loading}
           />
 
           <FormControl className="lg:w-5/6 w-full" margin="normal">
@@ -152,6 +172,7 @@ const Signup = () => {
               label="State"
               value={selectedState}
               onChange={handleStateChange}
+              disabled={loading}
             >
               {uniqueStates.map((stateName) => (
                 <MenuItem key={stateName} value={stateName}>
@@ -164,13 +185,14 @@ const Signup = () => {
           <FormControl
             className="lg:w-5/6 w-full"
             margin="normal"
-            disabled={!selectedState} 
+            disabled={!selectedState || loading}
           >
             <InputLabel>Service Provider</InputLabel>
             <Select
               label="Service Provider"
               value={selectedServiceProvider}
               onChange={(e) => setSelectedServiceProvider(e.target.value)}
+              disabled={loading}
             >
               {states
                 .filter((stateObj) => getStateName(stateObj.state) === selectedState)
@@ -186,8 +208,9 @@ const Signup = () => {
             variant="contained"
             type="submit"
             className="border border-neutral-900 w-44 h-9 text-xl"
+            disabled={loading}
           >
-            Signup
+            {loading ? "Loading..." : "Signup"}
           </Button>
           <Link to={"/"} className="text-sm text-blue-400 text-center">
             Already Have An Account?

@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
 import TextField from "@mui/material/TextField";
-import { Button } from "@mui/material";
+import { Button, CircularProgress } from "@mui/material"; 
 import { toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import { useDispatch } from "react-redux";
@@ -19,8 +19,12 @@ const AddDets = () => {
   const [state, setState] = useState();
   const dispatch = useDispatch();
 
+  const [loading, setLoading] = useState(false);
+
   const handleSubmit = async (e) => {
     e.preventDefault();
+    
+    setLoading(true);
 
     axios
       .post(`${import.meta.env.VITE_BACKEND_URL}/api/admin/bill-dets`, {
@@ -41,23 +45,26 @@ const AddDets = () => {
       .catch((error) => {
         toast.error("Error submitting bill details!");
         console.log(error?.response?.data?.message);
+      })
+      .finally(() => {
+        setLoading(false);
       });
   };
 
   return (
-    <div className="w-screen h-screen flex justify-center ">
+    <div className="w-screen h-screen flex justify-center">
       <div className="lg:w-1/3 w-4/5 lg:h-5/6 border border-neutral-900 rounded-3xl bg-white dark:bg-gray-800 dark:border-white lg:ml-20">
         <h1 className="text-center text-4xl pt-20 text-black dark:text-white">
           Bill Details
         </h1>
         <CancelIcon
-            className="ml-52 transform lg:-translate-y-14 -translate-y-28 lg:ml-96 right-0 text-black dark:text-white"
-            color="error"
-            onClick={() => {
-              dispatch(billDetsPage());
-            }}
-            fontSize="large"
-          />
+          className="ml-52 transform lg:-translate-y-14 -translate-y-28 lg:ml-96 right-0 text-black dark:text-white"
+          color="error"
+          onClick={() => {
+            dispatch(billDetsPage());
+          }}
+          fontSize="large"
+        />
         <form
           action=""
           onSubmit={handleSubmit}
@@ -69,10 +76,10 @@ const AddDets = () => {
             className="lg:w-5/6 dark:bg-gray-700 dark:text-white dark:border-white"
             onChange={(e) => setBase(e.target.value)}
             InputLabelProps={{
-              className: "dark:text-white", // Label color in dark mode
+              className: "dark:text-white", 
             }}
             InputProps={{
-              className: "dark:text-white", // Input text color in dark mode
+              className: "dark:text-white", 
             }}
           />
           <TextField
@@ -81,10 +88,10 @@ const AddDets = () => {
             className="lg:w-5/6 dark:bg-gray-700 dark:text-white dark:border-white"
             onChange={(e) => setPercentPerUnit(e.target.value)}
             InputLabelProps={{
-              className: "dark:text-white", // Label color in dark mode
+              className: "dark:text-white", 
             }}
             InputProps={{
-              className: "dark:text-white", // Input text color in dark mode
+              className: "dark:text-white", 
             }}
           />
           <TextField
@@ -93,10 +100,10 @@ const AddDets = () => {
             className="lg:w-5/6 dark:bg-gray-700 dark:text-white dark:border-white"
             onChange={(e) => setTotalTaxPercent(e.target.value)}
             InputLabelProps={{
-              className: "dark:text-white", // Label color in dark mode
+              className: "dark:text-white", 
             }}
             InputProps={{
-              className: "dark:text-white", // Input text color in dark mode
+              className: "dark:text-white", 
             }}
           />
           <TextField
@@ -105,10 +112,10 @@ const AddDets = () => {
             className="lg:w-5/6 dark:bg-gray-700 dark:text-white dark:border-white"
             onChange={(e) => setTax(e.target.value)}
             InputLabelProps={{
-              className: "dark:text-white", // Label color in dark mode
+              className: "dark:text-white", 
             }}
             InputProps={{
-              className: "dark:text-white", // Input text color in dark mode
+              className: "dark:text-white", 
             }}
           />
           <TextField
@@ -117,19 +124,25 @@ const AddDets = () => {
             className="lg:w-5/6 dark:bg-gray-700 dark:text-white dark:border-white"
             onChange={(e) => setState(e.target.value)}
             InputLabelProps={{
-              className: "dark:text-white", // Label color in dark mode
+              className: "dark:text-white", 
             }}
             InputProps={{
-              className: "dark:text-white", // Input text color in dark mode
+              className: "dark:text-white", 
             }}
           />
-          <Button
-            variant="contained"
-            className="border border-neutral-900 w-44 h-9 text-xl dark:bg-gray-700 dark:text-white dark:hover:bg-gray-600"
-            onClick={handleSubmit}
-          >
-            Next
-          </Button>
+
+          {loading ? (
+            <CircularProgress color="primary" />
+          ) : (
+            <Button
+              variant="contained"
+              className="border border-neutral-900 w-44 h-9 text-xl dark:bg-gray-700 dark:text-white dark:hover:bg-gray-600"
+              onClick={handleSubmit}
+              disabled={loading} 
+            >
+              Next
+            </Button>
+          )}
         </form>
       </div>
     </div>

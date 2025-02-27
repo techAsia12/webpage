@@ -69,7 +69,7 @@ const ForgotPassword = () => {
       setInput(
         <div className="flex space-x-2 justify-center mt-8">
           {Array(4)
-            .fill("")
+            .fill(" ")
             .map((_, index) => (
               <input
                 key={index}
@@ -178,7 +178,7 @@ const ForgotPassword = () => {
               });
               if (role == "Client") {
                 navigate("/");
-              }else{
+              } else {
                 navigate("/admin/login");
               }
             }
@@ -220,7 +220,11 @@ const ForgotPassword = () => {
               : "bg-blue-500 hover:bg-blue-600"
           }`}
         >
-          {isLoading ? "Submitting..." : "Submit"}
+          {isLoading ? (
+            <div className="w-6 h-6 border-4 border-blue-500 border-t-transparent rounded-full animate-spin mx-auto" />
+          ) : (
+            "Submit"
+          )}
         </button>
 
         <div className="mt-4 text-center text-sm text-gray-500">

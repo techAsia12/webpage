@@ -10,6 +10,7 @@ import {
   FormControl,
   InputLabel,
   MenuItem,
+  CircularProgress, 
 } from "@mui/material";
 import { Edit as EditIcon, Check as CheckIcon } from "@mui/icons-material";
 import { toast } from "react-toastify";
@@ -25,6 +26,7 @@ const Update = () => {
   const [selectedState, setSelectedState] = useState();
   const [selectedServiceProvider, setSelectedServiceProvider] = useState();
   const [states, setStates] = useState([]);
+  const [loading, setLoading] = useState(false);
   const dispatch = useDispatch();
   const [isNameReadOnly, setIsNameReadOnly] = useState(true);
   const [isEmailReadOnly, setIsEmailReadOnly] = useState(true);
@@ -61,6 +63,7 @@ const Update = () => {
   };
 
   useEffect(() => {
+    setLoading(true);
     axios
       .get(`${import.meta.env.VITE_BACKEND_URL}/api/user/retrive-stateDets`)
       .then((res) => {
@@ -79,10 +82,14 @@ const Update = () => {
       })
       .catch((err) => {
         toast.error("Failed to load user data.");
+      })
+      .finally(() => {
+        setLoading(false); 
       });
   }, []);
 
   const handleSubmit = () => {
+    setLoading(true);
     if (role === "Client") {
       axios
         .post(
@@ -102,6 +109,9 @@ const Update = () => {
         .catch((err) => {
           console.log(err.response.data.message);
           toast.error(`Error: ${err.response.data.message}`);
+        })
+        .finally(() => {
+          setLoading(false); 
         });
     } else {
       axios
@@ -122,6 +132,9 @@ const Update = () => {
         .catch((err) => {
           console.log(err.response.data.message);
           toast.error(`Error: ${err.response.data.message}`);
+        })
+        .finally(() => {
+          setLoading(false);
         });
     }
   };
@@ -136,151 +149,157 @@ const Update = () => {
         <Box className="flex flex-col items-center justify-center space-y-10 w-3/4 lg:w-1/3 h-3/4 border transform -translate-y-28 border-neutral-900 rounded-3xl dark:border-2 dark:border-white">
           <Avatar alt="User Avatar" src="" sx={{ width: 60, height: 60 }} />
 
-          <TextField
-            variant="outlined"
-            className="lg:w-5/6 w-3/4 dark:bg-gray-700 dark:text-white dark:border-white"
-            value={name || ""}
-            onChange={(e) => setName(e.target.value)}
-            InputProps={{
-              readOnly: isNameReadOnly,
-              endAdornment: (
-                <InputAdornment
-                  position="end"
-                  onClick={() => toggleFieldReadOnly("name")}
-                  style={{ cursor: "pointer", padding: "0 8px" }}
+          {loading ? (
+            <CircularProgress size={60} color="primary" /> 
+          ) : (
+            <>
+              <TextField
+                variant="outlined"
+                className="lg:w-5/6 w-3/4 dark:bg-gray-700 dark:text-white dark:border-white"
+                value={name || ""}
+                onChange={(e) => setName(e.target.value)}
+                InputProps={{
+                  readOnly: isNameReadOnly,
+                  endAdornment: (
+                    <InputAdornment
+                      position="end"
+                      onClick={() => toggleFieldReadOnly("name")}
+                      style={{ cursor: "pointer", padding: "0 8px" }}
+                    >
+                      {isNameReadOnly ? <EditIcon /> : <CheckIcon />}
+                    </InputAdornment>
+                  ),
+                }}
+                onFocus={() => setIsNameReadOnly(false)}
+              />
+
+              <TextField
+                type="email"
+                variant="outlined"
+                className="lg:w-5/6 w-3/4 dark:bg-gray-700 dark:text-white dark:border-white"
+                value={email || ""}
+                onChange={(e) => setEmail(e.target.value)}
+                InputProps={{
+                  readOnly: isEmailReadOnly,
+                  endAdornment: (
+                    <InputAdornment
+                      position="end"
+                      onClick={() => toggleFieldReadOnly("email")}
+                      style={{ cursor: "pointer", padding: "0 8px" }}
+                    >
+                      {isEmailReadOnly ? <EditIcon /> : <CheckIcon />}
+                    </InputAdornment>
+                  ),
+                }}
+                onFocus={() => setIsEmailReadOnly(false)}
+              />
+
+              <FormControl className="lg:w-5/6 w-3/4" margin="normal">
+                <InputLabel sx={{ color: "black", ".dark &": { color: "white" } }}>
+                  State
+                </InputLabel>
+                <Select
+                  label="State"
+                  value={selectedState}
+                  onChange={handleStateChange}
+                  sx={{
+                    "& .MuiInputBase-input": {
+                      color: "black",
+                    },
+                    "&.Mui-focused .MuiInputBase-input": {
+                      color: "black",
+                    },
+                    ".dark & .MuiInputBase-input": {
+                      color: "white",
+                    },
+                    ".dark & .MuiSelect-icon": {
+                      color: "white",
+                    },
+                    ".dark & .MuiOutlinedInput-notchedOutline": {
+                      borderColor: "white",
+                    },
+                    "& .MuiSelect-icon": {
+                      color: "black",
+                    },
+                    "& .MuiOutlinedInput-notchedOutline": {
+                      borderColor: "black",
+                    },
+                  }}
                 >
-                  {isNameReadOnly ? <EditIcon /> : <CheckIcon />}
-                </InputAdornment>
-              ),
-            }}
-            onFocus={() => setIsNameReadOnly(false)}
-          />
+                  {uniqueStates.map((stateName) => (
+                    <MenuItem key={stateName} value={stateName}>
+                      {stateName}
+                    </MenuItem>
+                  ))}
+                </Select>
+              </FormControl>
 
-          <TextField
-            type="email"
-            variant="outlined"
-            className="lg:w-5/6 w-3/4 dark:bg-gray-700 dark:text-white dark:border-white"
-            value={email || ""}
-            onChange={(e) => setEmail(e.target.value)}
-            InputProps={{
-              readOnly: isEmailReadOnly,
-              endAdornment: (
-                <InputAdornment
-                  position="end"
-                  onClick={() => toggleFieldReadOnly("email")}
-                  style={{ cursor: "pointer", padding: "0 8px" }}
+              <FormControl
+                className="lg:w-5/6 w-3/4"
+                margin="normal"
+                disabled={!selectedState}
+              >
+                <InputLabel sx={{ color: "black", ".dark &": { color: "white" } }}>
+                  Service Provider
+                </InputLabel>
+                <Select
+                  label="Service Provider"
+                  value={selectedServiceProvider}
+                  onChange={(e) => setSelectedServiceProvider(e.target.value)}
+                  sx={{
+                    "& .MuiInputBase-input": {
+                      color: "black",
+                    },
+                    "&.Mui-focused .MuiInputBase-input": {
+                      color: "black",
+                    },
+                    ".dark & .MuiInputBase-input": {
+                      color: "white",
+                    },
+                    ".dark & .MuiSelect-icon": {
+                      color: "white",
+                    },
+                    ".dark & .MuiOutlinedInput-notchedOutline": {
+                      borderColor: "white",
+                    },
+                    "& .MuiSelect-icon": {
+                      color: "black",
+                    },
+                    "& .MuiOutlinedInput-notchedOutline": {
+                      borderColor: "black",
+                    },
+                  }}
                 >
-                  {isEmailReadOnly ? <EditIcon /> : <CheckIcon />}
-                </InputAdornment>
-              ),
-            }}
-            onFocus={() => setIsEmailReadOnly(false)}
-          />
+                  {states
+                    .filter(
+                      (stateObj) => getStateName(stateObj.state) === selectedState
+                    )
+                    .map((stateObj) => (
+                      <MenuItem key={stateObj.state} value={stateObj.state}>
+                        {getServiceProvider(stateObj.state)}
+                      </MenuItem>
+                    ))}
+                </Select>
+              </FormControl>
 
-          <FormControl className="lg:w-5/6 w-3/4" margin="normal">
-            <InputLabel sx={{ color: "black", ".dark &": { color: "white" } }}>
-              State
-            </InputLabel>
-            <Select
-              label="State"
-              value={selectedState}
-              onChange={handleStateChange}
-              sx={{
-                "& .MuiInputBase-input": {
-                  color: "black",
-                },
-                "&.Mui-focused .MuiInputBase-input": {
-                  color: "black",
-                },
-                ".dark & .MuiInputBase-input": {
-                  color: "white",
-                },
-                ".dark & .MuiSelect-icon": {
-                  color: "white",
-                },
-                ".dark & .MuiOutlinedInput-notchedOutline": {
-                  borderColor: "white",
-                },
-                "& .MuiSelect-icon": {
-                  color: "black",
-                },
-                "& .MuiOutlinedInput-notchedOutline": {
-                  borderColor: "black",
-                },
-              }}
-            >
-              {uniqueStates.map((stateName) => (
-                <MenuItem key={stateName} value={stateName}>
-                  {stateName}
-                </MenuItem>
-              ))}
-            </Select>
-          </FormControl>
-
-          <FormControl
-            className="lg:w-5/6 w-3/4"
-            margin="normal"
-            disabled={!selectedState}
-          >
-            <InputLabel sx={{ color: "black", ".dark &": { color: "white" } }}>
-              Service Provider
-            </InputLabel>
-            <Select
-              label="Service Provider"
-              value={selectedServiceProvider}
-              onChange={(e) => setSelectedServiceProvider(e.target.value)}
-              sx={{
-                "& .MuiInputBase-input": {
-                  color: "black",
-                },
-                "&.Mui-focused .MuiInputBase-input": {
-                  color: "black",
-                },
-                ".dark & .MuiInputBase-input": {
-                  color: "white",
-                },
-                ".dark & .MuiSelect-icon": {
-                  color: "white",
-                },
-                ".dark & .MuiOutlinedInput-notchedOutline": {
-                  borderColor: "white",
-                },
-                "& .MuiSelect-icon": {
-                  color: "black",
-                },
-                "& .MuiOutlinedInput-notchedOutline": {
-                  borderColor: "black",
-                },
-              }}
-            >
-              {states
-                .filter(
-                  (stateObj) => getStateName(stateObj.state) === selectedState
-                )
-                .map((stateObj) => (
-                  <MenuItem key={stateObj.state} value={stateObj.state}>
-                    {getServiceProvider(stateObj.state)}
-                  </MenuItem>
-                ))}
-            </Select>
-          </FormControl>
-
-          <Button
-            variant="contained"
-            className="border border-neutral-900 w-44 h-9 text-xl dark:bg-gray-700 dark:text-white dark:hover:bg-gray-600"
-            onClick={handleSubmit}
-          >
-            Submit
-          </Button>
+              <Button
+                variant="contained"
+                className="border border-neutral-900 w-44 h-9 text-xl dark:bg-gray-700 dark:text-white dark:hover:bg-gray-600"
+                onClick={handleSubmit}
+              >
+                Submit
+              </Button>
+            </>
+          )}
         </Box>
         <CancelIcon
-            className="transform lg:-translate-y-[420px] -translate-y-[400px]"
-            color="error"
-            onClick={() => {
-              dispatch(updatePage());
-            }}
-            fontSize="large"
-          />
+          className="transform lg:-translate-y-[420px] -translate-y-[400px]"
+          color="error"
+          onClick={() => {
+            dispatch(updatePage());
+          }}
+          fontSize="large"
+        />
       </div>
     );
   } else {
@@ -296,96 +315,60 @@ const Update = () => {
             fontSize="large"
           />
           <Avatar alt="User Avatar" src="" sx={{ width: 60, height: 60 }} />
-          <TextField
-            variant="outlined"
-            className="lg:w-5/6 w-3/4 dark:bg-gray-700 dark:text-white dark:border-white"
-            value={name || ""}
-            onChange={(e) => setName(e.target.value)}
-            InputProps={{
-              readOnly: isNameReadOnly,
-              endAdornment: (
-                <InputAdornment
-                  position="end"
-                  onClick={() => toggleFieldReadOnly("name")}
-                  style={{ cursor: "pointer", padding: "0 8px" }}
-                >
-                  {isNameReadOnly ? <EditIcon /> : <CheckIcon />}
-                </InputAdornment>
-              ),
-            }}
-            sx={{
-              "& .MuiInputBase-input": {
-                color: "black",
-                border: "2px solid white",
-                "&.Mui-focused": {
-                  color: "black",
-                  border: "2px solid white",
-                },
-              },
-              "&.Mui-focused .MuiInputBase-input": {
-                color: "black",
-                border: "2px solid white",
-              },
-              ".dark & .MuiInputBase-input": {
-                color: "white",
-                border: "2px solid white",
-              },
-              ".dark & .MuiInputBase-input.Mui-focused": {
-                color: "white",
-                border: "2px solid white",
-              },
-            }}
-            onFocus={() => setIsNameReadOnly(false)}
-          />
-          <TextField
-            type="email"
-            variant="outlined"
-            className="lg:w-5/6 w-3/4 dark:bg-gray-700 dark:text-white dark:border-white"
-            value={email || ""}
-            onChange={(e) => setEmail(e.target.value)}
-            InputProps={{
-              readOnly: isEmailReadOnly,
-              endAdornment: (
-                <InputAdornment
-                  position="end"
-                  onClick={() => toggleFieldReadOnly("email")}
-                  style={{ cursor: "pointer", padding: "0 8px" }}
-                >
-                  {isEmailReadOnly ? <EditIcon /> : <CheckIcon />}
-                </InputAdornment>
-              ),
-            }}
-            sx={{
-              "& .MuiInputBase-input": {
-                color: "black",
-                border: "2px solid white",
-                "&.Mui-focused": {
-                  color: "black",
-                  border: "2px solid white",
-                },
-              },
-              "&.Mui-focused .MuiInputBase-input": {
-                color: "black",
-                border: "2px solid white",
-              },
-              ".dark & .MuiInputBase-input": {
-                color: "white",
-                border: "2px solid white",
-              },
-              ".dark & .MuiInputBase-input.Mui-focused": {
-                color: "white",
-                border: "2px solid white",
-              },
-            }}
-            onFocus={() => setIsEmailReadOnly(false)}
-          />
-          <Button
-            variant="contained"
-            className="border border-neutral-900 w-44 h-9 text-xl dark:bg-gray-700 dark:text-white dark:hover:bg-gray-600"
-            onClick={handleSubmit}
-          >
-            Submit
-          </Button>
+          {loading ? (
+            <CircularProgress size={60} color="primary" /> 
+          ) : (
+            <>
+              <TextField
+                variant="outlined"
+                className="lg:w-5/6 w-3/4 dark:bg-gray-700 dark:text-white dark:border-white"
+                value={name || ""}
+                onChange={(e) => setName(e.target.value)}
+                InputProps={{
+                  readOnly: isNameReadOnly,
+                  endAdornment: (
+                    <InputAdornment
+                      position="end"
+                      onClick={() => toggleFieldReadOnly("name")}
+                      style={{ cursor: "pointer", padding: "0 8px" }}
+                    >
+                      {isNameReadOnly ? <EditIcon /> : <CheckIcon />}
+                    </InputAdornment>
+                  ),
+                }}
+                onFocus={() => setIsNameReadOnly(false)}
+              />
+
+              <TextField
+                type="email"
+                variant="outlined"
+                className="lg:w-5/6 w-3/4 dark:bg-gray-700 dark:text-white dark:border-white"
+                value={email || ""}
+                onChange={(e) => setEmail(e.target.value)}
+                InputProps={{
+                  readOnly: isEmailReadOnly,
+                  endAdornment: (
+                    <InputAdornment
+                      position="end"
+                      onClick={() => toggleFieldReadOnly("email")}
+                      style={{ cursor: "pointer", padding: "0 8px" }}
+                    >
+                      {isEmailReadOnly ? <EditIcon /> : <CheckIcon />}
+                    </InputAdornment>
+                  ),
+                }}
+                onFocus={() => setIsEmailReadOnly(false)}
+              />
+
+              <Button
+                variant="contained"
+                className="border border-neutral-900 w-44 h-9 text-xl dark:bg-gray-700 dark:text-white dark:hover:bg-gray-600"
+                onClick={handleSubmit}
+              >
+                Submit
+              </Button>
+            </>
+          )}
         </Box>
       </div>
     );

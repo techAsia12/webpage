@@ -9,6 +9,7 @@ import {
   Button,
   ToggleButton,
   ToggleButtonGroup,
+  CircularProgress, 
 } from "@mui/material";
 import Visibility from "@mui/icons-material/Visibility";
 import VisibilityOff from "@mui/icons-material/VisibilityOff";
@@ -17,15 +18,15 @@ import "react-toastify/dist/ReactToastify.css";
 import { useDispatch } from "react-redux";
 import { login } from "../../Features/auth/auth.slice";
 import SideBarAnimation from "../SideBarAnimation";
-import { SlideTabs } from "../Navbar/Navbar.jsx";
 
 const Login = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [role, setRole] = useState("Client");
+  const [showPassword, setShowPassword] = useState(false);
+  const [loading, setLoading] = useState(false); 
   const navigate = useNavigate();
   const dispatch = useDispatch();
-  const [showPassword, setShowPassword] = useState(false);
   const options = { withCredentials: true };
 
   const handleClickShowPassword = () => setShowPassword(!showPassword);
@@ -38,28 +39,34 @@ const Login = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    setLoading(true);
+
     let url;
-    (role === "Admin") ? url=`${import.meta.env.VITE_BACKEND_URL}/api/admin/login` : url=`${import.meta.env.VITE_BACKEND_URL}/api/user/login`;
+    role === "Admin"
+      ? (url = `${import.meta.env.VITE_BACKEND_URL}/api/admin/login`)
+      : (url = `${import.meta.env.VITE_BACKEND_URL}/api/user/login`);
+
     axios
       .post(
         `${url}`,
-        { email, password,role},
+        { email, password, role },
         options
       )
       .then((res) => {
+        setLoading(false); 
         if (res?.data?.success === true) {
           toast.success(res.data.message || "Login successful!", {
             position: "top-right",
           });
           const user = res.data.data;
           setTimeout(() => {
-            console.log(user);
             dispatch(login(user));
             navigate("/dashboard");
           }, 2000);
         }
       })
       .catch((error) => {
+        setLoading(false); 
         const errorMsg = error?.response?.data?.message || "Login failed!";
         toast.error(errorMsg, { position: "top-right" });
       });
@@ -69,7 +76,13 @@ const Login = () => {
     <div className="w-screen h-screen flex justify-center items-center lg:flex-none bg-slate-200">
       <ToastContainer />
       <SideBarAnimation />
-      <div className="lg:w-3/4 w-4/5 h-3/4  lg:h-screen border border-neutral-900 rounded-3xl lg:border-none lg:pt-20 backdrop-blur-2xl bg-white/30 ">
+      {loading && (
+        <div className="fixed top-0 left-0 w-full h-full bg-black/50 flex justify-center items-center z-50">
+          <CircularProgress size={80} color="inherit" />
+        </div>
+      )}
+
+      <div className="lg:w-3/4 w-4/5 h-3/4 lg:h-screen border border-neutral-900 rounded-3xl lg:border-none lg:pt-20 backdrop-blur-2xl bg-white/30 ">
         <h1 className="text-center text-4xl pt-10 lg:pt-24"> Login</h1>
         <form className="self-center mx-10 space-y-4 flex flex-col justify-center items-center lg:h-2/3 h-3/4">
           <ToggleButtonGroup
@@ -83,11 +96,11 @@ const Login = () => {
               value="Client"
               className="w-1/2"
               sx={{
-                backgroundColor: role === "Client" ? "black" : "", 
-                color: role === "Client" ? "white" : "", 
+                backgroundColor: role === "Client" ? "black" : "",
+                color: role === "Client" ? "white" : "",
                 "&.Mui-selected": {
-                  backgroundColor: "black", 
-                  color: "white", 
+                  backgroundColor: "black",
+                  color: "white",
                 },
               }}
             >
@@ -97,11 +110,11 @@ const Login = () => {
               value="Admin"
               className="w-1/2"
               sx={{
-                backgroundColor: role === "Admin" ? "black" : "", 
-                color: role === "Admin" ? "white" : "", 
+                backgroundColor: role === "Admin" ? "black" : "",
+                color: role === "Admin" ? "white" : "",
                 "&.Mui-selected": {
-                  backgroundColor: "black", 
-                  color: "white", 
+                  backgroundColor: "black",
+                  color: "white",
                 },
               }}
             >
@@ -141,12 +154,14 @@ const Login = () => {
               Forgot Password ?
             </Link>
           </div>
+
           <Button
             variant="contained"
             className="border border-neutral-900 w-44 h-9 text-xl"
             onClick={handleSubmit}
+            disabled={loading} 
           >
-            Login
+            {loading ? "Loading..." : "Login"}
           </Button>
           <span className="text-neutral-400">OR</span>
           <GoogleLogin
@@ -159,24 +174,35 @@ const Login = () => {
               }
 
               axios
-              .post(
-                `${role === "Client" 
-                  ? `${import.meta.env.VITE_BACKEND_URL}/api/user/google-login` 
-                  : `${import.meta.env.VITE_BACKEND_URL}/api/admin/google-login`}`,
-                { token: idToken },
-                options
-              )
+                .post(
+                  `${
+                    role === "Client"
+                      ? `${import.meta.env.VITE_BACKEND_URL}/api/user/google-login`
+                      : `${import.meta.env.VITE_BACKEND_URL}/api/admin/google-login`
+                  }`,
+                  { token: idToken },
+                  options
+                )
                 .then((response) => {
                   toast.success("Google login successful!", {
                     position: "top-right",
                   });
                   setTimeout(() => {
                     if (response?.status === 201) {
-                      navigate(`${(role==="Client")?`/add-phone?email=${response.data.data.email}&name=${response.data.data.name}`:`/admin/add-phone?email=${response.data.data.email}&name=${response.data.data.name}`}`);
+                      navigate(
+                        `${
+                          role === "Client"
+                            ? `/add-phone?email=${response.data.data.email}&name=${response.data.data.name}`
+                            : `/admin/add-phone?email=${response.data.data.email}&name=${response.data.data.name}`
+                        }`
+                      );
                     } else if (response?.status === 200) {
-                      console.log(response.data.data);
                       dispatch(login(response.data.data));
-                      navigate(`${(role==="Client")?`/dashboard`:`/admin/home`}`);
+                      navigate(
+                        `${
+                          role === "Client" ? `/dashboard` : `/admin/home`
+                        }`
+                      );
                     }
                   }, 2000);
                 })
