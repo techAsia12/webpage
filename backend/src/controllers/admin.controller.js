@@ -226,7 +226,7 @@ const register = asyncHandler(async (req, res, next) => {
 
 const login = asyncHandler(async (req, res, next) => {
   const { email, password, role } = req.body;
-
+  console.log("Request body:", req.body);
   try {
     const user = await dbQuery(
       "SELECT * FROM users WHERE email = ? AND role = ?",
@@ -244,6 +244,7 @@ const login = asyncHandler(async (req, res, next) => {
 
     const token = generateToken(user[0]);
 
+    console.log("User logged in successfully:", user[0].email);
     res.cookie("authToken", token, options);
     return res
       .status(200)
