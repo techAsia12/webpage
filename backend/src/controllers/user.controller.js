@@ -12,6 +12,7 @@ const options = {
   httpOnly: true,
   secure: true,
   sameSite: "None",
+  path:"/",
 };
 
 const generateVerificationCode = () => {
@@ -406,33 +407,28 @@ const insertHourly = asyncHandler(async (phoneno, unit) => {
   const currentHour = currentDate.getHours();
 
   try {
-    // Check if there's an entry for the current hour
     const [existingEntry] = await db
       .promise()
-      .query("SELECT * FROM hourly_usage WHERE phoneno = ? AND HOUR(time) = ?", [
+      .query("SELECT * FROM daily_usage WHERE phoneno = ? AND HOUR(time) = ?", [
         phoneno,
         currentHour,
       ]);
 
     if (existingEntry.length > 0) {
-      // Update the existing entry
       await db
         .promise()
-        .query("UPDATE hourly_usage SET unit = ? WHERE phoneno = ? AND HOUR(time) = ?", [
-          unit,
-          phoneno,
-          currentHour,
-        ]);
+        .query(
+          "UPDATE daily_usage SET unit = ?,time=? WHERE phoneno = ? AND HOUR(time) = ?",
+          [unit,currentDate, phoneno, currentHour]
+        );
       console.log("Hourly data updated successfully");
     } else {
-      // Insert a new entry
       await db
         .promise()
-        .query("INSERT INTO hourly_usage (phoneno, unit, time) VALUES (?, ?, ?)", [
-          phoneno,
-          unit,
-          currentDate,
-        ]);
+        .query(
+          "INSERT INTO daily_usage (phoneno, unit, time) VALUES (?, ?, ?)",
+          [phoneno, unit, currentDate]
+        );
       console.log("Hourly data inserted successfully");
     }
   } catch (err) {
@@ -442,16 +438,33 @@ const insertHourly = asyncHandler(async (phoneno, unit) => {
 
 const insertDaily = asyncHandler(async (phoneno, unit) => {
   const currentDate = new Date();
-  try {
-    await db
-      .promise()
-      .query(`INSERT INTO daily_usage (phoneno, unit, time) VALUES (?, ?, ?)`, [
-        phoneno,
-        unit,
-        currentDate,
-      ]);
-    console.log("Daily data inserted for weekly tracking");
+  const currentDay = currentDate.toISOString().split("T")[0];
 
+  try {
+    const [existingData] = await db
+      .promise()
+      .query(
+        `SELECT * FROM weekly_usage WHERE phoneno = ? AND DATE(time) = ?`,
+        [phoneno, currentDay]
+      );
+
+    if (existingData.length > 0) {
+      await db
+        .promise()
+        .query(
+          `UPDATE weekly_usage SET unit = ? WHERE phoneno = ? AND DATE(time) = ?`,
+          [unit, phoneno, currentDay]
+        );
+      console.log("Daily data updated for weekly tracking");
+    } else {
+      await db
+        .promise()
+        .query(
+          `INSERT INTO weekly_usage (phoneno, unit, time) VALUES (?, ?, ?)`,
+          [phoneno, unit, currentDay]
+        );
+      console.log("Daily data inserted for weekly tracking");
+    }
   } catch (err) {
     console.error("Error inserting/updating daily data:", err);
   }
@@ -459,14 +472,34 @@ const insertDaily = asyncHandler(async (phoneno, unit) => {
 
 const insertMonthly = asyncHandler(async (phoneno, unit) => {
   const currentDate = new Date();
-  const currentMonth = currentDate.getMonth() + 1; // getMonth() returns 0-based month
+  const currentMonth = currentDate.getMonth() + 1;
+  const currentYear = currentDate.getFullYear();
 
   try {
-    // Check if there's an entry for the current month
-    const [existingEntry] = await db
+    const [existingData] = await db
       .promise()
-      
+      .query(
+        `SELECT * FROM yearly_usage WHERE phoneno = ? AND YEAR(time) = ? AND MONTH(time) = ?`,
+        [phoneno, currentYear, currentMonth]
+      );
 
+    if (existingData.length > 0) {
+      await db
+        .promise()
+        .query(
+          `UPDATE yearly_usage SET unit = ? WHERE phoneno = ? AND YEAR(time) = ? AND MONTH(time) = ?`,
+          [unit, phoneno, currentYear, currentMonth]
+        );
+      console.log("Monthly data updated for yearly tracking");
+    } else {
+      await db
+        .promise()
+        .query(
+          `INSERT INTO yearly_usage (phoneno, unit, time) VALUES (?, ?, ?)`,
+          [phoneno, unit, currentDate]
+        );
+      console.log("Monthly data inserted for yearly tracking");
+    }
   } catch (err) {
     console.error("Error inserting/updating monthly data:", err);
   }
@@ -659,15 +692,15 @@ const sentData = asyncHandler(async (req, res, next) => {
   )
     .toString()
     .padStart(2, "0")}-${currentDate
-      .getDate()
-      .toString()
-      .padStart(2, "0")} ${currentDate
-        .getHours()
-        .toString()
-        .padStart(2, "0")}:${currentDate
-          .getMinutes()
-          .toString()
-          .padStart(2, "0")}:${currentDate.getSeconds().toString().padStart(2, "0")}`;
+    .getDate()
+    .toString()
+    .padStart(2, "0")} ${currentDate
+    .getHours()
+    .toString()
+    .padStart(2, "0")}:${currentDate
+    .getMinutes()
+    .toString()
+    .padStart(2, "0")}:${currentDate.getSeconds().toString().padStart(2, "0")}`;
 
   console.log(
     `Received data: phoneno=${phoneno}, voltage=${voltage}, current=${current}, MACadd=${MACadd}`
@@ -677,34 +710,42 @@ const sentData = asyncHandler(async (req, res, next) => {
     console.log("Fetching current watt value from database...");
     const [result] = await db
       .promise()
-      .query("SELECT watt FROM client_dets WHERE phoneno = ?", [phoneno]);
+      .query("SELECT watt,date_time FROM client_dets WHERE phoneno = ?", [
+        phoneno,
+      ]);
 
     if (result.length === 0) {
       console.log("Client not found in database");
       return next(new ApiError(404, "Client not found"));
     }
 
-    const watt = result[0].watt === null ? 0 : result[0].watt;
+    const watt = result[0].watt === null ? 1 : result[0].watt;
     console.log(`Current watt: ${watt}, calculating new watt...`);
 
-    const newWatt = voltage * current + watt;
+    const prevtime = result[0].date_time;
+
+    const prevDate = new Date(prevtime);
+    const timeDifferenceInMs = currentDate - prevDate;
+    const timeInHours = timeDifferenceInMs / (1000 * 60 * 60);
+
+    console.log(`Previous time: ${timeInHours} hours ago`);
+    console.log(`Current watt: ${watt}, calculating new watt...`);
+
+    const kwh = (voltage * current * timeInHours) / 1000;
+    const newWatt = watt + kwh;
+    console.log(`New watt value calculated: ${newWatt}`);
 
     console.log(`New watt value calculated: ${newWatt}`);
 
-    // Check if the newWatt is a whole integer
-    if (Number.isInteger(newWatt)) {
-      console.log("Watt value is a whole integer, updating hourly, daily, and monthly data...");
-
-      // Insert or update hourly data
+    console.log(
+      "Watt value is a whole integer, updating hourly, daily, and monthly data..."
+    );
+    if (watt !== newWatt || prevtime.getHours() !== currentDate.getHours()) {
       await insertHourly(phoneno, newWatt);
-
-      // Insert or update daily data
       await insertDaily(phoneno, newWatt);
-
-      // Insert or update monthly data
       await insertMonthly(phoneno, newWatt);
     }
-    
+
     const updateQuery = `
       UPDATE client_dets SET
         voltage = ?,
@@ -896,7 +937,15 @@ const updateProfile = asyncHandler(async (req, res, next) => {
     }
 
     console.log("Client data updated successfully.");
-    return res.status(200).json(new ApiResponse(200, profile.secure_url, "Client data updated successfully"));
+    return res
+      .status(200)
+      .json(
+        new ApiResponse(
+          200,
+          profile.secure_url,
+          "Client data updated successfully"
+        )
+      );
   } catch (err) {
     console.error("Database error:", err);
     return next(new ApiError(500, "Database error"));

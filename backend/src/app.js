@@ -4,7 +4,7 @@ import cookieParser from "cookie-parser";
 const app=express()
 
 app.use(cors({
-    origin: ['http://localhost:5173','*','https://smartenergymeter.techasiamechatronics.com'], 
+    origin: ['http://localhost:5173','*','https://smartenergymeter.techasiamechatronics.com','https://webpage-pearl-sigma.vercel.app'], 
     credentials: true,  
   }))
 
