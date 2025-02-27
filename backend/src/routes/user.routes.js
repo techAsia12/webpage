@@ -16,9 +16,9 @@ import {
   retriveState,
   deleteUser,
   updateProfile,
-  verifyCode
 } from "../controllers/user.controller.js";
 import { verifyJWT } from "../middleware/authUser.middlerware.js";
+import { verifyCode } from "../middleware/authCode.middleware.js";
 import { upload } from "../middleware/multer.middleware.js";
 
 const router = express.Router();

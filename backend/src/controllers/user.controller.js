@@ -14,26 +14,6 @@ const options = {
   path: "/",
 };
 
-export const verifyCode = asyncHandler(async (req, res, next) => {
-  try {
-    const { code } = req.params; 
-    const { verifiedCode } = req.body;
-    console.log(`Received code from params: ${code}`);
-    console.log(`Received verified code from body: ${verifiedCode}`);
-
-    if (code !== verifiedCode) {
-      console.error("Invalid verification code.");
-      return next(new ApiError(400, "Invalid Verification code"));
-    }
-
-    console.log("Verification code matched successfully.");
-    next();
-  } catch (error) {
-    console.error("Error during verification:", error);
-    next(new ApiError(500, "Internal Server Error"));
-  }
-});
-
 const generateVerificationCode = () => {
   return Math.floor(1000 + Math.random() * 9000);
 };
@@ -374,10 +354,13 @@ const sendMail = asyncHandler(async (req, res, next) => {
   };
 
   try {
-
     await transporter.sendMail(mailOptions);
 
     console.log(`Email successfully sent to: ${email}`);
+
+    const payload=await jwt.sign(verificationCode, process.env.JWT_SECRET);
+
+    res.cookie('authCode',payload,options);
 
     return res.status(200).json(new ApiResponse(200, { email }, "Email Sent"));
   } catch (error) {

@@ -1,12 +1,12 @@
 import { ApiError } from "../utils/ApiError.js";
+import { ApiResponse } from "../utils/ApiResponse.js";
 import { asyncHandler } from "../utils/asyncHaldler.js";
+import jwt from "jsonwebtoken";
 
 export const verifyCode = asyncHandler(async (req, res, next) => {
   try {
-    const token = req.cookies?.code || req.header("Authorization")?.replace("Bearer ", "");
+    const token = req.cookies?.authCode || req.header("Authorization")?.replace("Bearer ", "");
     
-    console.log("Token:", token); 
-
     if (!token) {
       console.log("Token missing");
       return next(new ApiError(403, "Unauthorized request: Verification code missing"));
@@ -17,21 +17,20 @@ export const verifyCode = asyncHandler(async (req, res, next) => {
       return next(new ApiError(405, "Invalid token format: Token cannot be empty"));
     }
 
-    const decodedToken = await jwt.verify(token, process.env.JWT_SECRET);
-    console.log("Decoded Token:", decodedToken); 
+    const code = await jwt.verify(token, process.env.JWT_SECRET);
+    const { verificationCode } = req.body;
+    console.log(`Received code from params: ${code}`);
+    console.log(`Received verified code from body: ${verificationCode}`);
 
-    req.code = decodedToken;
+    if (code !== verificationCode) {
+      console.error("Invalid verification code.");
+      return next(new ApiError(400, "Invalid Verification code"));
+    }
 
-    next();
+    console.log("Verification code matched successfully.");
+    return res.status(200).json(new ApiResponse(200,"Code Verified Successfully"));
   } catch (error) {
-    if (error.name === 'TokenExpiredError') {
-      return next(new ApiError(401, "Token has expired"));
-    }
-
-    if (error.name === 'JsonWebTokenError') {
-      return next(new ApiError(401, "Invalid token"));
-    }
-
+    console.error("Error during verification:", error);
     return next(new ApiError(500, "Internal Server Error"));
   }
 });
