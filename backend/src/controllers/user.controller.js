@@ -532,7 +532,7 @@ const insertWeekly = asyncHandler(async (phoneno, unit) => {
   try {
     await db
       .promise()
-      .query(`INSERT INTO daily_usage (phoneno, unit, time) VALUES (?, ?, ?)`, [
+      .query(`INSERT INTO weekly_usage (phoneno, unit, time) VALUES (?, ?, ?)`, [
         phoneno,
         unit,
         currentDate,
@@ -550,7 +550,7 @@ const insertYearly = asyncHandler(async (phoneno, unit) => {
     await db
       .promise()
       .query(
-        `INSERT INTO monthly_usage (phoneno, unit, time) VALUES (?, ?, ?)`,
+        `INSERT INTO yearly_usage (phoneno, unit, time) VALUES (?, ?, ?)`,
         [phoneno, unit, currentDate]
       );
     console.log("Monthly data inserted for yearly tracking");
