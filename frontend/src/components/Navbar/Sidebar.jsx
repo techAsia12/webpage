@@ -93,7 +93,9 @@ const Sidebar = () => {
 
     removeCookie("authToken", { path: "/" });
     dispatch(logout());
-    navigate("/");
+    setTimeout(() => {
+      navigate("/");
+    }, 1000);
   };
 
   const options = {

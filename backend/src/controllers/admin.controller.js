@@ -4,7 +4,6 @@ import { ApiResponse } from "../utils/ApiResponse.js";
 import { ApiError } from "../utils/ApiError.js";
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
-import { MailtrapClient } from "mailtrap";
 import { uploadOnCloudinary } from "../utils/cloudinary.js";
 
 const options = {
