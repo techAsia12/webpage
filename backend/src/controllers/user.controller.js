@@ -4,15 +4,35 @@ import { ApiResponse } from "../utils/ApiResponse.js";
 import { ApiError } from "../utils/ApiError.js";
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
-import { MailtrapClient } from "mailtrap";
 import { uploadOnCloudinary } from "../utils/cloudinary.js";
+import nodemailer from "nodemailer";
 
 const options = {
   httpOnly: true,
   secure: true,
   sameSite: "None",
-  path:"/",
+  path: "/",
 };
+
+export const verifyCode = asyncHandler(async (req, res, next) => {
+  try {
+    const { code } = req.params; 
+    const { verifiedCode } = req.body;
+    console.log(`Received code from params: ${code}`);
+    console.log(`Received verified code from body: ${verifiedCode}`);
+
+    if (code !== verifiedCode) {
+      console.error("Invalid verification code.");
+      return next(new ApiError(400, "Invalid Verification code"));
+    }
+
+    console.log("Verification code matched successfully.");
+    next();
+  } catch (error) {
+    console.error("Error during verification:", error);
+    next(new ApiError(500, "Internal Server Error"));
+  }
+});
 
 const generateVerificationCode = () => {
   return Math.floor(1000 + Math.random() * 9000);
@@ -289,68 +309,80 @@ const getData = asyncHandler(async (req, res, next) => {
 
 const update = asyncHandler(async (req, res, next) => {
   const { name, email, state } = req.body;
-  const { profilePath } = req?.files;
   const user = req?.user;
 
   if (!user) {
+    console.log("User not authenticated");
     return next(new ApiError(400, "User not authenticated"));
   }
 
   try {
-    const profile = await uploadOnCloudinary(profilePath);
-
+    console.log("Updating user details in the database...");
     const result = await dbQuery(
-      "UPDATE users SET name=?, email=?,profile=? WHERE phoneno=?",
-      [name, email, profile, user.id]
+      "UPDATE users SET name=?, email=? WHERE phoneno=?",
+      [name, email, user.id]
     );
+    console.log("User details updated:", result);
 
     if (state) {
+      console.log("Updating client state in the database...");
       await dbQuery("UPDATE client_dets SET state = ? WHERE phoneno=?", [
         state,
         user.id,
       ]);
+      console.log("Client state updated");
     }
 
     return res
       .status(200)
       .json(new ApiResponse(200, result[0], "Updated successfully"));
   } catch (err) {
+    console.error("Database error:", err);
     return next(new ApiError(500, "Database error"));
   }
 });
 
 const sendMail = asyncHandler(async (req, res, next) => {
   const { email } = req.query;
-  const TOKEN = process.env.TOKEN;
+  console.log(`Received request to send verification email to: ${email}`);
 
-  const client = new MailtrapClient({
-    endpoint: "https://send.api.mailtrap.io/",
-    token: "472e8e82d10c7ada7cd1be176daea98d",
+  const transporter = nodemailer.createTransport({
+    service: "gmail",
+    auth: {
+      user: process.env.GMAIL_USER, 
+      pass: process.env.GMAIL_PASS, 
+    },
   });
 
   const verificationCode = generateVerificationCode();
+  console.log(`Generated verification code: ${verificationCode}`);
+
+  const mailOptions = {
+    from: `"TechAsia" <${process.env.GMAIL_USER}>`,
+    to: email, 
+    subject: "Password Verification Code", 
+    text: `Hello,
+
+    We received a request to reset your password. Please use the following code to verify your identity:
+
+    Verification Code: ${verificationCode}
+
+    If you did not request this, please ignore this email.
+
+    Best regards,
+    Your Team`, 
+  };
 
   try {
-    await client.send({
-      from: { name: "TechAsia", email: "mailtrap@demomailtrap.com" },
-      to: [{ email: email }],
-      subject: "Password Verification Code",
-      text: `Hello,
 
-We received a request to reset your password. Please use the following code to verify your identity:
+    await transporter.sendMail(mailOptions);
 
-Verification Code: ${verificationCode}
+    console.log(`Email successfully sent to: ${email}`);
 
-If you did not request this, please ignore this email.
-
-Best regards,
-Your Team`,
-    });
-
-    return res
-      .status(200)
-      .json(new ApiResponse(200, { verificationCode, email }, "Email Sent"));
+    return res.status(200).json(new ApiResponse(200, { email }, "Email Sent"));
   } catch (error) {
+    console.error("Error sending email:", error);
+
     return next(
       new ApiError(
         400,
@@ -418,7 +450,7 @@ const insertHourly = asyncHandler(async (phoneno, unit) => {
         .promise()
         .query(
           "UPDATE daily_usage SET unit = ?,time=? WHERE phoneno = ? AND HOUR(time) = ?",
-          [unit,currentDate, phoneno, currentHour]
+          [unit, currentDate, phoneno, currentHour]
         );
       console.log("Hourly data updated successfully");
     } else {
@@ -787,9 +819,10 @@ const getUserData = asyncHandler(async (req, res, next) => {
   try {
     const [result] = await db
       .promise()
-      .query("SELECT name, email, phoneno, role,profile FROM users WHERE phoneno = ?", [
-        req.user.id,
-      ]);
+      .query(
+        "SELECT name, email, phoneno, role,profile FROM users WHERE phoneno = ?",
+        [req.user.id]
+      );
 
     if (result.length === 0) {
       return next(new ApiError(404, "User not found"));
@@ -801,7 +834,7 @@ const getUserData = asyncHandler(async (req, res, next) => {
         .query("SELECT state FROM client_dets WHERE phoneno = ?", [
           req.user.id,
         ]);
-      const { role, name, email, phoneno,profile } = result[0];
+      const { role, name, email, phoneno, profile } = result[0];
       const { state } = resl[0];
 
       return res
@@ -809,7 +842,7 @@ const getUserData = asyncHandler(async (req, res, next) => {
         .json(
           new ApiResponse(
             200,
-            { name, email, phoneno, state, role,profile },
+            { name, email, phoneno, state, role, profile },
             "Data retrieved successfully"
           )
         );

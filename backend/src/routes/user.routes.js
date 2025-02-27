@@ -16,6 +16,7 @@ import {
   retriveState,
   deleteUser,
   updateProfile,
+  verifyCode
 } from "../controllers/user.controller.js";
 import { verifyJWT } from "../middleware/authUser.middlerware.js";
 import { upload } from "../middleware/multer.middleware.js";
@@ -36,7 +37,7 @@ router.route("/update").post(verifyJWT, upload.single("profile"), update);
 
 router.route("/send-mail").get(sendMail);
 
-// router.route("/verifyCode").post(verifyCode);
+router.route("/verifyCode").post(verifyCode);
 
 router.route("/reset-password").post(resetPassword);
 
