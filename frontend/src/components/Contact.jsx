@@ -21,9 +21,9 @@ const Contact = () => {
         animate={{ y: 0, opacity: 1 }}
         transition={{ duration: 1, delay: 1.2 }}
       >
-        <h1 className="my-10 text-center text-4xl">Address</h1>
-        <div className="text-center tracking-tighter">
-          <p className="my-4">
+        <h1 className="my-10 text-center lg:text-5xl text-2xl">Address</h1>
+        <div className="text-center font-thin">
+          <p className="my-4 lg:text-xl">  
             A-101, Ganpati Krupa Niwas, Opp. NKGSB Bank,Pt. Dindayal Road,
             Dombivli(W), Pin – 421202
           </p>

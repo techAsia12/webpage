@@ -13,6 +13,7 @@ import {
 import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import SideBarAnimation from "./SideBarAnimation";
+import ElectricBoltIcon from "@mui/icons-material/ElectricBolt";
 
 const Signup = () => {
   const [name, setName] = useState("");
@@ -105,7 +106,9 @@ const Signup = () => {
     return stateString.split("_")[0];
   };
 
-  const uniqueStates = Array.from(new Set(states.map(stateObj => getStateName(stateObj.state))));
+  const uniqueStates = Array.from(
+    new Set(states.map((stateObj) => getStateName(stateObj.state)))
+  );
 
   return (
     <div className="w-screen h-screen flex justify-center items-center bg-slate-200">
@@ -113,6 +116,7 @@ const Signup = () => {
       <SideBarAnimation />
       {loading && (
         <div className="fixed top-0 left-0 w-full h-full bg-black/50 flex justify-center items-center z-50">
+          <ElectricBoltIcon className="z-50 transform translate-x-14" />
           <CircularProgress size={80} color="secondary" />
         </div>
       )}
@@ -195,7 +199,9 @@ const Signup = () => {
               disabled={loading}
             >
               {states
-                .filter((stateObj) => getStateName(stateObj.state) === selectedState)
+                .filter(
+                  (stateObj) => getStateName(stateObj.state) === selectedState
+                )
                 .map((stateObj) => (
                   <MenuItem key={stateObj.state} value={stateObj.state}>
                     {getServiceProvider(stateObj.state)}

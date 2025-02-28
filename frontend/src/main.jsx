@@ -12,7 +12,7 @@ import { GoogleOAuthProvider } from "@react-oauth/google";
 import ForgotPassword from "./components/Login/ForgotPassword";
 import { Provider, useSelector } from "react-redux";
 import { store, persistor } from "./app/store.js";
-import About from "./components/About.jsx";
+import Download from "./components/Download.jsx";
 import Contact from "./components/Contact.jsx";
 import AdminPage from "./components/Admin/AdminPage.jsx";
 import CostRangePage from "./components/Admin/CostRangePage.jsx";
@@ -56,7 +56,7 @@ const router = createBrowserRouter([
           },
           {
             path: "/dashboard/about",
-            element: <About />,
+            element: <Download />,
           },
           {
             path: "/dashboard/contact",

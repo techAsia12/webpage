@@ -10,7 +10,7 @@ import {
   FormControl,
   InputLabel,
   MenuItem,
-  CircularProgress, 
+  CircularProgress,
 } from "@mui/material";
 import { Edit as EditIcon, Check as CheckIcon } from "@mui/icons-material";
 import { toast } from "react-toastify";
@@ -18,6 +18,7 @@ import "react-toastify/dist/ReactToastify.css";
 import { useDispatch } from "react-redux";
 import { updatePage } from "../Features/pages/pages.slice";
 import CancelIcon from "@mui/icons-material/Cancel";
+import ElectricBoltIcon from "@mui/icons-material/ElectricBolt";
 
 const Update = () => {
   const [name, setName] = useState();
@@ -84,7 +85,7 @@ const Update = () => {
         toast.error("Failed to load user data.");
       })
       .finally(() => {
-        setLoading(false); 
+        setLoading(false);
       });
   }, []);
 
@@ -111,7 +112,7 @@ const Update = () => {
           toast.error(`Error: ${err.response.data.message}`);
         })
         .finally(() => {
-          setLoading(false); 
+          setLoading(false);
         });
     } else {
       axios
@@ -150,7 +151,10 @@ const Update = () => {
           <Avatar alt="User Avatar" src="" sx={{ width: 60, height: 60 }} />
 
           {loading ? (
-            <CircularProgress size={60} color="primary" /> 
+            <div className="fixed top-0 left-0 w-full h-full bg-black/50 flex justify-center items-center z-40">
+              <ElectricBoltIcon className="z-50 transform translate-x-14" />
+              <CircularProgress size={80} color="inherit " />
+            </div>
           ) : (
             <>
               <TextField
@@ -195,7 +199,9 @@ const Update = () => {
               />
 
               <FormControl className="lg:w-5/6 w-3/4" margin="normal">
-                <InputLabel sx={{ color: "black", ".dark &": { color: "white" } }}>
+                <InputLabel
+                  sx={{ color: "black", ".dark &": { color: "white" } }}
+                >
                   State
                 </InputLabel>
                 <Select
@@ -239,7 +245,9 @@ const Update = () => {
                 margin="normal"
                 disabled={!selectedState}
               >
-                <InputLabel sx={{ color: "black", ".dark &": { color: "white" } }}>
+                <InputLabel
+                  sx={{ color: "black", ".dark &": { color: "white" } }}
+                >
                   Service Provider
                 </InputLabel>
                 <Select
@@ -272,7 +280,8 @@ const Update = () => {
                 >
                   {states
                     .filter(
-                      (stateObj) => getStateName(stateObj.state) === selectedState
+                      (stateObj) =>
+                        getStateName(stateObj.state) === selectedState
                     )
                     .map((stateObj) => (
                       <MenuItem key={stateObj.state} value={stateObj.state}>
@@ -316,7 +325,7 @@ const Update = () => {
           />
           <Avatar alt="User Avatar" src="" sx={{ width: 60, height: 60 }} />
           {loading ? (
-            <CircularProgress size={60} color="primary" /> 
+            <CircularProgress size={60} color="primary" />
           ) : (
             <>
               <TextField

@@ -267,7 +267,7 @@ useEffect(() => {
         <Meter
           color={"#d3435c"}
           value={parseFloat(kwh)}
-          maxValue={maxKwh}
+          maxValue={100}
           unit={"kwh"}
           initial={{ y: 100, opacity: 0 }}
           animate={{ y: 0, opacity: 1 }}

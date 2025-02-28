@@ -14,8 +14,8 @@ const Layout = () => {
 
   const navLinks = [
     { path: "/dashboard", label: "Home" },
-    { path: "/dashboard/about", label: "About" },
     { path: "/dashboard/services", label: "Usage" },
+    { path: "/dashboard/about", label: "Download" },
     { path: "/dashboard/contact", label: "Contact" },
   ];
 
@@ -39,7 +39,7 @@ const Layout = () => {
   return (
     <div className="lg:overflow-hidden dark:bg-gray-800 top-0">
       <Navbar navLinks={navLinks} />
-      <div className="content-container dark:bg-gray-800  z-10 flex">
+      <div className="container overflow-hidden dark:bg-gray-800  z-10 flex lg:ml-20">
         <Outlet />
         <div className={`z-20 absolute backdrop-blur-sm ${visibility}`}>
           <Update />

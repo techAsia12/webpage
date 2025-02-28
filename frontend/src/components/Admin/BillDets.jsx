@@ -13,8 +13,6 @@ import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import AddBoxIcon from '@mui/icons-material/AddBox';
 import EditIcon from '@mui/icons-material/Edit';
-import SaveIcon from '@mui/icons-material/Save';
-import { useNavigate } from "react-router-dom";
 import { useDispatch } from "react-redux";
 import { billDetsPage } from "../../Features/pages/pages.slice";
 
@@ -193,8 +191,8 @@ const BillDets = () => {
   };
 
   return (
-    <div className="w-screen h-screen flex justify-center items-center">
-      <div className="flex justify-center dark:bg-gray-800 dark:text-white h-fit w-full transform translate-x-10 -translate-y-40">
+    <div className="w-screen flex justify-center items-center">
+      <div className="flex justify-center dark:bg-gray-800 dark:text-white h-fit w-full mt-20 ml-20">
         <ToastContainer
           position="top-right"
           autoClose={5000}
@@ -334,7 +332,7 @@ const BillDets = () => {
       </div>
       <Button
         variant="contained"
-        className="z-10 absolute transform -translate-y-72 right-10 lg:right-2 dark:bg-gray-800 dark:text-white "
+        className="z-10 absolute trnasform -translate-y-40 right-20 dark:bg-gray-800 dark:text-white "
         onClick={handleClick}
       >
         <AddBoxIcon />

@@ -18,6 +18,7 @@ import "react-toastify/dist/ReactToastify.css";
 import { useDispatch } from "react-redux";
 import { login } from "../../Features/auth/auth.slice";
 import SideBarAnimation from "../SideBarAnimation";
+import ElectricBoltIcon from '@mui/icons-material/ElectricBolt';
 
 const Login = () => {
   const [email, setEmail] = useState("");
@@ -77,8 +78,9 @@ const Login = () => {
       <ToastContainer />
       <SideBarAnimation />
       {loading && (
-        <div className="fixed top-0 left-0 w-full h-full bg-black/50 flex justify-center items-center z-50">
-          <CircularProgress size={80} color="inherit" />
+        <div className="fixed top-0 left-0 w-full h-full bg-black/50 flex justify-center items-center z-40">
+          <ElectricBoltIcon className="z-50 transform translate-x-14"/>
+          <CircularProgress size={80} color="inherit " />
         </div>
       )}
 

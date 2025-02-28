@@ -19,7 +19,7 @@ app.use((req, res, next) => {
   res.setHeader("Cross-Origin-Embedder-Policy", "require-corp");
   next();
 });
-
+//"C:\Users\priye\AndroidStudioProjects\SmartEnergyMeter\app\build\outputs\apk\debug\app-debug.apk"
 import  userRoute from "./routes/user.routes.js";
 import  adminRoute from "./routes/admin.routes.js";
 import {errorHandler} from "./middleware/errorHandling.middleware.js"
