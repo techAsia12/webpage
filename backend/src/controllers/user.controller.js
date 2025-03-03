@@ -329,8 +329,8 @@ const sendMail = asyncHandler(async (req, res, next) => {
   const transporter = nodemailer.createTransport({
     service: "gmail",
     auth: {
-      user: process.env.GMAIL_USER, 
-      pass: process.env.GMAIL_PASS, 
+      user: process.env.GMAIL_USER,
+      pass: process.env.GMAIL_PASS,
     },
   });
 
@@ -339,8 +339,8 @@ const sendMail = asyncHandler(async (req, res, next) => {
 
   const mailOptions = {
     from: `"TechAsia" <${process.env.GMAIL_USER}>`,
-    to: email, 
-    subject: "Password Verification Code", 
+    to: email,
+    subject: "Password Verification Code",
     text: `Hello,
 
     We received a request to reset your password. Please use the following code to verify your identity:
@@ -350,7 +350,7 @@ const sendMail = asyncHandler(async (req, res, next) => {
     If you did not request this, please ignore this email.
 
     Best regards,
-    Your Team`, 
+    Your Team`,
   };
 
   try {
@@ -358,9 +358,9 @@ const sendMail = asyncHandler(async (req, res, next) => {
 
     console.log(`Email successfully sent to: ${email}`);
 
-    const payload=await jwt.sign(verificationCode, process.env.JWT_SECRET);
+    const payload = await jwt.sign(verificationCode, process.env.JWT_SECRET);
 
-    res.cookie('authCode',payload,options);
+    res.cookie("authCode", payload, options);
 
     return res.status(200).json(new ApiResponse(200, { email }, "Email Sent"));
   } catch (error) {
@@ -519,82 +519,59 @@ const insertMonthly = asyncHandler(async (phoneno, unit) => {
   }
 });
 
-const resetDailyAtMidnight = asyncHandler(async (req, res, next) => {
-  const now = new Date();
-  const timeUntilMidnight =
-    new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1, 0, 0, 0) -
-    now;
-
-  setTimeout(() => {
-    db.promise()
-      .query(`DELETE FROM daily_usage`)
-      .then(() => console.log("Daily usage table reset at midnight"))
-      .catch((err) => console.error("Error resetting daily usage:", err));
-
-    resetDailyAtMidnight();
-  }, timeUntilMidnight);
-});
-
-const resetWeeklyAtMidnight = asyncHandler(async (req, res, next) => {
-  const now = new Date();
-  const timeUntilNextWeek =
-    new Date(now.getFullYear(), now.getMonth(), now.getDate() + 7, 0, 0, 0) -
-    now;
-
-  setTimeout(() => {
-    db.promise()
-      .query(`DELETE FROM weekly_usage`)
-      .then(() => console.log("Weekly usage table reset after a week"))
-      .catch((err) => console.error("Error resetting weekly usage:", err));
-
-    resetWeeklyAtMidnight();
-  }, timeUntilNextWeek);
-});
-
-const resetYearlyAtMidnight = asyncHandler(async (req, res, next) => {
-  const now = new Date();
-  const timeUntilNextYear =
-    new Date(now.getFullYear() + 1, 0, 1, 0, 0, 0) - now;
-
-  setTimeout(() => {
-    db.promise()
-      .query(`DELETE FROM yearly_usage`)
-      .then(() => console.log("Yearly usage table reset after a year"))
-      .catch((err) => console.error("Error resetting yearly usage:", err));
-
-    resetYearlyAtMidnight();
-  }, timeUntilNextYear);
-});
-
-const startPeriodicUpdates = asyncHandler(async (req, res, next) => {
+const retiveCostToday = asyncHandler(async (req, res, next) => {
   const user = req?.user;
-  const phoneno = user?.id;
+  const previousDay = new Date();
+  previousDay.setDate(previousDay.getDate() - 1);
+  const prevDateString = previousDay.toISOString().split("T")[0]; 
+  const todayDateString = new Date().toISOString().split("T")[0]; 
 
-  const [result] = await db
-    .promise()
-    .query("SELECT watt FROM client_dets WHERE phoneno = ?", [user.id]);
+  console.log("User:", user);
+  console.log("Previous Day:", prevDateString);
+  console.log("Today:", todayDateString);
 
-  if (result.length === 0) {
-    return next(new ApiError(404, "No data found"));
+  if (!user) {
+    return next(new ApiError(400, "User not authenticated"));
   }
 
-  const unit = result[0];
+  try {
+    const [result] = await db.promise().query(
+      `SELECT unit, DATE(time) as date FROM weekly_usage 
+       WHERE phoneno = ? 
+       AND DATE(time) BETWEEN DATE_SUB(CURDATE(), INTERVAL 1 DAY) AND CURDATE()
+       ORDER BY time ASC`,
+      [user.id]
+    );
 
-  setInterval(() => {
-    insertHourly(phoneno, unit);
-  }, 60 * 60 * 1000);
+    console.log("Query Result:", result);
 
-  setInterval(() => {
-    insertWeekly(phoneno, unit);
-  }, 7 * 24 * 60 * 60 * 1000);
+    if (result.length === 0) {
+      return next(new ApiError(404, "No data found"));
+    }
 
-  setInterval(() => {
-    insertYearly(phoneno, unit);
-  }, 365 * 24 * 60 * 60 * 1000);
+    let previousDayData = 0;
+    let todayData = 0;
 
-  resetDailyAtMidnight();
-  resetWeeklyAtMidnight();
-  resetYearlyAtMidnight();
+    result.forEach((entry) => {
+      console.log("Entry:", entry);
+      if (entry.date === prevDateString) {
+        previousDayData += entry.unit; 
+      } else if (entry.date === todayDateString) {
+        todayData += entry.unit; 
+      }
+    });
+
+    console.log("Previous Day Usage:", previousDayData);
+    console.log("Today's Usage:", todayData);
+
+    const costToday = previousDayData - todayData;
+    console.log("Cost Difference:", costToday);
+
+    return res.status(200).json(new ApiResponse(200, costToday, "Data Sent"));
+  } catch (err) {
+    console.error("Database Error:", err);
+    return next(new ApiError(500, "Database Error"));
+  }
 });
 
 const retiveHourlyUsage = asyncHandler(async (req, res, next) => {
@@ -605,12 +582,14 @@ const retiveHourlyUsage = asyncHandler(async (req, res, next) => {
   }
 
   try {
-    const [result] = await db
-      .promise()
-      .query(
-        "SELECT unit, time FROM daily_usage WHERE phoneno = ? ORDER BY time ASC",
-        [user.id]
-      );
+    const [result] = await db.promise().query(
+      `SELECT unit, time 
+         FROM daily_usage 
+         WHERE phoneno = ? 
+         AND DATE(time) = CURDATE() 
+         ORDER BY time ASC`,
+      [user.id]
+    );
 
     if (result.length === 0) {
       return next(new ApiError(404, "No hourly data found"));
@@ -639,12 +618,13 @@ const retiveWeeklyUsage = asyncHandler(async (req, res, next) => {
   }
 
   try {
-    const [result] = await db
-      .promise()
-      .query(
-        "SELECT unit, time FROM weekly_usage WHERE phoneno = ? ORDER BY time ASC",
-        [user.id]
-      );
+    const [result] = await db.promise().query(
+      `SELECT unit, time FROM weekly_usage 
+        WHERE phoneno = ? 
+        AND YEARWEEK(time) = YEARWEEK(CURDATE()) 
+        ORDER BY time ASC`,
+      [user.id]
+    );
 
     if (result.length === 0) {
       return next(new ApiError(404, "No weekly data found"));
@@ -984,6 +964,6 @@ export {
   getUserData,
   retriveState,
   deleteUser,
-  startPeriodicUpdates,
   updateProfile,
+  retiveCostToday
 };

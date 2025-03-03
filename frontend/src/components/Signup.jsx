@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import axios from "axios";
+import { useSelector } from "react-redux";
 import TextField from "@mui/material/TextField";
 import {
   Button,
@@ -26,14 +27,10 @@ const Signup = () => {
   const [states, setStates] = useState([]);
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
-
-  const options = {
-    withCredentials: true,
-  };
+  const mode = useSelector((state) => state.theme.mode);
 
   const handleStateChange = (event) => {
-    const state = event.target.value;
-    setSelectedState(state);
+    setSelectedState(event.target.value);
     setSelectedServiceProvider("");
   };
 
@@ -72,12 +69,11 @@ const Signup = () => {
           serviceProvider: selectedServiceProvider,
           role: "Client",
         },
-        options
+        { withCredentials: true }
       );
 
       setLoading(false);
-
-      if (res?.data?.success === true) {
+      if (res?.data?.success) {
         toast.success("Registration successful!");
         navigate("/");
       } else {
@@ -92,40 +88,45 @@ const Signup = () => {
   useEffect(() => {
     axios
       .get(`${import.meta.env.VITE_BACKEND_URL}/api/user/retrive-stateDets`)
-      .then((res) => {
-        setStates(res.data.data);
-      })
+      .then((res) => setStates(res.data.data))
       .catch((err) => console.log(err));
   }, []);
 
-  const getStateName = (stateString) => {
-    return stateString.split("_")[1];
-  };
-
-  const getServiceProvider = (stateString) => {
-    return stateString.split("_")[0];
-  };
-
+  const getStateName = (stateString) => stateString.split("_")[1];
+  const getServiceProvider = (stateString) => stateString.split("_")[0];
   const uniqueStates = Array.from(
-    new Set(states.map((stateObj) => getStateName(stateObj.state)))
+    new Set(states.map((s) => getStateName(s.state)))
   );
 
   return (
-    <div className="w-screen h-screen flex justify-center items-center bg-slate-200">
+    <div
+      className={`w-screen h-screen flex justify-center items-center ${
+        mode === "dark" ? "bg-gray-900 text-white" : "bg-slate-200"
+      }`}
+    >
       <ToastContainer />
       <SideBarAnimation />
+
       {loading && (
         <div className="fixed top-0 left-0 w-full h-full bg-black/50 flex justify-center items-center z-50">
-          <ElectricBoltIcon className="z-50 transform translate-x-14" />
-          <CircularProgress size={80} color="secondary" />
+          <ElectricBoltIcon className="z-50 transform translate-x-14 dark:text-white" />
+          <CircularProgress
+            size={80}
+            color="inherit"
+            className="dark:text-white"
+          />
         </div>
       )}
 
-      <div className="lg:w-3/4 w-4/5 h-fit lg:h-screen border border-neutral-900 rounded-3xl lg:border-none lg:pt-16 backdrop-blur-2xl bg-white/30">
+      <div
+        className={`lg:w-3/4 w-4/5 h-fit lg:h-screen border rounded-3xl lg:border-none lg:pt-16 backdrop-blur-2xl ${
+          mode === "dark" ? "bg-gray-800 border-gray-700" : "bg-white/30"
+        }`}
+      >
         <h1 className="text-center text-4xl pt-12">Client SignUp</h1>
         <form
           onSubmit={handleSubmit}
-          className="self-center mx-10 mt-10 space-y-4 flex flex-col justify-center items-center h-3/4 "
+          className="mx-10 mt-10 space-y-4 flex flex-col justify-center items-center h-3/4"
         >
           <TextField
             label="Enter Name"
@@ -134,6 +135,25 @@ const Signup = () => {
             onChange={(e) => setName(e.target.value)}
             value={name}
             disabled={loading}
+            sx={{
+              "& .MuiInputLabel-root": {
+                color: mode === "dark" ? "white" : "black",
+              },
+              "& .MuiInputLabel-root.Mui-focused": {
+                color: mode === "dark" ? "white" : "black",
+              },
+              "& .MuiInputBase-input": {
+                color: mode === "dark" ? "white" : "black",
+                backgroundColor: "transparent",
+              },
+              "& .MuiOutlinedInput-notchedOutline": {
+                borderColor: mode === "dark" ? "white" : "black",
+              },
+              "& .MuiOutlinedInput-root:hover .MuiOutlinedInput-notchedOutline":
+                {
+                  borderColor: mode === "dark" ? "#BBBBBB" : "#333333",
+                },
+            }}
           />
           <TextField
             label="Enter Password"
@@ -143,6 +163,25 @@ const Signup = () => {
             onChange={(e) => setPassword(e.target.value)}
             value={password}
             disabled={loading}
+            sx={{
+              "& .MuiInputLabel-root": {
+                color: mode === "dark" ? "white" : "black",
+              },
+              "& .MuiInputLabel-root.Mui-focused": {
+                color: mode === "dark" ? "white" : "black",
+              },
+              "& .MuiInputBase-input": {
+                color: mode === "dark" ? "white" : "black",
+                backgroundColor: "transparent",
+              },
+              "& .MuiOutlinedInput-notchedOutline": {
+                borderColor: mode === "dark" ? "white" : "black",
+              },
+              "& .MuiOutlinedInput-root:hover .MuiOutlinedInput-notchedOutline":
+                {
+                  borderColor: mode === "dark" ? "#BBBBBB" : "#333333",
+                },
+            }}
           />
           <TextField
             label="Confirm Password"
@@ -152,6 +191,25 @@ const Signup = () => {
             onChange={(e) => setConfirm(e.target.value)}
             value={confirm}
             disabled={loading}
+            sx={{
+              "& .MuiInputLabel-root": {
+                color: mode === "dark" ? "white" : "black",
+              },
+              "& .MuiInputLabel-root.Mui-focused": {
+                color: mode === "dark" ? "white" : "black",
+              },
+              "& .MuiInputBase-input": {
+                color: mode === "dark" ? "white" : "black",
+                backgroundColor: "transparent",
+              },
+              "& .MuiOutlinedInput-notchedOutline": {
+                borderColor: mode === "dark" ? "white" : "black",
+              },
+              "& .MuiOutlinedInput-root:hover .MuiOutlinedInput-notchedOutline":
+                {
+                  borderColor: mode === "dark" ? "#BBBBBB" : "#333333",
+                },
+            }}
           />
           <TextField
             label="Enter Phone Number"
@@ -160,6 +218,25 @@ const Signup = () => {
             onChange={(e) => setPhoneno(e.target.value)}
             value={phoneno}
             disabled={loading}
+            sx={{
+              "& .MuiInputLabel-root": {
+                color: mode === "dark" ? "white" : "black",
+              },
+              "& .MuiInputLabel-root.Mui-focused": {
+                color: mode === "dark" ? "white" : "black",
+              },
+              "& .MuiInputBase-input": {
+                color: mode === "dark" ? "white" : "black",
+                backgroundColor: "transparent",
+              },
+              "& .MuiOutlinedInput-notchedOutline": {
+                borderColor: mode === "dark" ? "white" : "black",
+              },
+              "& .MuiOutlinedInput-root:hover .MuiOutlinedInput-notchedOutline":
+                {
+                  borderColor: mode === "dark" ? "#BBBBBB" : "#333333",
+                },
+            }}
           />
           <TextField
             label="Enter E-mail"
@@ -168,15 +245,52 @@ const Signup = () => {
             onChange={(e) => setEmail(e.target.value)}
             value={email}
             disabled={loading}
+            sx={{
+              "& .MuiInputLabel-root": {
+                color: mode === "dark" ? "white" : "black",
+              },
+              "& .MuiInputLabel-root.Mui-focused": {
+                color: mode === "dark" ? "white" : "black",
+              },
+              "& .MuiInputBase-input": {
+                color: mode === "dark" ? "white" : "black",
+                backgroundColor: "transparent",
+              },
+              "& .MuiOutlinedInput-notchedOutline": {
+                borderColor: mode === "dark" ? "white" : "black",
+              },
+              "& .MuiOutlinedInput-root:hover .MuiOutlinedInput-notchedOutline":
+                {
+                  borderColor: mode === "dark" ? "#BBBBBB" : "#333333",
+                },
+            }}
           />
 
-          <FormControl className="lg:w-5/6 w-full" margin="normal">
-            <InputLabel>State</InputLabel>
+          <FormControl className="lg:w-5/6 w-full">
+            <InputLabel className="dark:text-white">State</InputLabel>
             <Select
-              label="State"
               value={selectedState}
               onChange={handleStateChange}
               disabled={loading}
+              sx={{
+                "& .MuiInputLabel-root": {
+                  color: mode === "dark" ? "white" : "black",
+                },
+                "& .MuiInputLabel-root.Mui-focused": {
+                  color: mode === "dark" ? "white" : "black",
+                },
+                "& .MuiInputBase-input": {
+                  color: mode === "dark" ? "white" : "black",
+                  backgroundColor: "transparent",
+                },
+                "& .MuiOutlinedInput-notchedOutline": {
+                  borderColor: mode === "dark" ? "white" : "black",
+                },
+                "& .MuiOutlinedInput-root:hover .MuiOutlinedInput-notchedOutline":
+                  {
+                    borderColor: mode === "dark" ? "#BBBBBB" : "#333333",
+                  },
+              }}
             >
               {uniqueStates.map((stateName) => (
                 <MenuItem key={stateName} value={stateName}>
@@ -188,23 +302,37 @@ const Signup = () => {
 
           <FormControl
             className="lg:w-5/6 w-full"
-            margin="normal"
             disabled={!selectedState || loading}
           >
-            <InputLabel>Service Provider</InputLabel>
+            <InputLabel className="dark:text-white">Service Provider</InputLabel>
             <Select
-              label="Service Provider"
               value={selectedServiceProvider}
               onChange={(e) => setSelectedServiceProvider(e.target.value)}
-              disabled={loading}
+              sx={{
+                "& .MuiInputLabel-root": {
+                  color: mode === "dark" ? "white" : "black",
+                },
+                "& .MuiInputLabel-root.Mui-focused": {
+                  color: mode === "dark" ? "white" : "black",
+                },
+                "& .MuiInputBase-input": {
+                  color: mode === "dark" ? "white" : "black",
+                  backgroundColor: "transparent",
+                },
+                "& .MuiOutlinedInput-notchedOutline": {
+                  borderColor: mode === "dark" ? "white" : "black",
+                },
+                "& .MuiOutlinedInput-root:hover .MuiOutlinedInput-notchedOutline":
+                  {
+                    borderColor: mode === "dark" ? "#BBBBBB" : "#333333",
+                  },
+              }}
             >
               {states
-                .filter(
-                  (stateObj) => getStateName(stateObj.state) === selectedState
-                )
-                .map((stateObj) => (
-                  <MenuItem key={stateObj.state} value={stateObj.state}>
-                    {getServiceProvider(stateObj.state)}
+                .filter((s) => getStateName(s.state) === selectedState)
+                .map((s) => (
+                  <MenuItem key={s.state} value={s.state}>
+                    {getServiceProvider(s.state)}
                   </MenuItem>
                 ))}
             </Select>
@@ -213,12 +341,12 @@ const Signup = () => {
           <Button
             variant="contained"
             type="submit"
-            className="border border-neutral-900 w-44 h-9 text-xl"
+            className="w-44 h-9 text-xl"
             disabled={loading}
           >
             {loading ? "Loading..." : "Signup"}
           </Button>
-          <Link to={"/"} className="text-sm text-blue-400 text-center">
+          <Link to="/" className="text-sm text-blue-400 text-center">
             Already Have An Account?
           </Link>
         </form>

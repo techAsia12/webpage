@@ -25,14 +25,14 @@ const ThemeToggle = () => {
 
 
     <motion.div
-    className="rounded-full w-20 h-10 mt-1 p-1 border border-neutral-900 bg-cover bg-center cursor-pointer"
+    className="rounded-full w-16 h-8 mt-3 p-1 border border-neutral-900 bg-cover bg-center cursor-pointer"
     style={{ backgroundImage: `url(${bgImage})` }}
     onClick={() => dispatch(toggleTheme())}
   >
     <motion.div
-      className="w-8 h-8 rounded-full bg-cover bg-center"
+      className="w-6 h-6 rounded-full bg-cover bg-center"
       style={{ backgroundImage: `url(${image})` }}
-      animate={{ x: theme === "light" ? 2 : 36 }}
+      animate={{ x: theme === "light" ? 2 : 26 }}
       transition={{ type: "spring", stiffness: 200, damping: 20 }}
     ></motion.div>
   </motion.div>

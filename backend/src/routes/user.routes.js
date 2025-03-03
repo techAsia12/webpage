@@ -16,6 +16,7 @@ import {
   retriveState,
   deleteUser,
   updateProfile,
+  retiveCostToday
 } from "../controllers/user.controller.js";
 import { verifyJWT } from "../middleware/authUser.middlerware.js";
 import { verifyCode } from "../middleware/authCode.middleware.js";
@@ -50,6 +51,8 @@ router.route("/retrive-weekly").get(verifyJWT, retiveWeeklyUsage);
 router.route("/retrive-yearly").get(verifyJWT, retiveYearlyUsage);
 
 router.route("/retrive-user").get(verifyJWT, getUserData);
+
+router.route("/retrive-costToday").get(verifyJWT,retiveCostToday);
 
 router.route("/retrive-stateDets").get(retriveState);
 

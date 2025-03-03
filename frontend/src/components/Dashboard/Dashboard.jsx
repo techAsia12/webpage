@@ -66,7 +66,7 @@ const Dashboard = () => {
     withCredentials: true,
   };
 
-  const costCalc = async (unit) => {
+  const costCalc = (unit) => {
     const calc = (unit, cos, index) => {
       const base = unit * cos + billDets.base;
       const tax1 = unit * billDets.percentPerUnit;
@@ -88,10 +88,7 @@ const Dashboard = () => {
     } else {
       ({ base, total } = calc(unit, billDets.range[0].cost, 0));
     }
-
-    setCost(parseFloat(base.toFixed()));
-    setTotalCost(parseFloat(total.toFixed()));
-    setPerMonth(parseFloat(totalCost / 12).toFixed());
+    return (parseFloat(total.toFixed()))
   };
 
   useEffect(() => {
@@ -149,8 +146,6 @@ const Dashboard = () => {
       }
     }, 5000);
 
-
-
     return () => clearInterval(interval);
   }, [user.watt]);
 
@@ -161,9 +156,7 @@ const Dashboard = () => {
         .then((res) => {
           const userData = res.data.data;
           dispatch(login(userData));
-          const time = (new Date() - new Date(userData.date_time)) / (1000 * 60 * 60); 
-          const newKwh = parseFloat(((userData.watt * time) / 1000).toFixed(3)); 
-          setKwh(newKwh); 
+          setKwh(userData.watt); 
         })
         .catch((err) =>
           console.log("User data error:", err.response?.data?.message || err)
@@ -220,14 +213,31 @@ useEffect(() => {
             range: [range, range1, range2, range3],
           });
 
-          costCalc(kwh); 
+          setTotalCost(costCalc(kwh)); 
+          setPerMonth(parseFloat(totalCost / 12).toFixed());
         })
         .catch((err) =>
           console.log("Bill details error:", err.response?.data?.message || err)
         );
     };
 
+    const fetchCostToday=async()=>{
+      try {
+        const response = await axios.get(
+          `${import.meta.env.VITE_BACKEND_URL}/api/user//retrive-costToday`, 
+          { withCredentials: true } 
+        );
+        
+        if (response.status === 200) {
+          setCost(costCalc(response.data.data));
+        }
+      }catch (error) {
+        console.error("Error fetching hourly usage data:", error);
+      }
+    }
+
     fetchBillDetails(); 
+    fetchCostToday();
 
   }, [user, kwh]); 
 
@@ -267,7 +277,7 @@ useEffect(() => {
         <Meter
           color={"#d3435c"}
           value={parseFloat(kwh)}
-          maxValue={100}
+          maxValue={1000}
           unit={"kwh"}
           initial={{ y: 100, opacity: 0 }}
           animate={{ y: 0, opacity: 1 }}

@@ -13,7 +13,8 @@ import {
 import { Button } from "@mui/material";
 import axios from "axios";
 import { toast, ToastContainer } from "react-toastify";
-import "react-toastify/dist/ReactToastify.css"; // Import Toastify styles
+import "react-toastify/dist/ReactToastify.css";
+import { useSelector } from "react-redux";
 
 ChartJS.register(
   CategoryScale,
@@ -27,6 +28,7 @@ ChartJS.register(
 
 const Services = () => {
   const options = { withCredentials: true };
+  const mode = useSelector((state) => state.theme.mode);
 
   const [data, setData] = useState({
     labels: [
@@ -53,14 +55,28 @@ const Services = () => {
     plugins: {
       legend: {
         position: "top",
+        labels: {
+          color: mode === "dark" ? "white" : "black",
+        },
       },
       title: {
         display: true,
+        color: mode === "dark" ? "white" : "black",
       },
     },
     scales: {
-      x: { beginAtZero: true },
-      y: { beginAtZero: true },
+      x: {
+        beginAtZero: true,
+        ticks: {
+          color: mode === "dark" ? "white" : "black",
+        },
+      },
+      y: {
+        beginAtZero: true,
+        ticks: {
+          color: mode === "dark" ? "white" : "black",
+        },
+      },
     },
   };
 
@@ -102,7 +118,7 @@ const Services = () => {
                   : btnState === "w"
                   ? "Units Used This Week"
                   : "Units Used Today",
-              data: res.data.data || Array(labels.length).fill(0),
+              data: res.data.data.length ? res.data.data : Array(labels.length).fill(0),
               fill: false,
               borderColor: "rgba(75, 192, 192, 1)",
               tension: 0.1,
@@ -113,13 +129,30 @@ const Services = () => {
       })
       .catch((error) => {
         console.error("Error fetching data:", error);
-        toast.error("Error fetching data! Please try again."); 
+        setData({
+          labels,
+          datasets: [
+            {
+              label:
+                btnState === "y"
+                  ? "Units Used This Year"
+                  : btnState === "w"
+                  ? "Units Used This Week"
+                  : "Units Used Today",
+              data: Array(labels.length).fill(0),
+              fill: false,
+              borderColor: "rgba(75, 192, 192, 1)",
+              tension: 0.1,
+            },
+          ],
+        });
+        toast.error(error.response?.data?.message || "Error fetching data"); 
       });
-  }, [btnState]);
+  }, [btnState, mode]);
 
   return (
     <div className="lg:w-4/5 h-fit lg:ml-44 lg:pt-10">
-      <h2>Usage Statistics</h2>
+      <h2 className={mode === "dark" ? "text-white" : "text-black"}>Usage Statistics</h2>
       <Line data={data} options={chartOptions} />
       <div className="pt-10 flex justify-center space-x-10">
         <Button

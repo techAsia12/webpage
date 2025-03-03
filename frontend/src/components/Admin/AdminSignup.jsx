@@ -1,11 +1,12 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import axios from "axios";
 import TextField from "@mui/material/TextField";
-import { Button } from "@mui/material";
+import { Button, IconButton } from "@mui/material";
 import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
-import  SideBarAnimation  from "../SideBarAnimation.jsx";
+import SideBarAnimation from "../SideBarAnimation.jsx";
+import { useSelector } from "react-redux";
 
 const AdminSignup = () => {
   const [name, setName] = useState("");
@@ -13,11 +14,9 @@ const AdminSignup = () => {
   const [confirm, setConfirm] = useState("");
   const [phoneno, setPhoneno] = useState("");
   const [email, setEmail] = useState("");
-  const navigate = useNavigate();
+  const mode = useSelector((state) => state.theme.mode);
 
-  const options = {
-    withCredentials: true,
-  };
+  const navigate = useNavigate();
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -42,7 +41,7 @@ const AdminSignup = () => {
           phoneno,
           role: "Admin",
         },
-        options
+        { withCredentials: true }
       );
 
       if (res?.data?.success === true) {
@@ -57,14 +56,15 @@ const AdminSignup = () => {
   };
 
   return (
-    <div className="w-screen h-screen flex justify-center items-center bg-slate-200 ">
+    <div className="w-screen h-screen flex justify-center items-center bg-gray-100 dark:bg-gray-900 transition-all">
       <ToastContainer />
       <SideBarAnimation />
-      <div className="lg:w-3/4 w-4/5 h-fit lg:h-screen border border-neutral-900 rounded-3xl lg:border-none lg:pt-16 backdrop-blur-2xl bg-white/30">
-        <h1 className="text-center text-4xl pt-12">Admin SignUp</h1>
+
+      <div className="relative lg:w-3/4 w-4/5 h-fit lg:h-screen border border-neutral-900 rounded-3xl lg:border-none lg:pt-16 backdrop-blur-2xl bg-white/30 dark:bg-gray-800 dark:text-white transition-all">
+        <h1 className="text-center text-4xl pt-20">Admin SignUp</h1>
         <form
           onSubmit={handleSubmit}
-          className="self-center mx-10 mt-10 space-y-4 flex flex-col justify-center items-center h-3/4"
+          className="self-center mx-10 mt-10 space-y-10  flex flex-col justify-center items-center h-3/4"
         >
           <TextField
             label="Enter Name"
@@ -72,6 +72,24 @@ const AdminSignup = () => {
             className="lg:w-5/6"
             onChange={(e) => setName(e.target.value)}
             value={name}
+            InputLabelProps={{ className: "dark:text-white" }}
+            InputProps={{ className: "dark:text-white" }}
+            sx={{
+              "& .MuiOutlinedInput-root": {
+                "& fieldset": {
+                  borderColor: "white", 
+                },
+                "&:hover fieldset": {
+                  borderColor: "white",
+                },
+                "&.Mui-focused fieldset": {
+                  borderColor: "white",
+                },
+              },
+              "& .MuiInputLabel-root": {
+                color: "white", 
+              },
+            }}
           />
           <TextField
             label="Enter Password"
@@ -80,6 +98,24 @@ const AdminSignup = () => {
             className="lg:w-5/6"
             onChange={(e) => setPassword(e.target.value)}
             value={password}
+            InputLabelProps={{ className: "dark:text-white" }}
+            InputProps={{ className: "dark:text-white" }}
+            sx={{
+              "& .MuiOutlinedInput-root": {
+                "& fieldset": {
+                  borderColor: "white", 
+                },
+                "&:hover fieldset": {
+                  borderColor: "white",
+                },
+                "&.Mui-focused fieldset": {
+                  borderColor: "white",
+                },
+              },
+              "& .MuiInputLabel-root": {
+                color: "white", 
+              },
+            }}
           />
           <TextField
             label="Confirm Password"
@@ -88,6 +124,24 @@ const AdminSignup = () => {
             className="lg:w-5/6"
             onChange={(e) => setConfirm(e.target.value)}
             value={confirm}
+            InputLabelProps={{ className: "dark:text-white" }}
+            InputProps={{ className: "dark:text-white" }}
+            sx={{
+              "& .MuiOutlinedInput-root": {
+                "& fieldset": {
+                  borderColor: "white", 
+                },
+                "&:hover fieldset": {
+                  borderColor: "white",
+                },
+                "&.Mui-focused fieldset": {
+                  borderColor: "white",
+                },
+              },
+              "& .MuiInputLabel-root": {
+                color: "white", 
+              },
+            }}
           />
           <TextField
             label="Enter Phone Number"
@@ -95,6 +149,24 @@ const AdminSignup = () => {
             className="lg:w-5/6"
             onChange={(e) => setPhoneno(e.target.value)}
             value={phoneno}
+            InputLabelProps={{ className: "dark:text-white" }}
+            InputProps={{ className: "dark:text-white" }}
+            sx={{
+              "& .MuiOutlinedInput-root": {
+                "& fieldset": {
+                  borderColor: "white", 
+                },
+                "&:hover fieldset": {
+                  borderColor: "white",
+                },
+                "&.Mui-focused fieldset": {
+                  borderColor: "white",
+                },
+              },
+              "& .MuiInputLabel-root": {
+                color: "white", 
+              },
+            }}
           />
           <TextField
             label="Enter E-mail"
@@ -102,18 +174,38 @@ const AdminSignup = () => {
             className="lg:w-5/6"
             onChange={(e) => setEmail(e.target.value)}
             value={email}
+            InputLabelProps={{ className: "dark:text-white" }}
+            InputProps={{ className: "dark:text-white" }}
+            sx={{
+              "& .MuiOutlinedInput-root": {
+                "& fieldset": {
+                  borderColor: "white", 
+                },
+                "&:hover fieldset": {
+                  borderColor: "white",
+                },
+                "&.Mui-focused fieldset": {
+                  borderColor: "white",
+                },
+              },
+              "& .MuiInputLabel-root": {
+                color: "white", 
+              },
+            }}
           />
           <Button
             variant="contained"
-            type="submit"
-            className="border border-neutral-900 w-44 h-9 text-xl"
+            className="w-44 h-9 text-xl text-white"
+            sx={{
+              backgroundColor: mode === "dark" ? "#374151" : "#000000",
+              "&:hover": {
+                backgroundColor: mode === "dark" ? "#000000" : "#374151",
+              },
+            }}
           >
-            Signup
+            SignUp
           </Button>
-          <Link
-            to={"/"}
-            className="text-sm text-blue-400 text-center"
-          >
+          <Link to={"/"} className="text-sm text-blue-400 text-center">
             Already Have An Account?
           </Link>
         </form>
