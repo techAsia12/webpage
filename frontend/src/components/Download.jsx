@@ -35,7 +35,7 @@ const Download = () => {
         >
           <Button
             variant="contained"
-            className="border border-neutral-900 w-56 transform lg:translate-y-10 translate-y-32   translate-x-10 lg:translate-x-64 text-9xl text-white hover:bg-white hover:text-black"
+            className="border border-neutral-900 w-56 transform lg:translate-y-10 translate-y-32 translate-x-10 lg:translate-x-44 text-9xl text-white hover:bg-white hover:text-black"
             color="primary"
             readOnly
           >

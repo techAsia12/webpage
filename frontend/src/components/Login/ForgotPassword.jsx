@@ -123,7 +123,7 @@ const ForgotPassword = () => {
         .get(
           `${
             import.meta.env.VITE_BACKEND_URL
-          }/api/user/send-mail?email=${email}`,
+          }/api/user/receive-mail?email=${email}`,
           options
         )
         .then((res) => {

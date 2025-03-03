@@ -322,7 +322,7 @@ const update = asyncHandler(async (req, res, next) => {
   }
 });
 
-const sendMail = asyncHandler(async (req, res, next) => {
+const sendVerificationMail = asyncHandler(async (req, res, next) => {
   const { email } = req.query;
   console.log(`Received request to send verification email to: ${email}`);
 
@@ -523,8 +523,8 @@ const retiveCostToday = asyncHandler(async (req, res, next) => {
   const user = req?.user;
   const previousDay = new Date();
   previousDay.setDate(previousDay.getDate() - 1);
-  const prevDateString = previousDay.toISOString().split("T")[0]; 
-  const todayDateString = new Date().toISOString().split("T")[0]; 
+  const prevDateString = previousDay.toISOString().split("T")[0];
+  const todayDateString = new Date().toISOString().split("T")[0];
 
   console.log("User:", user);
   console.log("Previous Day:", prevDateString);
@@ -555,9 +555,9 @@ const retiveCostToday = asyncHandler(async (req, res, next) => {
     result.forEach((entry) => {
       console.log("Entry:", entry);
       if (entry.date === prevDateString) {
-        previousDayData += entry.unit; 
+        previousDayData += entry.unit;
       } else if (entry.date === todayDateString) {
-        todayData += entry.unit; 
+        todayData += entry.unit;
       }
     });
 
@@ -947,6 +947,45 @@ const updateProfile = asyncHandler(async (req, res, next) => {
   }
 });
 
+const sendMail = asyncHandler(async (req, res, next) => {
+  const { name, email, phoneno, message } = req.body;
+
+  if (!name || !email || !message || !phoneno) {
+    return res
+      .status(400)
+      .json({ error: "All fields are required." });
+  }
+  const transporter = nodemailer.createTransport({
+    service: "gmail",
+    auth: {
+      user: process.env.GMAIL_USER,
+      pass: process.env.GMAIL_PASS,
+    },
+  });
+
+  const mailOptions = {
+    from: email,
+    to: process.env.GMAIL_USER,
+    subject: `New message from ${name}`,
+    text: message,
+    html: `<p><strong>From:</strong> ${name} (${email}) (${phoneno})</p><p><strong>Message:</strong><br>${message}</p>`,
+  };
+
+  try {
+    await transporter.sendMail(mailOptions);
+    console.log(
+      `Email sent successfully from: ${email} to: ${process.env.GMAIL_USER}`
+    );
+
+    return res.status(200).json({ message: "Email sent successfully!" });
+  } catch (error) {
+    console.error("Error sending email:", error);
+    return res
+      .status(500)
+      .json({ error: "Failed to send email. Please try again later." });
+  }
+});
+
 export {
   getData,
   register,
@@ -955,7 +994,7 @@ export {
   generateToken,
   addPhoneno,
   update,
-  sendMail,
+  sendVerificationMail,
   resetPassword,
   sentData,
   retiveHourlyUsage,
@@ -965,5 +1004,6 @@ export {
   retriveState,
   deleteUser,
   updateProfile,
-  retiveCostToday
+  retiveCostToday,
+  sendMail,
 };

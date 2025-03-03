@@ -21,8 +21,8 @@ const Layout = () => {
 
   const actions = [
     { icon: <HomeIcon />, name: "Home", path: "/dashboard" },
-    { icon: <InfoIcon />, name: "About", path: "/dashboard/about" },
     { icon: <TimelineIcon />, name: "Usage", path: "/dashboard/services" },
+    { icon: <InfoIcon />, name: "About", path: "/dashboard/about" },
     { icon: <LocationOnIcon />, name: "Contact", path: "/dashboard/contact" },
   ];
 
@@ -39,14 +39,14 @@ const Layout = () => {
   return (
     <div className="lg:overflow-hidden dark:bg-gray-800 top-0">
       <Navbar navLinks={navLinks} />
-      <div className="container overflow-hidden dark:bg-gray-800  z-10 flex lg:ml-20">
+      <div className="container lg:overflow-hidden dark:bg-gray-800  z-10 flex lg:ml-20">
         <Outlet />
         <div className={`z-20 absolute backdrop-blur-sm ${visibility}`}>
           <Update />
         </div>
-        <div className="lg:hidden">
-          <NavDial actions={actions} />
-        </div>
+      </div>
+      <div className="lg:hidden bottom-0 right-0 sticky">
+        <NavDial actions={actions} />
       </div>
     </div>
   );

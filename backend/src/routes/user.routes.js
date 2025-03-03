@@ -6,7 +6,7 @@ import {
   register,
   addPhoneno,
   update,
-  sendMail,
+  sendVerificationMail,
   resetPassword,
   sentData,
   retiveHourlyUsage,
@@ -16,7 +16,8 @@ import {
   retriveState,
   deleteUser,
   updateProfile,
-  retiveCostToday
+  retiveCostToday,
+  sendMail
 } from "../controllers/user.controller.js";
 import { verifyJWT } from "../middleware/authUser.middlerware.js";
 import { verifyCode } from "../middleware/authCode.middleware.js";
@@ -36,7 +37,7 @@ router.route("/add-phoneno").post(addPhoneno);
 
 router.route("/update").post(verifyJWT, upload.single("profile"), update);
 
-router.route("/send-mail").get(sendMail);
+router.route("/receive-mail").get(sendVerificationMail);
 
 router.route("/verifyCode").post(verifyCode);
 
@@ -57,6 +58,8 @@ router.route("/retrive-costToday").get(verifyJWT,retiveCostToday);
 router.route("/retrive-stateDets").get(retriveState);
 
 router.route("/delete").delete(verifyJWT, deleteUser);
+
+router.route("/send-Mail").post(sendMail);
 
 router
   .route("/profileUpdate")
