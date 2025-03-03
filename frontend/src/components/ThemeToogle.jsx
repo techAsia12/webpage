@@ -25,7 +25,7 @@ const ThemeToggle = () => {
 
 
     <motion.div
-    className="rounded-full w-16 h-8 mt-3 p-1 border border-neutral-900 bg-cover bg-center cursor-pointer"
+    className="rounded-full w-16 h-8 mt-2 p-1 border border-neutral-900 bg-cover bg-center cursor-pointer"
     style={{ backgroundImage: `url(${bgImage})` }}
     onClick={() => dispatch(toggleTheme())}
   >
