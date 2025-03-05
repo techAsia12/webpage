@@ -1,13 +1,13 @@
 import React, { useState, useEffect } from "react";
-import Navbar from "./components/Navbar/Navbar.jsx";
+import Navbar from "../components/Navbar/Navbar.jsx";
 import { Outlet } from "react-router-dom";
 import { useSelector } from "react-redux";
-import Update from "./components/Update.jsx";
+import Update from "../components/Update.jsx";
 import HomeIcon from "@mui/icons-material/Home";
 import InfoIcon from "@mui/icons-material/Info";
 import TimelineIcon from "@mui/icons-material/Timeline";
 import LocationOnIcon from "@mui/icons-material/LocationOn";
-import NavDial from "./components/Navbar/NavDial.jsx";
+import NavDial from "../components/Navbar/NavDial.jsx";
 
 const Layout = () => {
   const [visibility, setVisibility] = useState();

@@ -1,10 +1,10 @@
 import React, { useEffect, useState } from "react";
-import Meter from "./Meter";
-import CardTemp from "./CardView";
+import Meter from "../components/Dashboard/Meter";
+import CardTemp from "../components/Dashboard/CardView";
 import axios from "axios";
-import Barchart from "./Barchart";
+import Barchart from "../components/Dashboard/Barchart";
 import { motion } from "motion/react";
-import { login } from "../../Features/auth/auth.slice";
+import { login } from "../Features/auth/auth.slice.js";
 import { useDispatch } from "react-redux";
 
 const Dashboard = () => {

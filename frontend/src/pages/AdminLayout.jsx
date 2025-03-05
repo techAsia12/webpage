@@ -1,11 +1,11 @@
 import React, { useEffect, useState } from "react";
-import Navbar from "./components/Navbar/Navbar.jsx";
+import Navbar from "../components/Navbar/Navbar.jsx";
 import { Outlet } from "react-router-dom";
-import Update from "./components/Update.jsx";
+import Update from "../components/Update.jsx";
 import { useSelector } from "react-redux";
-import AddDets from "./components/Admin/AddDets.jsx";
-import CostRangePage from "./components/Admin/CostRangePage.jsx";
-import NavDial from "./components/Navbar/NavDial.jsx";
+import AddDets from "../components/Admin/AddDets.jsx";
+import CostRangePage from "../components/Admin/CostRange.jsx";
+import NavDial from "../components/Navbar/NavDial.jsx";
 import HomeIcon from "@mui/icons-material/Home";
 import ArticleIcon from "@mui/icons-material/Article";
 

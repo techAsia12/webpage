@@ -2,11 +2,11 @@ import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
 import "./index.css";
 import { createBrowserRouter, RouterProvider } from "react-router-dom";
-import Layout from "./Layout";
+import Layout from "./pages/Layout";
 import App from "./App";
 import Login from "./components/Login/Login";
 import Signup from "./components/Signup";
-import Dashboard from "./components/Dashboard/Dashboard";
+import Dashboard from "./pages/Dashboard.jsx";
 import Addphone from "./components/Login/Addphone";
 import { GoogleOAuthProvider } from "@react-oauth/google";
 import ForgotPassword from "./components/Login/ForgotPassword";
@@ -14,18 +14,19 @@ import { Provider, useSelector } from "react-redux";
 import { store, persistor } from "./app/store.js";
 import Download from "./components/Download.jsx";
 import Contact from "./components/Contact.jsx";
-import AdminPage from "./components/Admin/AdminPage.jsx";
-import CostRangePage from "./components/Admin/CostRangePage.jsx";
+import AdminPage from "./pages/AdminPage.jsx";
+import CostRangePage from "./components/Admin/CostRange.jsx";
 import BillDets from "./components/Admin/BillDets.jsx";
 import Services from "./components/Services.jsx";
 import AdminSignup from "./components/Admin/AdminSignup.jsx";
 import AdminAddPhone from "./components/Admin/AdminAddPhone.jsx";
-import AdminLayout from "./AdminLayout.jsx";
-import HomePage from "./components/Admin/HomePage.jsx";
+import AdminLayout from "./pages/AdminLayout.jsx";
+import HomePage from "./components/Admin/Home.jsx";
 import AuthLogin from "./AuthLogin.jsx";
 import { PersistGate } from "redux-persist/integration/react";
 import AdminAuth from "./AdminAuth.jsx";
 import { ToastContainer } from "react-toastify";
+import LandingPage from "./pages/LandingPage.jsx";
 
 const router = createBrowserRouter([
   {
@@ -69,11 +70,15 @@ const router = createBrowserRouter([
         ],
       },
       {
+        path:"",
+        element:<LandingPage/>
+      },
+      {
         path: "/register",
         element: <Signup />,
       },
       {
-        path: "",
+        path: "/login",
         element: (
           <GoogleOAuthProvider clientId={import.meta.env.VITE_CLIENT_ID}>
             <Login />
