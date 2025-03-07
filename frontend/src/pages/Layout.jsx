@@ -10,7 +10,7 @@ import LocationOnIcon from "@mui/icons-material/LocationOn";
 import NavDial from "../components/Navbar/NavDial.jsx";
 
 const Layout = () => {
-  const [visibility, setVisibility] = useState();
+  const [visibility, setVisibility] = useState("hidden");
 
   const navLinks = [
     { path: "/dashboard", label: "Home" },
@@ -29,19 +29,28 @@ const Layout = () => {
   const isUpdate = useSelector((state) => state.pages?.isUpdate);
 
   useEffect(() => {
-    if (isUpdate === true) {
-      setVisibility("block");
-    } else {
-      setVisibility("hidden");
-    }
+    setVisibility(isUpdate ? "block" : "hidden");
   }, [isUpdate]);
 
+  const mode = useSelector((state) => state.theme.mode);
+
+  const backgroundClass =
+    mode === "dark"
+      ? "bg-neutral-950 bg-[radial-gradient(ellipse_80%_80%_at_50%_-20%,rgba(120,119,198,0.3),rgba(255,255,255,0))]"
+      : "bg-white bg-[radial-gradient(ellipse_80%_80%_at_50%_-20%,rgba(0,0,0,0.2),rgba(0,0,0,0))]";
+
   return (
-    <div className="lg:overflow-hidden dark:bg-gray-800 top-0">
+    <div
+      className={`min-h-screen  ${backgroundClass} bg-cover bg-center lg:overflow-x-hidden  ${
+        visibility === "block" ? "overflow-hidden" : ""
+      }`}
+    >
       <Navbar navLinks={navLinks} />
-      <div className="container lg:overflow-hidden dark:bg-gray-800  z-10 flex lg:ml-20">
+      <div className=" z-10 text-center">
         <Outlet />
-        <div className={`z-20 absolute backdrop-blur-sm ${visibility}`}>
+        <div
+          className={`fixed z-20  inset-0 backdrop-blur-sm ${visibility}`}
+        >
           <Update />
         </div>
       </div>

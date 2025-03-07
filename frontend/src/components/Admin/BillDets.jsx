@@ -11,52 +11,33 @@ import { Button } from "@mui/material";
 import axios from "axios";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
-import AddBoxIcon from '@mui/icons-material/AddBox';
-import EditIcon from '@mui/icons-material/Edit';
-import { useDispatch } from "react-redux";
+import AddBoxIcon from "@mui/icons-material/AddBox";
+import EditIcon from "@mui/icons-material/Edit";
+import { useDispatch, useSelector } from "react-redux";
 import { billDetsPage } from "../../Features/pages/pages.slice";
-
-const columns = [
-  { id: "state", label: "State", minWidth: 100 },
-  {
-    id: "base",
-    label: "Base",
-    minWidth: 100,
-    align: "right",
-    format: (value) => value.toFixed(2),
-  },
-  {
-    id: "percentPerUnit",
-    label: "Percent Per Unit",
-    minWidth: 170,
-    align: "right",
-    format: (value) => value.toFixed(2),
-  },
-  {
-    id: "totalTaxPercent",
-    label: "Total Tax Percent",
-    minWidth: 170,
-    align: "right",
-    format: (value) => value.toFixed(2),
-  },
-];
+import {
+  useReactTable,
+  createColumnHelper,
+  flexRender,
+  getCoreRowModel,
+  getPaginationRowModel,
+} from "@tanstack/react-table";
 
 const BillDets = () => {
-  const [page, setPage] = React.useState(0);
-  const [rowsPerPage, setRowsPerPage] = React.useState(10);
   const [billDetails, setBillDetails] = React.useState([]);
   const [costDetails, setCostDetails] = React.useState([]);
   const [loading, setLoading] = React.useState(true);
   const [error, setError] = React.useState(null);
   const [editingRowIndex, setEditingRowIndex] = React.useState(null);
   const [editedValues, setEditedValues] = React.useState({});
+  const theme = useSelector((state) => state.theme.mode);
   const dispatch = useDispatch();
 
   const options = {
     withCredentials: true,
   };
 
-  const fetchData = async () => {
+  const fetchData = React.useCallback(async () => {
     try {
       const response = await axios.get(
         `${import.meta.env.VITE_BACKEND_URL}/api/admin/data-dets`,
@@ -65,69 +46,238 @@ const BillDets = () => {
       setBillDetails(response.data.data.billDetails);
       setCostDetails(response.data.data.costDetails);
       setLoading(false);
-
-      if (
-        response.data.data.billDetails.length === 0 &&
-        response.data.data.costDetails.length === 0
-      ) {
-        toast.info("No data available.");
-      }
     } catch (err) {
       console.error("Error fetching data:", err);
+      setError("Failed to fetch data. Please try again later.");
       setLoading(false);
       toast.error("Error fetching data!");
     }
-  };
+  }, []);
 
   React.useEffect(() => {
     fetchData();
-  }, []);
+  }, [fetchData]);
 
-  const handleChangePage = (event, newPage) => {
-    setPage(newPage);
-  };
+  const unitRangeColumns = React.useMemo(() => {
+    const unitRanges = new Set();
+    costDetails.forEach((cost) => unitRanges.add(cost.unitRange));
+    return Array.from(unitRanges).sort((a, b) => {
+      if (!isNaN(a) && !isNaN(b)) return parseFloat(a) - parseFloat(b);
+      return a.localeCompare(b);
+    });
+  }, [costDetails]);
 
-  const handleChangeRowsPerPage = (event) => {
-    setRowsPerPage(+event.target.value);
-    setPage(0);
-  };
+  const rows = React.useMemo(() => {
+    const rows = [];
+    billDetails.forEach((bill) => {
+      const row = {
+        state: bill.state,
+        base: bill.base,
+        percentPerUnit: bill.percentPerUnit,
+        totalTaxPercent: bill.totalTaxPercent,
+      };
+      costDetails
+        .filter((cost) => cost.state === bill.state)
+        .forEach((cost) => {
+          row[cost.unitRange] = cost.cost;
+        });
+      rows.push(row);
+    });
+    return rows;
+  }, [billDetails, costDetails]);
+
+  const columnHelper = createColumnHelper();
+
+  const columns = React.useMemo(() => {
+    const cols = [
+      columnHelper.accessor("state", {
+        header: "State",
+        cell: (info) => info.getValue(),
+      }),
+      columnHelper.accessor("base", {
+        header: "Base",
+        cell: (info) => {
+          const rowIndex = info.row.index;
+          const isEditing = editingRowIndex === rowIndex;
+          return isEditing ? (
+            <input
+              value={editedValues.base ?? info.getValue()}
+              onChange={(e) =>
+                setEditedValues((prev) => ({
+                  ...prev,
+                  base: e.target.value,
+                }))
+              }
+              className="dark:bg-gray-950 dark:text-white w-full"
+            />
+          ) : (
+            Number(info.getValue()).toFixed(2)
+          );
+        },
+      }),
+      columnHelper.accessor("percentPerUnit", {
+        header: "Percent Per Unit",
+        cell: (info) => {
+          const rowIndex = info.row.index;
+          const isEditing = editingRowIndex === rowIndex;
+          return isEditing ? (
+            <input
+              value={editedValues.percentPerUnit ?? info.getValue()}
+              onChange={(e) =>
+                setEditedValues((prev) => ({
+                  ...prev,
+                  percentPerUnit: e.target.value,
+                }))
+              }
+              className="dark:bg-gray-950 dark:text-white w-full"
+            />
+          ) : (
+            Number(info.getValue()).toFixed(2)
+          );
+        },
+      }),
+      columnHelper.accessor("totalTaxPercent", {
+        header: "Total Tax Percent",
+        cell: (info) => {
+          const rowIndex = info.row.index;
+          const isEditing = editingRowIndex === rowIndex;
+          return isEditing ? (
+            <input
+              value={editedValues.totalTaxPercent ?? info.getValue()}
+              onChange={(e) =>
+                setEditedValues((prev) => ({
+                  ...prev,
+                  totalTaxPercent: e.target.value,
+                }))
+              }
+              className="dark:bg-gray-950 dark:text-white w-full"
+            />
+          ) : (
+            Number(info.getValue()).toFixed(2)
+          );
+        },
+      }),
+    ];
+
+    unitRangeColumns.forEach((unitRange) => {
+      cols.push(
+        columnHelper.accessor(unitRange.toString(), {
+          header: unitRange.toString(),
+          cell: (info) => {
+            const rowIndex = info.row.index;
+            const isEditing = editingRowIndex === rowIndex;
+            const value = info.getValue();
+            return isEditing ? (
+              <input
+                value={editedValues[unitRange] ?? value}
+                onChange={(e) =>
+                  setEditedValues((prev) => ({
+                    ...prev,
+                    [unitRange]: e.target.value,
+                  }))
+                }
+                className="dark:bg-gray-950 dark:text-white w-full"
+              />
+            ) : value ? (
+              Number(value).toFixed(2)
+            ) : (
+              "-"
+            );
+          },
+        })
+      );
+    });
+
+    cols.push(
+      columnHelper.display({
+        id: "actions",
+        header: "Actions",
+        cell: (info) => {
+          const rowIndex = info.row.index;
+          const isEditing = editingRowIndex === rowIndex;
+          return isEditing ? (
+            <div className="space-y-2">
+              <Button
+                variant="contained"
+                className="w-24 dark:bg-gray-950"
+                sx={{
+                  border:
+                    theme === "dark" ? "1px solid white" : "1px solid black",
+                }}
+                onClick={handleSave}
+              >
+                Save
+              </Button>
+              <Button
+                variant="contained"
+                className="w-24 dark:bg-gray-950"
+                sx={{
+                  border:
+                    theme === "dark" ? "1px solid white" : "1px solid black",
+                }}
+                onClick={handleCancel}
+              >
+                Cancel
+              </Button>
+            </div>
+          ) : (
+            <Button
+              variant="contained"
+              className="dark:bg-gray-950 "
+              sx={{
+                border:
+                  theme === "dark" ? "1px solid white" : "1px solid black",
+              }}
+              onClick={() => handleEdit(rowIndex)}
+            >
+              <EditIcon />
+              Edit
+            </Button>
+          );
+        },
+      })
+    );
+
+    return cols;
+  }, [unitRangeColumns, editingRowIndex, editedValues]);
+
+  const table = useReactTable({
+    data: rows,
+    columns,
+    getCoreRowModel: getCoreRowModel(),
+    getPaginationRowModel: getPaginationRowModel(),
+  });
 
   const handleEdit = (rowIndex) => {
     setEditingRowIndex(rowIndex);
-    setEditedValues({ ...billDetails[rowIndex] });
+    setEditedValues({ ...rows[rowIndex] });
   };
 
   const handleSave = async () => {
     if (editingRowIndex !== null) {
-      const updatedData = [...billDetails];
-      const rowToUpdate = updatedData[editingRowIndex];
-
-      updatedData[editingRowIndex] = { ...rowToUpdate, ...editedValues };
-
-      const unitRanges = [];
-      const costs = [];
-
-      unitRangeColumns.forEach((unitRange) => {
-        if (editedValues[unitRange] !== undefined) {
-          unitRanges.push(unitRange);
-          costs.push(editedValues[unitRange]);
-        }
-      });
-
-      const state = updatedData[editingRowIndex].state;
       try {
-        const response = await axios.put(
+        const unitRanges = [];
+        const costs = [];
+
+        unitRangeColumns.forEach((unitRange) => {
+          if (editedValues[unitRange] !== undefined) {
+            unitRanges.push(unitRange);
+            costs.push(editedValues[unitRange]);
+          }
+        });
+
+        await axios.put(
           `${import.meta.env.VITE_BACKEND_URL}/api/admin/update-bill`,
           {
             ...editedValues,
             unitRanges,
             costs,
-            state,
+            state: editedValues.state,
           }
         );
 
         toast.success("Data updated successfully!");
-        setBillDetails(updatedData);
+        fetchData();
         setEditingRowIndex(null);
       } catch (err) {
         toast.error("Failed to update data!");
@@ -140,199 +290,94 @@ const BillDets = () => {
     setEditedValues({});
   };
 
-  const handleChange = (e, columnId) => {
-    setEditedValues({ ...editedValues, [columnId]: e.target.value });
-  };
-
-  if (loading) {
-    return <div>Loading...</div>;
-  }
-
-  if (error) {
-    return <div>{error}</div>;
-  }
-
-  const rows = [];
-  const unitRanges = new Set();
-
-  billDetails.forEach((bill) => {
-    costDetails.forEach((cost) => {
-      if (bill.state === cost.state) {
-        unitRanges.add(cost.unitRange);
-
-        const existingRow = rows.find((row) => row.state === bill.state);
-        if (existingRow) {
-          existingRow[cost.unitRange] = cost.cost;
-        } else {
-          rows.push({
-            state: bill.state,
-            base: bill.base,
-            percentPerUnit: bill.percentPerUnit,
-            totalTaxPercent: bill.totalTaxPercent,
-            tax: bill.tax,
-            cost: bill.cost,
-            taxPerUnit: bill.taxPerUnit,
-            [cost.unitRange]: cost.cost,
-          });
-        }
-      }
-    });
-  });
-
-  const unitRangeColumns = Array.from(unitRanges).sort((a, b) => {
-    if (!isNaN(a) && !isNaN(b)) {
-      return parseFloat(a) - parseFloat(b);
-    }
-    return a.localeCompare(b);
-  });
-
   const handleClick = () => {
     dispatch(billDetsPage());
   };
 
+  if (loading) {
+    return <div className="text-center py-10 dark:text-white">Loading...</div>;
+  }
+
+  if (error) {
+    return <div className="text-center py-10 text-red-500">{error}</div>;
+  }
+
   return (
-    <div className="w-screen flex justify-center items-center">
-      <div className="flex justify-center dark:bg-gray-800 dark:text-white h-fit w-full mt-20 ml-20">
-        <ToastContainer
-          position="top-right"
-          autoClose={5000}
-          hideProgressBar={false}
-          newestOnTop
-          closeButton
-        />
-        <Paper sx={{ width: "90%", overflow: "hidden" }} className="dark:bg-gray-800 dark:text-white">
+    <div className="w-screen flex items-center ">
+      <div className="flex justify-center dark:text-white h-fit w-full mt-20 lg:ml-40">
+        <ToastContainer />
+        <Paper
+          sx={{
+            width: "90%",
+            overflow: "hidden",
+            border: theme === "dark" ? "1px solid white" : "1px solid black",
+          }}
+          className=" dark:text-white"
+        >
           <TableContainer sx={{ maxHeight: 520 }}>
-            <Table aria-label="sticky table">
+            <Table stickyHeader>
               <TableHead>
-                <TableRow>
-                  {columns.map((column) => (
-                    <TableCell
-                      sx={{ background: "#e2e8f0" }}
-                      key={column.id}
-                      align={column.align}
-                      style={{ minWidth: column.minWidth }}
-                    >
-                      {column.label}
-                    </TableCell>
-                  ))}
-                  {unitRangeColumns.map((unitRange) => (
-                    <TableCell
-                      sx={{ background: "#e2e8f0" }}
-                      key={unitRange}
-                      align="right"
-                    >
-                      {unitRange}
-                    </TableCell>
-                  ))}
-                  <TableCell sx={{ background: "#e2e8f0" }} align="center">Actions</TableCell>
-                </TableRow>
+                {table.getHeaderGroups().map((headerGroup) => (
+                  <TableRow key={headerGroup.id}>
+                    {headerGroup.headers.map((header) => (
+                      <TableCell
+                        key={header.id}
+                        sx={{
+                          background: theme === "dark" ? "#030712" : "",
+                          color: theme === "dark" ? "white" : "black",
+                        }}
+                        align="right"
+                      >
+                        {flexRender(
+                          header.column.columnDef.header,
+                          header.getContext()
+                        )}
+                      </TableCell>
+                    ))}
+                  </TableRow>
+                ))}
               </TableHead>
               <TableBody>
-                {rows.length === 0 ? (
-                  <TableRow>
-                    <TableCell
-                      colSpan={columns.length + unitRangeColumns.length + 1}
-                      align="center"
-                      className="dark:bg-gray-800 dark:text-white"
-                    >
-                      No data available.
-                    </TableCell>
-                  </TableRow>
-                ) : (
-                  rows
-                    .slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
-                    .map((row, rowIndex) => (
-                      <TableRow
-                        hover
-                        role="checkbox"
-                        tabIndex={-1}
-                        key={row.state}
+                {table.getRowModel().rows.map((row) => (
+                  <TableRow hover key={row.id}>
+                    {row.getVisibleCells().map((cell) => (
+                      <TableCell
+                        key={cell.id}
+                        className="dark:bg-gray-950 dark:text-white"
+                        align="right"
                       >
-                        {columns.map((column) => {
-                          const value = row[column.id];
-                          return (
-                            <TableCell key={column.id} align={column.align} className="dark:bg-gray-600 dark:text-white">
-                              {editingRowIndex === rowIndex &&
-                                column.id !== "state" ? (
-                                <input
-                                  className="text-right dark:bg-gray-600 dark:text-white"
-                                  value={editedValues[column.id]}
-                                  onChange={(e) => handleChange(e, column.id)}
-                                />
-                              ) : column.format && typeof value === "number" ? (
-                                column.format(value)
-                              ) : (
-                                value
-                              )}
-                            </TableCell>
-                          );
-                        })}
-                        {unitRangeColumns.map((unitRange) => (
-                          <TableCell key={unitRange} align="right" className="dark:bg-gray-600 dark:text-white">
-                            {editingRowIndex === rowIndex ? (
-                              <input
-                                value={
-                                  editedValues[unitRange] || row[unitRange]
-                                }
-                                onChange={(e) => handleChange(e, unitRange)}
-                                className="text-right dark:bg-gray-600 dark:text-white"
-                              />
-                            ) : row[unitRange] ? (
-                              row[unitRange].toFixed(2)
-                            ) : (
-                              "-"
-                            )}
-                          </TableCell>
-                        ))}
-                        <TableCell align="center" className="dark:bg-gray-600 dark:text-white">
-                          {editingRowIndex === rowIndex ? (
-                            <div className="space-y-2">
-                              <Button
-                                variant="contained"
-                                className="w-12"
-                                onClick={handleSave}
-                              >
-                                Save
-                              </Button>
-                              <Button
-                                variant="contained"
-                                className="w-12"
-                                onClick={handleCancel}
-                              >
-                                Cancel
-                              </Button>
-                            </div>
-                          ) : (
-                            <Button
-                              variant="contained"
-                              onClick={() => handleEdit(rowIndex)}
-                            >
-                              <EditIcon />
-                              Edit
-                            </Button>
-                          )}
-                        </TableCell>
-                      </TableRow>
-                    ))
-                )}
+                        {flexRender(
+                          cell.column.columnDef.cell,
+                          cell.getContext()
+                        )}
+                      </TableCell>
+                    ))}
+                  </TableRow>
+                ))}
               </TableBody>
             </Table>
           </TableContainer>
           <TablePagination
             rowsPerPageOptions={[10, 25, 100]}
             component="div"
-            count={rows.length}
-            rowsPerPage={rowsPerPage}
-            page={page}
-            onPageChange={handleChangePage}
-            onRowsPerPageChange={handleChangeRowsPerPage}
-            className="dark:bg-gray-600 dark:text-white"
+            count={table.getFilteredRowModel().rows.length}
+            rowsPerPage={table.getState().pagination.pageSize}
+            page={table.getState().pagination.pageIndex}
+            onPageChange={(_, page) => table.setPageIndex(page)}
+            onRowsPerPageChange={(e) =>
+              table.setPageSize(Number(e.target.value))
+            }
+            className="dark:bg-gray-950 dark:text-white"
           />
         </Paper>
       </div>
       <Button
         variant="contained"
-        className="z-10 absolute trnasform -translate-y-40 right-20 dark:bg-gray-800 dark:text-white "
+        className="z-10 absolute transform -translate-y-72 right-20 dark:text-white dark:hover:bg-[#4963c7]"
+        sx={{
+          backgroundColor: theme === "dark" ? "#3f51b5" : "",
+          border: theme === "dark" ? "1px solid white" : "1px solid black",
+        }}
         onClick={handleClick}
       >
         <AddBoxIcon />

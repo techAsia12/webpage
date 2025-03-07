@@ -13,6 +13,20 @@ const ThemeToggle = () => {
     "https://th.bing.com/th/id/OIP._F-KiBUQe499xvG60RPuRwHaHa?pid=ImgDet&w=202&h=202&c=7&dpr=1.5"
   );
 
+  const [screenWidth, setScreenWidth] = useState(window.innerWidth);
+
+  useEffect(() => {
+    const handleResize = () => {
+      setScreenWidth(window.innerWidth);
+    };
+
+    window.addEventListener("resize", handleResize);
+
+    return () => {
+      window.removeEventListener("resize", handleResize);
+    };
+  }, []);
+
   useEffect(() => {
     if (theme === "dark") {
       setBgImage(
@@ -31,16 +45,24 @@ const ThemeToggle = () => {
     }
   }, [theme]);
 
+  const calculateXPosition = () => {
+    if (screenWidth >= 1024) {
+      return theme === "light" ? 2 : 26;
+    } else {
+      return theme === "light" ? 2 : 14;
+    }
+  };
+
   return (
     <motion.div
-      className="rounded-full w-16 h-8 mt-2 p-1 border border-neutral-900 bg-cover bg-center cursor-pointer"
+      className="rounded-full w-8 h-4 lg:w-16 lg:h-8 mt-2 p-0.5 lg:p-1 border border-neutral-900 bg-cover bg-center cursor-pointer"
       style={{ backgroundImage: `url(${bgImage})` }}
       onClick={() => dispatch(toggleTheme())}
     >
       <motion.div
-        className="w-6 h-6 rounded-full bg-cover bg-center"
+        className="w-3 h-3 lg:w-6 lg:h-6 rounded-full bg-cover bg-center"
         style={{ backgroundImage: `url(${image})` }}
-        animate={{ x: theme === "light" ? 2 : 26 }}
+        animate={{ x: calculateXPosition() }}
         transition={{ type: "spring", stiffness: 200, damping: 20 }}
       ></motion.div>
     </motion.div>

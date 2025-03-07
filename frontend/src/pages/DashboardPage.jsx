@@ -1,9 +1,9 @@
 import React, { useEffect, useState } from "react";
-import Meter from "../components/Dashboard/Meter";
-import CardTemp from "../components/Dashboard/CardView";
+import Meter from "../components/Dashboard/Meter.jsx";
+import CardTemp from "../components/Dashboard/CardView.jsx";
 import axios from "axios";
-import Barchart from "../components/Dashboard/Barchart";
-import { motion } from "motion/react";
+import Barchart from "../components/Dashboard/Barchart.jsx";
+import { motion } from "framer-motion";
 import { login } from "../Features/auth/auth.slice.js";
 import { useDispatch } from "react-redux";
 
@@ -88,7 +88,7 @@ const Dashboard = () => {
     } else {
       ({ base, total } = calc(unit, billDets.range[0].cost, 0));
     }
-    return (parseFloat(total.toFixed()))
+    return parseFloat(total.toFixed());
   };
 
   useEffect(() => {
@@ -99,8 +99,8 @@ const Dashboard = () => {
           setUser(res.data.data);
           const time =
             (new Date() - new Date(res.data.data.date_time)) / (1000 * 60 * 60);
-            console.log(res.data.data.watt);
-          setkwh(parseFloat(((res.data.data.watt).toFixed(3))));
+          console.log(res.data.data.watt);
+          setkwh(parseFloat(res.data.data.watt.toFixed(3)));
         })
         .catch((err) =>
           console.log("User data error:", err.response?.data?.message || err)
@@ -156,7 +156,7 @@ const Dashboard = () => {
         .then((res) => {
           const userData = res.data.data;
           dispatch(login(userData));
-          setKwh(userData.watt); 
+          setKwh(userData.watt);
         })
         .catch((err) =>
           console.log("User data error:", err.response?.data?.message || err)
@@ -166,10 +166,10 @@ const Dashboard = () => {
     const fetchHourlyUsage = async () => {
       try {
         const response = await axios.get(
-          `${import.meta.env.VITE_BACKEND_URL}/api/user/retrive-hourly`, 
-          { withCredentials: true } 
+          `${import.meta.env.VITE_BACKEND_URL}/api/user/retrive-hourly`,
+          { withCredentials: true }
         );
-        
+
         if (response.status === 200) {
           const unitsPerHour = response.data.data;
 
@@ -190,15 +190,17 @@ const Dashboard = () => {
 
     fetchUserData();
     fetchHourlyUsage();
-  }, []); 
+  }, []);
 
-useEffect(() => {
-    if (!user || kwh <= 0) return; 
+  useEffect(() => {
+    if (!user || kwh <= 0) return;
 
     const fetchBillDetails = () => {
       axios
         .get(
-          `${import.meta.env.VITE_BACKEND_URL}/api/admin/data-dets?state=${user.state}`,
+          `${import.meta.env.VITE_BACKEND_URL}/api/admin/data-dets?state=${
+            user.state
+          }`,
           options
         )
         .then((res) => {
@@ -213,7 +215,7 @@ useEffect(() => {
             range: [range, range1, range2, range3],
           });
 
-          setTotalCost(costCalc(kwh)); 
+          setTotalCost(costCalc(kwh));
           setPerMonth(parseFloat(totalCost / 12).toFixed());
         })
         .catch((err) =>
@@ -221,36 +223,35 @@ useEffect(() => {
         );
     };
 
-    const fetchCostToday=async()=>{
+    const fetchCostToday = async () => {
       try {
         const response = await axios.get(
-          `${import.meta.env.VITE_BACKEND_URL}/api/user//retrive-costToday`, 
-          { withCredentials: true } 
+          `${import.meta.env.VITE_BACKEND_URL}/api/user//retrive-costToday`,
+          { withCredentials: true }
         );
-        
+
         if (response.status === 200) {
           setCost(costCalc(response.data.data));
         }
-      }catch (error) {
+      } catch (error) {
         console.error("Error fetching hourly usage data:", error);
       }
-    }
+    };
 
-    fetchBillDetails(); 
+    fetchBillDetails();
     fetchCostToday();
-
-  }, [user, kwh]); 
+  }, [user, kwh]);
 
   useEffect(() => {
     if (kwh > maxKwh) {
-      setMaxKwh(Math.ceil(kwh / 10000) * 100000); 
+      setMaxKwh(Math.ceil(kwh / 10000) * 100000);
     }
   }, [kwh]);
 
   return (
-    <div className="w-screen max-h-screen z-0 dark:bg-gray-800 lg:overflow-x-hidden overflow-auto top-0">
-      <div className="lg:flex lg:space-x-10 px-10 dark:bg-gray-800">
-        <div className="lg:w-4/5">
+    <div className="w-full min-h-screen bg-transparent p-4 lg:p-10">
+      <div className="flex flex-col lg:flex-row lg:space-x-4 space-y-6 lg:space-y-0">
+        <div className="w-full lg:w-1/2 flex flex-col space-y-4">
           <motion.div
             initial={{ y: -100, opacity: 0 }}
             animate={{ y: 0, opacity: 1 }}
@@ -274,29 +275,38 @@ useEffect(() => {
             />
           </motion.div>
         </div>
-        <Meter
-          color={"#d3435c"}
-          value={parseFloat(kwh)}
-          maxValue={1000}
-          unit={"kwh"}
-          initial={{ y: 100, opacity: 0 }}
-          animate={{ y: 0, opacity: 1 }}
-          transition={{ duration: 1, delay: 1.2 }}
-        />
-        <Meter
-          color={"#ed9d00"}
-          value={user?.voltage || 0}
-          maxValue={350}
-          unit={"v"}
-          initial={{ x: 100, opacity: 0 }}
-          animate={{ x: 0, opacity: 1 }}
-          transition={{ duration: 1, delay: 1.2 }}
-        />
+
+        <div className="w-full lg:w-1/3 flex flex-col space-y-6">
+          <div className="flex flex-col lg:flex-row lg:space-x-6 space-y-6 lg:space-y-0 h-80">
+            <Meter
+              color={"#d3435c"}
+              value={parseFloat(kwh)}
+              maxValue={1000}
+              unit={"kwh"}
+              initial={{ y: 100, opacity: 0 }}
+              animate={{ y: 0, opacity: 1 }}
+              transition={{ duration: 1, delay: 1.2 }}
+            />
+            <Meter
+              color={"#ed9d00"}
+              value={user?.voltage || 0}
+              maxValue={350}
+              unit={"v"}
+              initial={{ x: 100, opacity: 0 }}
+              animate={{ x: 0, opacity: 1 }}
+              transition={{ duration: 1, delay: 1.2 }}
+            />
+          </div>
+        </div>
       </div>
-      <div className="px-10 w-full dark:bg-gray-800 ">
-        <div className="lg:flex lg:space-x-10 w-full dark:bg-gray-800 ">
-          <Barchart data={data} />
-          <div className="lg:w-1/3">
+
+      <div className="w-full lg:mt-10 mt-24">
+        <div className="flex flex-col lg:flex-row lg:space-x-10 space-y-6 lg:space-y-0 ">
+          <div className="w-full ">
+            <Barchart data={data} />
+          </div>
+
+          <div className="w-full lg:w-1/3 flex flex-col space-y-6 ">
             <Meter
               color={"#34d399"}
               value={user?.current || 0}

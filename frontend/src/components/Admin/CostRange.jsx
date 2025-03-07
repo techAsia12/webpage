@@ -12,8 +12,8 @@ import {
   TableRow,
   CircularProgress,
 } from "@mui/material";
-import { ToastContainer, toast } from "react-toastify";  
-import "react-toastify/dist/ReactToastify.css";  
+import { ToastContainer, toast } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
 import { useDispatch, useSelector } from "react-redux";
 import { costRangePage } from "../../Features/pages/pages.slice";
 
@@ -26,6 +26,7 @@ const range = [
 
 const CostRangePage = () => {
   const state = useSelector((state) => state.bill?.state);
+  const theme = useSelector((state) => state.theme?.mode);
   const dispatch = useDispatch();
 
   const [rows, setRows] = useState([
@@ -34,7 +35,7 @@ const CostRangePage = () => {
     { unitRange: "", cost: "", taxPerUnit: "" },
     { unitRange: "", cost: "", taxPerUnit: "" },
   ]);
-  
+
   const [loading, setLoading] = useState(false);
 
   const handleChange = (e, index, field) => {
@@ -56,11 +57,14 @@ const CostRangePage = () => {
       };
 
       axios
-        .post(`${import.meta.env.VITE_BACKEND_URL}/api/admin/range-dets`, rowData)
+        .post(
+          `${import.meta.env.VITE_BACKEND_URL}/api/admin/range-dets`,
+          rowData
+        )
         .then((res) => {
           if (res?.status === 200) {
-            toast.success("Data submitted successfully!"); 
-            dispatch(costRangePage()); 
+            toast.success("Data submitted successfully!");
+            dispatch(costRangePage());
           }
         })
         .catch((error) => {
@@ -68,7 +72,7 @@ const CostRangePage = () => {
             "Error sending data for this row:",
             error?.response?.data?.message
           );
-          toast.error("Error submitting data!");  
+          toast.error("Error submitting data!");
         })
         .finally(() => {
           setLoading(false);
@@ -77,31 +81,42 @@ const CostRangePage = () => {
   };
 
   return (
-    <div className="w-screen h-fit lg:ml-20">
-      <ToastContainer position="top-right" autoClose={5000} hideProgressBar={false} newestOnTop closeButton />
-      <TableContainer className="lg:flex lg:justify-center w-1/2">
-        <Table
+    <div className="flex flex-col justify-center items-center dark:text-white lg:p-40 pt-20 ">
+      <ToastContainer
+        position="top-right"
+        autoClose={5000}
+        hideProgressBar={false}
+        newestOnTop
+        closeButton
+      />
+      <TableContainer className="lg:flex lg:justify-center w-1/2 ">
+        <Table 
           sx={{
             maxWidth: 900,
             borderCollapse: "collapse",
             boxShadow: 2,
             border: "1px solid #ddd",
             borderRadius: "8px",
-            background: "white",
-            '& .MuiTableCell-root': {
-              color: 'black',
+            background: "transparent",
+            "& .MuiTableCell-root": {
+              color: "black",
             },
-            '.dark & .MuiTableCell-root': {
-              color: 'white',
+            ".dark & .MuiTableCell-root": {
+              color: "white",
             },
           }}
-          aria-label="simple table"
         >
           <TableHead>
             <TableRow>
-              <TableCell align="center" className="dark:text-white">Unit</TableCell>
-              <TableCell align="center" className="dark:text-white">Cost</TableCell>
-              <TableCell align="center" className="dark:text-white">Tax Per Unit</TableCell>
+              <TableCell align="center" className="dark:text-white">
+                Unit
+              </TableCell>
+              <TableCell align="center" className="dark:text-white">
+                Cost
+              </TableCell>
+              <TableCell align="center" className="dark:text-white">
+                Tax Per Unit
+              </TableCell>
             </TableRow>
           </TableHead>
           <TableBody>
@@ -111,9 +126,12 @@ const CostRangePage = () => {
                   <TextField
                     select
                     label="Select Unit Range"
-                    className="w-52 dark:bg-gray-700 dark:text-white dark:border-white"
+                    className="w-52 bg-transparent dark:text-white dark:border-white"
                     value={row.unitRange}
                     onChange={(e) => handleChange(e, index, "unitRange")}
+                    sx={{
+                      border:theme==="dark"?"1px solid white":"1px solid black"
+                    }}
                     InputLabelProps={{
                       className: "dark:text-white",
                     }}
@@ -132,8 +150,11 @@ const CostRangePage = () => {
                 <TableCell align="center">
                   <TextField
                     label="Select Cost"
-                    className="w-52 dark:bg-gray-700 dark:text-white dark:border-white"
+                    className="w-52 bg-transparent dark:text-white dark:border-white"
                     onChange={(e) => handleChange(e, index, "cost")}
+                    sx={{
+                      border:theme==="dark"?"1px solid white":"1px solid black"
+                    }}
                     InputLabelProps={{
                       className: "dark:text-white",
                     }}
@@ -146,8 +167,11 @@ const CostRangePage = () => {
                 <TableCell align="center">
                   <TextField
                     label="Select Tax Per Unit"
-                    className="w-52 dark:bg-gray-700 dark:text-white dark:border-white"
+                    className="w-52 bg-transparent dark:text-white"
                     onChange={(e) => handleChange(e, index, "taxPerUnit")}
+                    sx={{
+                      border:theme==="dark"?"1px solid white":"1px solid black"
+                    }}
                     InputLabelProps={{
                       className: "dark:text-white",
                     }}
@@ -168,7 +192,12 @@ const CostRangePage = () => {
         ) : (
           <Button
             variant="contained"
-            className="border border-neutral-900 w-44 h-9 text-xl dark:bg-gray-700 dark:text-white dark:hover:bg-gray-600"
+            className="w-44 h-9 text-xl dark:text-white hover:bg-slate-600"
+            sx={{
+              backgroundColor: theme === "dark" ? "black" : "",
+              color: theme === "dark" ? "white" : "black",
+              border: `1px solid ${theme === "dark" ? "white" : "black"}`,
+            }}
             onClick={handleSubmit}
             disabled={loading}
           >

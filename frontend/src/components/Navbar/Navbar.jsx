@@ -4,7 +4,7 @@ import Avatar from "@mui/material/Avatar";
 import { Drawer } from "@mui/material";
 import Sidebar from "./Sidebar.jsx";
 import { useSelector, useDispatch } from "react-redux";
-import {  drawerToogle } from "../../Features/pages/pages.slice.js";
+import { drawerToogle } from "../../Features/pages/pages.slice.js";
 import { motion } from "motion/react";
 import ThemeToggle from "../ThemeToogle.jsx";
 import axios from "axios";
@@ -24,7 +24,7 @@ const SlideTabs = ({ navLinks }) => {
           opacity: 0,
         }));
       }}
-      className="relative flex w-fit rounded-full bg-white p-1 dark:bg-gray-800"
+      className="relative flex w-fit rounded-full bg-transparent"
     >
       {navLinks.map((link) => (
         <Tabs setPosition={setPosition} link={link} key={link.path}>
@@ -38,6 +38,7 @@ const SlideTabs = ({ navLinks }) => {
 
 const Tabs = ({ link, setPosition, children }) => {
   const tabRef = useRef(null);
+  const theme=useSelector((state)=>state.theme.mode) ;
 
   const handleMouseEnter = () => {
     if (!tabRef.current) return;
@@ -54,9 +55,9 @@ const Tabs = ({ link, setPosition, children }) => {
     <li
       ref={tabRef}
       onMouseEnter={handleMouseEnter}
-      className="relative z-10 cursor-pointer py-1.5 text-xs uppercase text-white mix-blend-difference md:px-10 md:py-3 md:text-base hidden lg:block"
+      className="relative z-10 cursor-pointer py-1.5 text-xs uppercase mix-blend-difference md:px-10 md:py-3 md:text-base hidden lg:block text-black dark:text-white hover:text-white"
     >
-      <NavLink to={link.path} className="block w-full text-white">
+      <NavLink to={link.path} className="block w-full">
         {children}
       </NavLink>
     </li>
@@ -78,14 +79,14 @@ const Cursor = ({ position }) => {
 
 const Navbar = ({ navLinks }) => {
   const [open, setOpen] = React.useState(false);
-  const [profile,setProfile]=React.useState();
+  const [profile, setProfile] = React.useState();
   const isOpen = useSelector((state) => state.pages?.drawer);
   const dispatch = useDispatch();
 
   const options = {
     withCredentials: true,
   };
-  
+
   useEffect(() => {
     setOpen(isOpen);
   }, [isOpen]);
@@ -108,29 +109,27 @@ const Navbar = ({ navLinks }) => {
   };
 
   return (
-    <div className="mt-7 mb-10 overflow-hidden z-0 dark:bg-gray-800 ">
-      <nav className="flex justify-center lg:px-20 lg:w-full bg-white dark:bg-gray-800 dark:text-white">
-        <div className="lg:-translate-x-20 dark:bg-gray-800">
-          <img
-            src="https://techasiamechatronics.com/wp-content/uploads/2023/03/techAsia-LOGO_horizontal1028.png"
-            alt="logo"
-            className="w-52"
-            onClick={handleRedirect}
-          />
-        </div>
-        <div className="flex w-3/4 items-center justify-center -translate-x-5 translate-y-1 ">
-          <SlideTabs navLinks={navLinks} />
-        </div>
+    <nav className="flex justify-center py-5  lg:px-20 lg:w-full dark:text-white">
+      <div className="lg:-translate-x-20 ">
+        <img
+          src="https://techasiamechatronics.com/wp-content/uploads/2023/03/techAsia-LOGO_horizontal1028.png"
+          alt="logo"
+          className="w-52"
+          onClick={handleRedirect}
+        />
+      </div>
+      <div className="flex w-3/4 items-center justify-center -translate-x-5 translate-y-1 ">
+        <SlideTabs navLinks={navLinks} />
+      </div>
 
-        <div className="lg:translate-x-12 lg:pt-3 pt-2 -translate-x-10 flex space-x-3">
-          <ThemeToggle />
-          <Avatar
-            alt="User Avatar"
-            src={`${profile}` || ""}
-            onClick={toggleDrawer}
-          />
-        </div>
-      </nav>
+      <div className="lg:translate-x-12 lg:pt-3 pt-2 -translate-x-10 flex space-x-3">
+        <ThemeToggle />
+        <Avatar
+          alt="User Avatar"
+          src={`${profile}` || ""}
+          onClick={toggleDrawer}
+        />
+      </div>
       <Drawer
         open={open}
         onClose={toggleDrawer}
@@ -139,7 +138,7 @@ const Navbar = ({ navLinks }) => {
       >
         <Sidebar />
       </Drawer>
-    </div>
+    </nav>
   );
 };
 

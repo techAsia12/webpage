@@ -93,7 +93,7 @@ const Sidebar = () => {
 
     removeCookie("authToken", { path: "/" });
     dispatch(logout());
-    navigate("/");
+    navigate("/login");
   };
 
   const options = {
@@ -184,7 +184,7 @@ const Sidebar = () => {
 
   if (role === "Client") {
     return (
-      <Box className="flex flex-col items-center justify-center space-y-10 h-full lg:w-80 w-64 dark:bg-gray-800 dark:text-white ">
+      <Box className="flex flex-col items-center justify-center space-y-10 h-full lg:w-80 w-64 dark:bg-gray-900 dark:text-white ">
         <ToastContainer />
         <MessageDialog
           open={open}
@@ -193,7 +193,7 @@ const Sidebar = () => {
           role={role}
         />
 
-        <div className="flex space-x-6 ml-8 dark:bg-gray-800">
+        <div className="flex space-x-6 ml-8 dark:bg-gray-900">
           <Avatar
             alt="User Avatar"
             src={`${profile}` || ""}
@@ -460,8 +460,8 @@ const Sidebar = () => {
 
         <Button
           variant="contained"
-          className="border border-neutral-900 w-44 h-9 text-xl hover:bg-white hover:text-black dark:hover:bg-gray-600 dark:hover:text-white"
-          onClick={handleLogout}
+          className="border border-neutral-900 w-44 h-9 text-xl hover:bg-white hover:text-black dark:bg-[#3f51b5] dark:hover:bg-[#4963c7] dark:hover:text-white"
+          onClick={()=>{handleLogout ,navigate('/login')}}
         >
           <LogoutIcon />
           Logout
@@ -472,7 +472,7 @@ const Sidebar = () => {
     );
   } else {
     return (
-      <Box className="flex flex-col items-center justify-center space-y-10 h-full lg:w-80 w-64 dark:bg-gray-800 lg:overflow-hidden dark:text-white ">
+      <Box className="flex flex-col items-center justify-center space-y-10 h-full lg:w-80 w-64 dark:bg-gray-900 lg:overflow-hidden dark:text-white ">
         <ToastContainer />
         <MessageDialog
           open={open}
@@ -480,7 +480,7 @@ const Sidebar = () => {
           message={message}
           role={role}
         />
-        <div className="flex space-x-6 ml-8 dark:bg-gray-800">
+        <div className="flex space-x-6 ml-8 dark:bg-gray-900">
           <Avatar
             alt="User Avatar"
             src={`${profile}` || ""}
@@ -698,9 +698,9 @@ const Sidebar = () => {
 
         <Button
           variant="contained"
-          className="border border-neutral-900 w-44 h-9 text-xl hover:bg-white hover:text-black dark:hover:bg-gray-600 dark:hover:text-white"
+          className="border border-neutral-900 w-44 h-9 text-xl dark:bg-[#3f51b5] dark:hover:bg-[#4963c7] hover:bg-white hover:text-black dark:hover:text-white"
           onClick={() => {
-            handleLogout, navigate("/");
+            handleLogout, navigate("/login");
           }}
         >
           <LogoutIcon />

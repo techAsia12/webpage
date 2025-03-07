@@ -5,6 +5,7 @@ import { useSelector } from "react-redux";
 import axios from "axios";
 import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
+import SendIcon from '@mui/icons-material/Send';
 
 const Contact = () => {
   const [name, setName] = useState("");
@@ -63,17 +64,17 @@ const Contact = () => {
   };
 
   return (
-    <div className="w-screen h-fit lg:flex overflow-hidden dark:bg-gray-800 dark:text-white">
+    <div className="w-screen h-fit lg:flex overflow-hidden px-10 dark:text-white">
       <div className="space-y-6">
         <motion.Card
           className="w-1/4 h-1/3 items-start"
           initial={{ opacity: 0, x: 50 }}
           animate={{ opacity: 1, x: 0 }}
-          transition={{ duration: 1, delay: 1.2}}
+          transition={{ duration: 1, delay: 1.2 }}
         >
           <h1 className="my-10 text-center lg:text-5xl text-2xl">Address</h1>
           <div className="text-center font-thin">
-            <p className="my-4 lg:text-xl">
+            <p className="my-4 lg:text-xl px-5">
               A-101, Ganpati Krupa Niwas, Opp. NKGSB Bank,Pt. Dindayal Road,
               Dombivli(W), Pin – 421202
             </p>
@@ -94,7 +95,7 @@ const Contact = () => {
         >
           <iframe
             src="https://www.google.com/maps/embed?pb=!1m14!1m8!1m3!1d235.49426307261186!2d73.11453188025294!3d19.19921110789753!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x3be7bf878e333687%3A0xe888f9ff8893f96e!2stechAsia%20Mechatronics%20Private%20Limited!5e0!3m2!1sen!2sin!4v1738911619430!5m2!1sen!2sin"
-            className="w-5/6 h-96 border-0 bottom-0"
+            className="w-5/6 lg:h-96 h-1/2 border-0 bottom-0"
             allowFullScreen
             loading="lazy"
             referrerPolicy="no-referrer-when-downgrade"
@@ -110,29 +111,51 @@ const Contact = () => {
       >
         <form
           onSubmit={handleSubmit}
-          className="text-center h-full p-10 space-y-4 border-2 dark:border-white border-black rounded-3xl"
+          className={`text-center p-5 lg:h-full lg:p-10 space-y-4 border-2 rounded-3xl ${
+            mode === "dark"
+              ? "bg-transparent border-white text-white"
+              : "bg-transparent border-black text-black"
+          }`}
         >
           <h1 className="text-3xl">Get In Touch</h1>
 
           <TextField
             label="Name"
             variant="outlined"
-            className={`lg:w-full ${
-              mode === "dark" ? "bg-gray-700 text-white border-gray-600" : ""
-            }`}
-            sx={inputStyles}
+            className="w-full"
+            sx={{
+              ...inputStyles,
+              "& .MuiInputBase-input": {
+                color: mode === "dark" ? "white" : "black",
+              },
+              "& .MuiOutlinedInput-notchedOutline": {
+                borderColor: mode === "dark" ? "white" : "black",
+              },
+              "& .MuiInputLabel-root": {
+                color: mode === "dark" ? "white" : "black",
+              },
+            }}
             required
             onChange={(e) => setName(e.target.value)}
           />
 
-          <div className="flex space-x-8">
+          <div className="lg:flex space-y-5 lg:space-x-8">
             <TextField
               label="Mobile No"
               variant="outlined"
-              className={`lg:w-1/2 ${
-                mode === "dark" ? "bg-gray-700 text-white border-gray-600" : ""
-              }`}
-              sx={inputStyles}
+              className="lg:w-1/2 w-full"
+              sx={{
+                ...inputStyles,
+                "& .MuiInputBase-input": {
+                  color: mode === "dark" ? "white" : "black",
+                },
+                "& .MuiOutlinedInput-notchedOutline": {
+                  borderColor: mode === "dark" ? "white" : "black",
+                },
+                "& .MuiInputLabel-root": {
+                  color: mode === "dark" ? "white" : "black",
+                },
+              }}
               required
               onChange={(e) => setPhonenno(e.target.value)}
             />
@@ -140,10 +163,19 @@ const Contact = () => {
               label="Email"
               variant="outlined"
               multiline
-              className={`lg:w-1/2 ${
-                mode === "dark" ? "bg-gray-700 text-white border-gray-600" : ""
-              }`}
-              sx={inputStyles}
+              className="lg:w-1/2 w-full"
+              sx={{
+                ...inputStyles,
+                "& .MuiInputBase-input": {
+                  color: mode === "dark" ? "white" : "black",
+                },
+                "& .MuiOutlinedInput-notchedOutline": {
+                  borderColor: mode === "dark" ? "white" : "black",
+                },
+                "& .MuiInputLabel-root": {
+                  color: mode === "dark" ? "white" : "black",
+                },
+              }}
               required
               onChange={(e) => setEmail(e.target.value)}
             />
@@ -153,20 +185,38 @@ const Contact = () => {
             label="Message"
             multiline
             rows={6}
-            className={`lg:w-full ${
-              mode === "dark" ? "bg-gray-700 text-white border-gray-600" : ""
-            }`}
-            sx={inputStyles}
+            className="w-full"
+            sx={{
+              ...inputStyles,
+              "& .MuiInputBase-input": {
+                color: mode === "dark" ? "white" : "black",
+              },
+              "& .MuiOutlinedInput-notchedOutline": {
+                borderColor: mode === "dark" ? "white" : "black",
+              },
+              "& .MuiInputLabel-root": {
+                color: mode === "dark" ? "white" : "black",
+              },
+            }}
             onChange={(e) => setMessage(e.target.value)}
           />
 
           <Button
             variant="contained"
-            className="w-44 h-9 text-xl text-white"
-            sx={buttonStyles}
+            className="w-44 h-9 text-xl text-center"
+            sx={{
+              ...buttonStyles,
+              backgroundColor: mode === "dark" ? "black" : "",
+              border:"1px solid white",
+              color:"white" ,
+              "&:hover": {
+                backgroundColor: mode === "dark" ? "#374151" : "balck",
+              },
+            }}
             type="submit"
           >
-            Send
+            <p className="mt-0.5">Send</p>
+            <SendIcon className="ml-2"/>
           </Button>
         </form>
       </motion.div>

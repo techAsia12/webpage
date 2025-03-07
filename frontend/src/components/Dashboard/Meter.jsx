@@ -1,7 +1,6 @@
 import { React, useState, useEffect } from "react";
-import { PieChart, Pie, Cell, Tooltip, Legend } from "recharts";
 import { Box, Typography, CardContent } from "@mui/material";
-import { motion } from "motion/react";
+import { motion } from "framer-motion";
 
 const Meter = ({
   color,
@@ -12,16 +11,10 @@ const Meter = ({
   animate,
   transition,
 }) => {
-  const data = [
-    { name: "Used", value: value },
-    { name: "Remaining", value: Math.min(maxValue - value) || 100 },
-    { name: "Zero", value: 0 },
-  ];
-
-  const COLORS = [color, "#e0e0e0"];
-  const minValue = 0;
-  const progress = Math.min(value, maxValue);
+  const progress = (value / maxValue) * 100;
   const [screenWidth, setScreenWidth] = useState(window.innerWidth);
+  const totalSegments = 30;
+  const filledSegments = Math.round((progress / 100) * totalSegments);
 
   useEffect(() => {
     const handleResize = () => {
@@ -34,110 +27,113 @@ const Meter = ({
     };
   }, []);
 
-  useEffect(() => {
-    const delayTimer = setTimeout(() => {
-      setAnimationDelay(1200);
-    }, 500);
-
-    return () => clearTimeout(delayTimer);
-  }, []);
-
-  const isSmallScreen = screenWidth < 600 ? true : false;
-  const [animationDelay, setAnimationDelay] = useState(0);
+  const isSmallScreen = screenWidth < 600;
 
   return (
-    <>
-      <motion.Card
-        className={`w-full shadow-lg rounded-3xl  dark:bg-gray-800 dark:text-neutral-400 `}
-        initial={initial}
-        animate={animate}
-        transition={transition}
-      >
-        <CardContent>
+    <motion.Card
+      className={`w-full shadow-lg rounded-3xl bg-white dark:bg-neutral-900 dark:text-neutral-400 border`}
+      initial={initial}
+      animate={animate}
+      transition={{ duration: 1 }}
+    >
+      <CardContent>
+        <Box
+          sx={{
+            position: "relative",
+            display: "flex",
+            flexDirection: "column",
+            alignItems: "center",
+            justifyContent: "center",
+            width: "100%",
+          }}
+        >
           <Box
             sx={{
               position: "relative",
-              display: "inline-flex",
+              width: isSmallScreen ? "200px" : "300px",
+              height: isSmallScreen ? "200px" : "300px",
+              display: "flex",
               alignItems: "center",
               justifyContent: "center",
-              width: isSmallScreen ? "80%" : "100%",
             }}
           >
-            <PieChart
-              width={isSmallScreen ? 200 : 400}
-              height={isSmallScreen ? 150 : 250}
-            >
-              <Pie
-                data={data}
-                cx="50%"
-                cy="100%"
-                startAngle={180}
-                endAngle={0}
-                innerRadius={isSmallScreen ? 50 : 130}
-                outerRadius={isSmallScreen ? 80 : 200}
-                fill="#8884d8"
-                paddingAngle={0}
-                dataKey="value"
-                animationDuration={3000}
-                animationEasing="ease-in-out"
-                isAnimationActive={animationDelay > 0}
-                animationBegin={animationDelay}
-                minAngle={1}
-              >
-                {data.map((entry, index) => (
-                  <Cell key={`cell-${index}`} fill={COLORS[index]} />
-                ))}
-              </Pie>
-              <Tooltip />
-            </PieChart>
+            {Array.from({ length: totalSegments }).map((_, index) => (
+              <Box
+                key={index}
+                sx={{
+                  position: "absolute",
+                  width: "8px",
+                  height: "50%",
+                  backgroundColor:
+                    index < filledSegments ? color : "rgba(224, 224, 224, 0.5)",
+                  borderRadius: "2px",
+                  transform: `rotate(${(360 / totalSegments) * index}deg)`,
+                  transformOrigin: "bottom center",
+                  top: "1%",
+                  left: "50%",
+                  zIndex: 1,
+                }}
+              />
+            ))}
 
             <Box
               sx={{
                 position: "absolute",
-                top: "80%",
-                left: "50%",
-                transform: "translate(-50%, -50%)",
+                width: "60%",
+                height: "60%",
+                borderRadius: "50%",
+                boxShadow: "inset 0 0 10px rgba(0, 0, 0, 0.1)",
+                zIndex: 2, 
               }}
-            >
-              <Typography
-                variant="h4"
-                component="div"
-                sx={{ fontSize: isSmallScreen ? "1rem" : "2rem" }}
-                color={color}
-              >
-                {`${Math.round(progress)}${unit}`}
-              </Typography>
-            </Box>
+              className="bg-white bg-[radial-gradient(ellipse_80%_80%_at_50%_-20%,rgba(0,0,0,0.2),rgba(0,0,0,0))] dark:bg-neutral-950 dark:bg-[radial-gradient(ellipse_80%_80%_at_50%_-20%,rgba(120,119,198,0.3),rgba(255,255,255,0))]"
+            />
 
             <Typography
-              variant="body2"
+              variant="h4"
+              component="div"
               sx={{
-                position: "absolute",
-                top: isSmallScreen ? "100%" : "110%",
-                left: isSmallScreen ? "15%" : "6%",
-                transform: "translate(-20%, -80%)",
-                fontSize: isSmallScreen ? "0.8rem" : "1.2rem",
+                fontSize: isSmallScreen ? "1.5rem" : "2rem",
+                fontWeight: "bold",
+                color: color,
+                position: "relative",
+                zIndex: 3, 
               }}
             >
-              {`${minValue}`}
-            </Typography>
-
-            <Typography
-              variant="body2"
-              sx={{
-                position: "absolute",
-                top: isSmallScreen ? "100%" : "110%",
-                right: isSmallScreen ? "12%" : "2%",
-                transform: "translate(20%, -80%)",
-                fontSize: isSmallScreen ? "0.8rem" : "1.2rem",
-              }}
-            >
-              {`${maxValue}`}
+              {`${Math.round(value)}${unit}`}
             </Typography>
           </Box>
-        </CardContent>
-      </motion.Card>
-    </>
+
+          <Box
+            sx={{
+              display: "flex",
+              justifyContent: "space-between",
+              width: "100%",
+              mt: isSmallScreen ? 1 : 2,
+              px: isSmallScreen ? 2 : 4,
+            }}
+          >
+            <Typography
+              variant="body2"
+              sx={{
+                fontSize: isSmallScreen ? "0.8rem" : "1rem",
+                color: "text.secondary",
+              }}
+            >
+              {`0${unit}`}
+            </Typography>
+            <Typography
+              variant="body2"
+              sx={{
+                fontSize: isSmallScreen ? "0.8rem" : "1rem",
+                color: "text.secondary",
+              }}
+            >
+              {`${maxValue}${unit}`}
+            </Typography>
+          </Box>
+        </Box>
+      </CardContent>
+    </motion.Card>
   );
 };
 

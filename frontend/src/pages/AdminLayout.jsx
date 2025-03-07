@@ -13,6 +13,12 @@ const AdminLayout = () => {
   const [visibility, setVisibility] = useState();
   const [billVisibility, setBillVisibility] = useState();
   const [costRangeVisibility, setCostRangeVisibility] = useState();
+  const mode = useSelector((state) => state.theme.mode);
+
+  const backgroundClass =
+    mode === "dark"
+      ? "bg-neutral-950 bg-[radial-gradient(ellipse_80%_80%_at_50%_-20%,rgba(120,119,198,0.3),rgba(255,255,255,0))]"
+      : "bg-white bg-[radial-gradient(ellipse_80%_80%_at_50%_-20%,rgba(0,0,0,0.2),rgba(0,0,0,0))]";
 
   const navLinks = [
     { path: "/admin/home", label: "Home" },
@@ -54,20 +60,25 @@ const AdminLayout = () => {
 
   console.log(costRangeVisibility);
   return (
-    <div className="lg:overflow-hidden dark:bg-gray-800 dark:text-white top-0">
+    <div
+      className={`min-h-screen  ${backgroundClass} bg-cover bg-center overflow-hidden  ${
+        visibility === "block" ? "overflow-hidden" : ""
+      }`}
+    >
       <Navbar navLinks={navLinks} />
-      <div className="content-container z-10 dark:bg-gray-800 dark:text-white justify-center  overflow-hidden flex">
+      <div className="z-10 text-center">
         <Outlet />
-        <div className={`z-20 absolute backdrop-blur-sm ${visibility}`}>
+        <div className={`fixed z-20  inset-0 backdrop-blur-sm ${visibility}`}>
           <Update />
         </div>
         <div
-          className={`z-20 absolute backdrop-blur-sm ${billVisibility}`}
+          className={`fixed z-20  inset-0 backdrop-blur-sm ${billVisibility}`}
         >
+          {" "}
           <AddDets />
         </div>
         <div
-          className={`z-20 absolute backdrop-blur-sm ${costRangeVisibility}`}
+          className={`fixed z-20  inset-0 backdrop-blur-sm ${costRangeVisibility}`}
         >
           <CostRangePage />
         </div>

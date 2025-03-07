@@ -83,9 +83,9 @@ const Navbar = ({ navLinks }) => {
 
   useEffect(() => {
     if (theme === "dark") {
-      setThemeBtn(<DarkModeIcon />);
+      setThemeBtn(<WbSunnyIcon/>);
     } else {
-      setThemeBtn(<WbSunnyIcon />);
+      setThemeBtn(<DarkModeIcon />);
     }
   }, [theme]);
 

@@ -16,8 +16,8 @@ import VisibilityOff from "@mui/icons-material/VisibilityOff";
 import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import { useDispatch, useSelector } from "react-redux";
-import { login } from "../../Features/auth/auth.slice";
-import SideBarAnimation from "../SideBarAnimation";
+import { login } from "../Features/auth/auth.slice";
+import SideBarAnimation from "../components/SideBarAnimation";
 import ElectricBoltIcon from "@mui/icons-material/ElectricBolt";
 
 const Login = () => {
@@ -72,7 +72,7 @@ const Login = () => {
 
   return (
     <div
-      className={`w-screen h-screen flex justify-center items-center lg:flex-none bg-slate-200 dark:bg-gray-900`}
+      className={`w-screen h-screen flex justify-center items-center lg:flex-none bg-white bg-[radial-gradient(ellipse_80%_80%_at_50%_-20%,rgba(0,0,0,0.2),rgba(0,0,0,0))] dark:bg-neutral-950 dark:bg-[radial-gradient(ellipse_80%_80%_at_50%_-20%,rgba(120,119,198,0.3),rgba(255,255,255,0))] dark:text-white selection:bg-gray-400 selection:text-gray-800`}
     >
       <ToastContainer />
       <SideBarAnimation />
@@ -88,7 +88,7 @@ const Login = () => {
         </div>
       )}
 
-      <div className="lg:w-3/4 w-4/5 h-3/4 lg:h-screen border border-neutral-900 rounded-3xl lg:border-none lg:pt-20 backdrop-blur-2xl bg-white/30 dark:bg-gray-800 dark:border-gray-700">
+      <div className="lg:w-3/4 w-4/5 h-3/4 lg:h-screen tracking-tighter border border-neutral-900 rounded-3xl lg:border-none lg:pt-20 backdrop-blur-3xl dark:border-gray-700">
         <h1 className="text-center text-4xl pt-10 lg:pt-24 dark:text-white">
           {" "}
           Login
@@ -100,12 +100,13 @@ const Login = () => {
             exclusive
             onChange={handleRoleChange}
             aria-label="Role selection"
-            className="mb-4 lg:w-5/6 mt-20 lg:mt-10"
+            className="mb-4 lg:w-5/6 mt-20 lg:mt-10 justify-between"
           >
             <ToggleButton
               value="Client"
               className="w-1/2 dark:bg-gray-700 dark:text-white"
               sx={{
+                borderColor: mode === "dark" ? "white" : "black",
                 backgroundColor: role === "Client" ? "black" : "",
                 color: role === "Client" ? "white" : "",
                 "&.Mui-selected": {
@@ -120,6 +121,7 @@ const Login = () => {
               value="Admin"
               className="w-1/2 dark:bg-gray-700 dark:text-white"
               sx={{
+                borderColor: mode === "dark" ? "white" : "black",
                 backgroundColor: role === "Admin" ? "black" : "",
                 color: role === "Admin" ? "white" : "",
                 "&.Mui-selected": {
@@ -212,9 +214,10 @@ const Login = () => {
             variant="contained"
             className="w-44 h-9 text-xl text-white"
             sx={{
-              backgroundColor: mode === "dark" ? "#374151" : "#000000",
+              backgroundColor: "#000000",
+              border: "1px solid #ffffff",
               "&:hover": {
-                backgroundColor: mode === "dark" ? "#000000" : "#374151",
+                backgroundColor: "#374151",
               },
             }}
             onClick={handleSubmit}
@@ -222,6 +225,7 @@ const Login = () => {
           >
             {loading ? "Loading..." : "Login"}
           </Button>
+
           <span className="text-neutral-400 dark:text-gray-300">OR</span>
           <GoogleLogin
             size="medium"
@@ -277,12 +281,16 @@ const Login = () => {
               toast.error("Google Login Failed", { position: "top-right" });
             }}
           />
-          <Link
-            to="/register"
-            className="text-sm text-blue-400 text-center hover:underline dark:text-blue-300"
-          >
-            Don't Have An Account?
-          </Link>
+          <p>
+            Don't have an account {"  "}
+            <Link
+              to="/register"
+              className=" text-blue-400 text-center hover:underline dark:text-blue-300"
+            >
+              {" "}
+              SignIn?
+            </Link>
+          </p>
         </form>
       </div>
     </div>

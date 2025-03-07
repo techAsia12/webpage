@@ -13,7 +13,7 @@ import {
 } from "@mui/material";
 import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
-import SideBarAnimation from "./SideBarAnimation";
+import SideBarAnimation from "../components/SideBarAnimation.jsx";
 import ElectricBoltIcon from "@mui/icons-material/ElectricBolt";
 
 const Signup = () => {
@@ -100,9 +100,7 @@ const Signup = () => {
 
   return (
     <div
-      className={`w-screen h-screen flex justify-center items-center ${
-        mode === "dark" ? "bg-gray-900 text-white" : "bg-slate-200"
-      }`}
+      className={`w-screen h-screen flex justify-center items-center bg-white bg-[radial-gradient(ellipse_80%_80%_at_50%_-20%,rgba(0,0,0,0.2),rgba(0,0,0,0))] dark:bg-neutral-950 dark:bg-[radial-gradient(ellipse_80%_80%_at_50%_-20%,rgba(120,119,198,0.3),rgba(255,255,255,0))] dark:text-white selection:bg-gray-400 selection:text-gray-800`}
     >
       <ToastContainer />
       <SideBarAnimation />
@@ -119,11 +117,11 @@ const Signup = () => {
       )}
 
       <div
-        className={`lg:w-3/4 w-4/5 h-fit lg:h-screen border rounded-3xl lg:border-none lg:pt-16 backdrop-blur-2xl ${
-          mode === "dark" ? "bg-gray-800 border-gray-700" : "bg-white/30"
-        }`}
+        className={`lg:w-3/4 w-4/5 h-fit lg:h-screen border rounded-3xl lg:border-none lg:pt-16 backdrop-blur-2xl `}
       >
-        <h1 className="text-center text-4xl pt-12">Client SignUp</h1>
+        <h1 className="text-center text-4xl pt-12 tracking-tighter">
+          Client SignUp
+        </h1>
         <form
           onSubmit={handleSubmit}
           className="mx-10 mt-10 space-y-4 flex flex-col justify-center items-center h-3/4"
@@ -304,7 +302,9 @@ const Signup = () => {
             className="lg:w-5/6 w-full"
             disabled={!selectedState || loading}
           >
-            <InputLabel className="dark:text-white">Service Provider</InputLabel>
+            <InputLabel className="dark:text-white">
+              Service Provider
+            </InputLabel>
             <Select
               value={selectedServiceProvider}
               onChange={(e) => setSelectedServiceProvider(e.target.value)}
@@ -342,13 +342,20 @@ const Signup = () => {
             variant="contained"
             type="submit"
             className="w-44 h-9 text-xl"
+            sx={{ border: "1px solid #ffffff" }}
             disabled={loading}
           >
             {loading ? "Loading..." : "Signup"}
           </Button>
-          <Link to="/" className="text-sm text-blue-400 text-center">
-            Already Have An Account?
-          </Link>
+          <p>
+            Already Have An Account{" "}
+            <Link
+              to="/login"
+              className="text-blue-400 text-center hover:underline"
+            >
+              Sigin?
+            </Link>
+          </p>
         </form>
       </div>
     </div>
