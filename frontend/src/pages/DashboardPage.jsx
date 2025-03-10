@@ -300,7 +300,7 @@ const Dashboard = () => {
         </div>
       </div>
 
-      <div className="w-full lg:mt-10 mt-24">
+      <div className="w-full lg:mt-10 mt-60">
         <div className="flex flex-col lg:flex-row lg:space-x-10 space-y-6 lg:space-y-0 ">
           <div className="w-full ">
             <Barchart data={data} />
