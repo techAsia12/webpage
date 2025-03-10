@@ -51,7 +51,7 @@ const Download = () => {
 
       <motion.img
         src={image}
-        className="w-full lg:w-1/4 mt-10 lg:mt-0 lg:block"
+        className="w-full lg:w-1/4 mt-10 lg:mt-0 lg:block p-5"
         initial={{ y: 50, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
         transition={{ duration: 1 }}
