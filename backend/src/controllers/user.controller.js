@@ -6,6 +6,7 @@ import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 import { uploadOnCloudinary } from "../utils/cloudinary.js";
 import nodemailer from "nodemailer";
+import twilio from "twilio";
 
 const options = {
   httpOnly: true,
@@ -13,6 +14,8 @@ const options = {
   sameSite: "None",
   path: "/",
 };
+
+const client = twilio(process.env.TWILIO_ACCOUNT_SID, process.env.TWILIO_AUTH_TOKEN);
 
 const generateVerificationCode = () => {
   return Math.floor(1000 + Math.random() * 9000);
@@ -986,6 +989,38 @@ const sendMail = asyncHandler(async (req, res, next) => {
   }
 });
 
+const sendMessage = asyncHandler(async (req, res, next) => {
+  const { phone } = req.body; 
+  const message = `Alert: Your electricity consumption has exceeded the set limit. The current usage has surpassed [LIMIT] with an amount of ₹[AMOUNT]. Please take necessary actions to avoid additional charges or service disruption.`;
+
+  console.log("Received message request:", { phone, message });
+
+  if (!phone || !message) {
+    console.log("Missing required fields");
+    return next(new ApiError(400, "Phone number and message are required"));
+  }
+
+  if (phone.length !== 10 || isNaN(phone)) {
+    console.log("Invalid phone number:", phone);
+    return next(new ApiError(400, "Please enter a valid 10-digit phone number"));
+  }
+
+  try {
+    console.log("Sending SMS...");
+    const response = await client.messages.create({
+      body: message,
+      from: process.env.TWILIO_PHONE_NUMBER, 
+      to: `+91${phone}`, 
+    });
+
+    console.log("Message sent successfully:", response.sid);
+    return res.status(200).json(new ApiResponse(200, { phone, message }, "Message sent successfully"));
+  } catch (err) {
+    console.error("Error sending SMS:", err);
+    return next(new ApiError(500, "Failed to send message"));
+  }
+});
+
 export {
   getData,
   register,
@@ -1006,4 +1041,5 @@ export {
   updateProfile,
   retiveCostToday,
   sendMail,
+  sendMessage
 };

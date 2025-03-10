@@ -134,7 +134,7 @@ const Navbar = ({ navLinks }) => {
         open={open}
         onClose={toggleDrawer}
         anchor="right"
-        className="rounded-2xl dark:bg-gray-900"
+        className="rounded-2xl"
       >
         <Sidebar />
       </Drawer>

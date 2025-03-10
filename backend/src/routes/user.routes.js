@@ -17,7 +17,8 @@ import {
   deleteUser,
   updateProfile,
   retiveCostToday,
-  sendMail
+  sendMail,
+  sendMessage
 } from "../controllers/user.controller.js";
 import { verifyJWT } from "../middleware/authUser.middlerware.js";
 import { verifyCode } from "../middleware/authCode.middleware.js";
@@ -64,5 +65,7 @@ router.route("/send-Mail").post(sendMail);
 router
   .route("/profileUpdate")
   .post(verifyJWT, upload.single("profile"), updateProfile);
+
+router.route("/send-message").post(sendMessage); 
 
 export default router;

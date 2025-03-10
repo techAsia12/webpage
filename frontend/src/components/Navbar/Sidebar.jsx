@@ -184,7 +184,7 @@ const Sidebar = () => {
 
   if (role === "Client") {
     return (
-      <Box className="flex flex-col items-center justify-center space-y-10 h-full lg:w-80 w-64 dark:bg-gray-900 dark:text-white ">
+      <Box className="flex flex-col items-center justify-center space-y-10 h-fit lg:w-80 w-64 dark:bg-gray-900 dark:text-white ">
         <ToastContainer />
         <MessageDialog
           open={open}
