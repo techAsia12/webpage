@@ -49,11 +49,11 @@ const Hero = () => {
         <div className="w-full lg:w-1/2 lg:p-8 lg:pt-0">
           <div className="flex justify-center w-full h-full">
             <motion.img
-              className="rounded-2xl w-full h-80 md:h-full shadow-lg shadow-black dark:shadow-white"
+              className="rounded-2xl w-2/3 h-80 md:h-full shadow-lg shadow-black dark:shadow-white"
               initial={{ x: 100, opacity: 0 }} 
               whileInView={{ x: 0, opacity: 1 }}
               transition={{ duration: 1, delay: 1.2 }}
-              src="https://th.bing.com/th/id/OIP.HBnLX6hmMTqqvDEJVGfw0wHaEK?pid=ImgDet&w=202&h=114&c=7&dpr=1.5"
+              src="https://res.cloudinary.com/misbackend/image/upload/v1741692125/openart-image_eu1sYUqd_1740215719551_raw_rbalfq.jpg"
               alt=""
             />
           </div>

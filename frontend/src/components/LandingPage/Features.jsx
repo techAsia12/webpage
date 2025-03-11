@@ -3,8 +3,8 @@ import Slider from "./Slider";
 import { motion } from "motion/react";
 
 const Features = () => {
-  return (
-    <div className="border-b border-x-neutral-900 pb-4 lg:mb-10">
+  return ( 
+    <div className="border-b border-x-neutral-900 p-5 lg:mb-10">
       <motion.div
         initial={{ opacity: 0 }}
         whileInView={{ opacity: 1 }}

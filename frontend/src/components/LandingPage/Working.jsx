@@ -15,7 +15,7 @@ const Working = () => {
   });
 
   return (
-    <div className="border-b border-x-neutral-900 pb-4 lg:mb-35 dark:text-white">
+    <div className="border-b border-x-neutral-900 pb-4 lg:mb-35 dark:text-white p-5">
       <motion.div
         initial={{ opacity: 0 }}
         whileInView={{ opacity: 1 }}
@@ -45,7 +45,7 @@ const Working = () => {
             </p>
           </div>
           <img
-            src="https://www.bing.com/th?id=OIP.U_VJuupQohwnzXcKMztqWgHaEo&w=154&h=100&c=8&rs=1&qlt=90&o=6&dpr=1.5&pid=3.1&rm=2"
+            src="https://th.bing.com/th/id/OIP.MGbLH7AxvOjZT3njt-tmFAHaEK?w=285&h=180&c=7&r=0&o=5&dpr=1.5&pid=1.7"
             className="w-full shadow-lg shadow-black dark:shadow-white rounded-2xl"
           />
         </motion.div>
@@ -70,7 +70,7 @@ const Working = () => {
             </p>
           </div>
           <img
-            src="https://www.bing.com/th?id=OIP.U_VJuupQohwnzXcKMztqWgHaEo&w=154&h=100&c=8&rs=1&qlt=90&o=6&dpr=1.5&pid=3.1&rm=2"
+            src="https://th.bing.com/th/id/R.e6e3d7d7dea143fcc21c8acb352d7826?rik=3455fDgrJECZRA&riu=http%3a%2f%2fwww.binarytranslator.com%2fimages%2fdata4.jpg&ehk=QBr7tC8QAzOA%2fuZst3fD6moXx8u7q1hpjbzE6r6HfZg%3d&risl=&pid=ImgRaw&r=0"
             className="w-full shadow-lg shadow-black dark:shadow-white rounded-2xl"
           />
           <div className="w-full text-center self-center mb-5 hidden lg:block">
@@ -107,8 +107,8 @@ const Working = () => {
             </p>
           </div>
           <img
-            src="https://www.bing.com/th?id=OIP.U_VJuupQohwnzXcKMztqWgHaEo&w=154&h=100&c=8&rs=1&qlt=90&o=6&dpr=1.5&pid=3.1&rm=2"
-            className="w-full shadow-lg shadow-black dark:shadow-white rounded-2xl"
+            src="https://res.cloudinary.com/misbackend/image/upload/v1741687494/qqef6bhkcpgubb5lva8c.png"
+            className="w-full lg:w-1/2 shadow-lg shadow-black dark:shadow-white rounded-2xl"
           />
         </motion.div>
       </div>

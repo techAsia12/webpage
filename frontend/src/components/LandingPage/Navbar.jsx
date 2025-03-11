@@ -94,12 +94,12 @@ const Navbar = ({ navLinks }) => {
       <img
         src="https://techasiamechatronics.com/wp-content/uploads/2023/03/techAsia-LOGO_horizontal1028.png"
         alt="logo"
-        className="w-52"
+        className="w-24 lg:w-52"
         onClick={() =>
           (window.location.href = "https://techasiamechatronics.com/")
         }
       />
-      <div className="flex space-x-2">
+      <div className="flex lg:space-x-2 space-x-1">
         <SlideTabs navLinks={navLinks} />
         <div className="flex space-x-2">
           <Button

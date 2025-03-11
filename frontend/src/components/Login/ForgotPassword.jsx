@@ -52,14 +52,14 @@ const ForgotPassword = () => {
       );
       setInput(
         <>
-          <label className="block text-sm font-medium text-gray-700">
+          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
             E-mail
           </label>
           <input
             type="email"
             onChange={(e) => setEmail(e.target.value)}
             placeholder="Enter your email id"
-            className="mt-2 w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="mt-2 w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-800 dark:border-gray-700 dark:text-gray-300"
           />
         </>
       );
@@ -79,7 +79,7 @@ const ForgotPassword = () => {
                 onChange={(e) => handleChange(e, index)}
                 onKeyDown={(e) => handleKeyDown(e, index)}
                 maxLength="1"
-                className="w-12 h-12 text-center text-2xl border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-12 h-12 text-center text-2xl border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-800 dark:border-gray-700 dark:text-gray-300"
               />
             ))}
         </div>
@@ -91,23 +91,23 @@ const ForgotPassword = () => {
       );
       setInput(
         <>
-          <label className="block text-sm font-medium text-gray-700">
+          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
             Password
           </label>
           <input
             type="password"
             onChange={(e) => setPassword(e.target.value)}
             placeholder="Enter your new password"
-            className="mt-2 w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="mt-2 w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-800 dark:border-gray-700 dark:text-gray-300"
           />
-          <label className="block text-sm font-medium text-gray-700">
+          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
             Confirm Password
           </label>
           <input
             type="password"
             onChange={(e) => setConfirmPassword(e.target.value)}
             placeholder="Confirm your new password"
-            className="mt-2 w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="mt-2 w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-800 dark:border-gray-700 dark:text-gray-300"
           />
         </>
       );
@@ -200,14 +200,16 @@ const ForgotPassword = () => {
   };
 
   return (
-    <div className="fixed inset-0 flex items-center justify-center bg-gray-500 bg-opacity-50 z-50">
+    <div className="fixed inset-0 flex items-center justify-center bg-gray-500 bg-opacity-50 z-50 dark:bg-gray-900 dark:bg-opacity-50">
       <ToastContainer />
-      <div className="bg-white p-8 rounded-lg shadow-lg w-96">
+      <div className="bg-white p-8 rounded-lg shadow-lg w-96 dark:bg-gray-800">
         <div className="flex justify-between items-center mb-4">
-          <h2 className="text-xl font-semibold text-gray-800">{label}</h2>
+          <h2 className="text-xl font-semibold text-gray-800 dark:text-gray-200">
+            {label}
+          </h2>
         </div>
 
-        <p className="text-gray-600 mb-4">{desc}</p>
+        <p className="text-gray-600 mb-4 dark:text-gray-400">{desc}</p>
 
         <div className="mb-4">{input}</div>
 
@@ -227,7 +229,7 @@ const ForgotPassword = () => {
           )}
         </button>
 
-        <div className="mt-4 text-center text-sm text-gray-500">
+        <div className="mt-4 text-center text-sm text-gray-500 dark:text-gray-400">
           <p>
             By submitting, you agree to our{" "}
             <a href="#" className="text-blue-500">

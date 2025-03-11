@@ -6,25 +6,25 @@ import { motion } from "motion/react";
 const Slider = () => {
   const slides = [
     {
-      url: "https://images.pexels.com/photos/459225/pexels-photo-459225.jpeg?cs=srgb&dl=daylight-environment-forest-459225.jpg&fm=jpg",
+      url: "https://res.cloudinary.com/misbackend/image/upload/v1741692864/Untitled_design_4_nygefr.png",
       title: "Real-Time Monitoring",
       textLists:
         "Track your energy consumption instantly, allowing for informed decisions and energy savings.",
     },
     {
-      url: "https://th.bing.com/th/id/OIP.1orB_PnChvAbd-RSG7fFyAHaEK?w=262&h=183&c=7&r=0&o=5&dpr=1.5&pid=1.7",
+      url: "https://res.cloudinary.com/misbackend/image/upload/v1741692985/Untitled_design_5_rf9a6k.png",
       title: "Accurate Billing",
       textLists:
         "Eliminate estimated bills with precise measurements, ensuring you only pay for what you use.",
     },
     {
-      url: "https://images.pexels.com/photos/459225/pexels-photo-459225.jpeg?cs=srgb&dl=daylight-environment-forest-459225.jpg&fm=jpg",
+      url: "https://res.cloudinary.com/misbackend/image/upload/v1741692522/Untitled_design_jzgywl.png",
       title: "Remote Access",
       textLists:
         "Monitor and manage your energy usage from anywhere with our user-friendly mobile app.",
     },
     {
-      url: "https://images.pexels.com/photos/459225/pexels-photo-459225.jpeg?cs=srgb&dl=daylight-environment-forest-459225.jpg&fm=jpg",
+      url: "https://i.pinimg.com/736x/87/4f/da/874fda66dfaed0f70482d2f4e209b5d0.jpg",
       title: "Smart Alerts & Notifications",
       textLists:
         "Receive instant alerts for unusual energy spikes, faults, or maintenance needs to stay in control.",
@@ -57,8 +57,10 @@ const Slider = () => {
       className="relative mb-10"
     >
       <div
-        className={`w-full h-96 bg-cover bg-center rounded-2xl shadow-lg shadow-black dark:shadow-white `}
-        style={{ backgroundImage: `url(${slides[currentIndex].url})` }}
+        className="w-full h-96 bg-cover bg-center rounded-2xl shadow-lg shadow-black dark:shadow-white"
+        style={{
+          backgroundImage: `url(${slides[currentIndex].url})`,
+        }}
       >
         <div className="absolute top-5 lg:left-10 left-4 text-white lg:text-4xl text-3xl font-thin tracking-tight">
           {slides[currentIndex].title}

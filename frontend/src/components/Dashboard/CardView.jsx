@@ -49,7 +49,7 @@ const CardTemp = ({ color, name, value, unit, hidden }) => {
             />
           </div>
           <p className={`ml-14 lg:text-6xl text-2xl ${color}`}>
-            {value || 0} {unit}
+          {'₹'} {value || 0} 
           </p>
         </CardContent>
       </Card>
