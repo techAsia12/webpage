@@ -9,7 +9,6 @@ const Meter = ({
   unit,
   initial,
   animate,
-  transition,
 }) => {
   const progress = (value / maxValue) * 100;
   const [screenWidth, setScreenWidth] = useState(window.innerWidth);
@@ -103,34 +102,6 @@ const Meter = ({
             </Typography>
           </Box>
 
-          <Box
-            sx={{
-              display: "flex",
-              justifyContent: "space-between",
-              width: "100%",
-              mt: isSmallScreen ? 1 : 2,
-              px: isSmallScreen ? 2 : 4,
-            }}
-          >
-            <Typography
-              variant="body2"
-              sx={{
-                fontSize: isSmallScreen ? "0.8rem" : "1rem",
-                color: "text.secondary",
-              }}
-            >
-              {`0${unit}`}
-            </Typography>
-            <Typography
-              variant="body2"
-              sx={{
-                fontSize: isSmallScreen ? "0.8rem" : "1rem",
-                color: "text.secondary",
-              }}
-            >
-              {`${maxValue}${unit}`}
-            </Typography>
-          </Box>
         </Box>
       </CardContent>
     </motion.Card>

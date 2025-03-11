@@ -18,7 +18,7 @@ import {
   updateProfile,
   retiveCostToday,
   sendMail,
-  sendMessage
+  setThershold,
 } from "../controllers/user.controller.js";
 import { verifyJWT } from "../middleware/authUser.middlerware.js";
 import { verifyCode } from "../middleware/authCode.middleware.js";
@@ -54,7 +54,7 @@ router.route("/retrive-yearly").get(verifyJWT, retiveYearlyUsage);
 
 router.route("/retrive-user").get(verifyJWT, getUserData);
 
-router.route("/retrive-costToday").get(verifyJWT,retiveCostToday);
+router.route("/retrive-costToday").get(verifyJWT, retiveCostToday);
 
 router.route("/retrive-stateDets").get(retriveState);
 
@@ -66,6 +66,6 @@ router
   .route("/profileUpdate")
   .post(verifyJWT, upload.single("profile"), updateProfile);
 
-router.route("/send-message").post(sendMessage); 
+router.route("/set-threshold").post(verifyJWT, setThershold);
 
 export default router;

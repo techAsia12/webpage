@@ -6,7 +6,7 @@ import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 import { uploadOnCloudinary } from "../utils/cloudinary.js";
 import nodemailer from "nodemailer";
-import twilio from "twilio";
+import axios from "axios";
 
 const options = {
   httpOnly: true,
@@ -14,8 +14,6 @@ const options = {
   sameSite: "None",
   path: "/",
 };
-
-const client = twilio(process.env.TWILIO_ACCOUNT_SID, process.env.TWILIO_AUTH_TOKEN);
 
 const generateVerificationCode = () => {
   return Math.floor(1000 + Math.random() * 9000);
@@ -274,13 +272,15 @@ const getData = asyncHandler(async (req, res, next) => {
     const [result] = await db
       .promise()
       .query(
-        "SELECT phoneno, MACadd, voltage, current, watt, date_time, state FROM client_dets WHERE phoneno = ?",
+        "SELECT phoneno, MACadd, voltage, current, watt, date_time, state, totalCost, costToday,threshold FROM client_dets WHERE phoneno = ?",
         [user.id]
       );
 
     if (result.length === 0) {
       return next(new ApiError(404, "No data found"));
     }
+
+    console.log("Data fetched successfully:", result[0]);
 
     return res
       .status(200)
@@ -680,6 +680,30 @@ const retiveYearlyUsage = asyncHandler(async (req, res, next) => {
   }
 });
 
+const costCalc = (unit, billDets) => {
+  const calc = (unit, cos, index, billDets) => {
+    const base = unit * cos + billDets.base;
+    const tax1 = unit * billDets.percentPerUnit;
+    const tax2 = unit * billDets.range[index].taxPerUnit;
+    const tax3 = (billDets.totalTaxPercent / 100) * (base + tax1 + tax2);
+    const total = base + tax1 + tax2 + tax3 + billDets.tax;
+
+    return { base, total };
+  };
+  let { base, total } = { base: 0, total: 0 };
+
+  if (unit > billDets.range[3].unitRange) {
+    ({ base, total } = calc(unit, billDets.range[3].cost, 3, billDets));
+  } else if (unit > billDets.range[2].unitRange) {
+    ({ base, total } = calc(unit, billDets.range[2].cost, 2, billDets));
+  } else if (unit > billDets.range[1].unitRange) {
+    ({ base, total } = calc(unit, billDets.range[1].cost, 1, billDets));
+  } else {
+    ({ base, total } = calc(unit, billDets.range[0].cost, 0, billDets));
+  }
+  return parseFloat(total.toFixed());
+};
+
 const sentData = asyncHandler(async (req, res, next) => {
   const { phoneno, voltage, current, MACadd } = req.query;
   const currentDate = new Date();
@@ -707,9 +731,10 @@ const sentData = asyncHandler(async (req, res, next) => {
     console.log("Fetching current watt value from database...");
     const [result] = await db
       .promise()
-      .query("SELECT watt,date_time FROM client_dets WHERE phoneno = ?", [
-        phoneno,
-      ]);
+      .query(
+        "SELECT watt, date_time, state, threshold, emailSent FROM client_dets WHERE phoneno = ?",
+        [phoneno]
+      );
 
     if (result.length === 0) {
       console.log("Client not found in database");
@@ -717,9 +742,10 @@ const sentData = asyncHandler(async (req, res, next) => {
     }
 
     const watt = result[0].watt === null ? 1 : result[0].watt;
-    console.log(`Current watt: ${watt}, calculating new watt...`);
-
     const prevtime = result[0].date_time;
+    const state = result[0].state;
+    let threshold = result[0].threshold;
+    let emailSent = result[0].email_sent;
 
     const prevDate = new Date(prevtime);
     const timeDifferenceInMs = currentDate - prevDate;
@@ -732,15 +758,63 @@ const sentData = asyncHandler(async (req, res, next) => {
     const newWatt = watt + kwh;
     console.log(`New watt value calculated: ${newWatt}`);
 
-    console.log(`New watt value calculated: ${newWatt}`);
-
-    console.log(
-      "Watt value is a whole integer, updating hourly, daily, and monthly data..."
-    );
     if (watt !== newWatt || prevtime.getHours() !== currentDate.getHours()) {
       await insertHourly(phoneno, newWatt);
       await insertDaily(phoneno, newWatt);
       await insertMonthly(phoneno, newWatt);
+    }
+
+    const [billDetailsResult] = await db
+      .promise()
+      .query("SELECT * FROM bill_details WHERE state=?", [state]);
+
+    if (!billDetailsResult || billDetailsResult.length === 0) {
+      return next(new ApiError(404, "No Bill Details Found"));
+    }
+
+    const billDetails = billDetailsResult[0];
+
+    const [costDetailsResult] = await db
+      .promise()
+      .query(
+        "SELECT * FROM cost_per_unit WHERE state=? ORDER BY unitRange ASC",
+        [state]
+      );
+
+    if (!costDetailsResult || costDetailsResult.length === 0) {
+      return next(new ApiError(404, "No Cost Details Found"));
+    }
+
+    const billDets = {
+      base: billDetails.base,
+      percentPerUnit: billDetails.percentPerUnit,
+      state: billDetails.state,
+      tax: billDetails.tax,
+      totalTaxPercent: billDetails.totalTaxPercent,
+      range: costDetailsResult,
+    };
+
+    const totalCost = costCalc(newWatt, billDets);
+    let costToday = costCalc(kwh, billDets);
+
+    if (currentDate.getDate() !== prevtime.getDate()) {
+      console.log("Midnight detected. Resetting costToday to 0.");
+      costToday = 0;
+    }
+
+    if (threshold < totalCost && emailSent===0) {
+      const [userResult] = await db
+        .promise()
+        .query("SELECT email FROM users WHERE phoneno = ?", [phoneno]);
+
+      if (userResult.length > 0) {
+        const userEmail = userResult[0].email;
+        console.log("Sending email to:", userEmail);
+        await sendMessage(userEmail, totalCost, threshold);
+
+        emailSent = 0; 
+        threshold *= 10; 
+      }
     }
 
     const updateQuery = `
@@ -749,7 +823,11 @@ const sentData = asyncHandler(async (req, res, next) => {
         current = ?,
         MACadd = ?,
         watt = ?, 
-        date_time = ?
+        date_time = ?,
+        totalCost = ?,
+        costToday = ?,
+        threshold = ?,
+        emailSent = ?
       WHERE phoneno = ?
     `;
     const updateParams = [
@@ -758,6 +836,10 @@ const sentData = asyncHandler(async (req, res, next) => {
       MACadd,
       newWatt,
       mysqlTimestamp,
+      totalCost,
+      costToday,
+      threshold,
+      emailSent,
       phoneno,
     ];
 
@@ -954,9 +1036,7 @@ const sendMail = asyncHandler(async (req, res, next) => {
   const { name, email, phoneno, message } = req.body;
 
   if (!name || !email || !message || !phoneno) {
-    return res
-      .status(400)
-      .json({ error: "All fields are required." });
+    return res.status(400).json({ error: "All fields are required." });
   }
   const transporter = nodemailer.createTransport({
     service: "gmail",
@@ -989,35 +1069,75 @@ const sendMail = asyncHandler(async (req, res, next) => {
   }
 });
 
-const sendMessage = asyncHandler(async (req, res, next) => {
-  const { phone } = req.body; 
-  const message = `Alert: Your electricity consumption has exceeded the set limit. The current usage has surpassed [LIMIT] with an amount of ₹[AMOUNT]. Please take necessary actions to avoid additional charges or service disruption.`;
+const sendMessage =async(email,totalCost,threshold)=> {
 
-  console.log("Received message request:", { phone, message });
-
-  if (!phone || !message) {
-    console.log("Missing required fields");
-    return next(new ApiError(400, "Phone number and message are required"));
-  }
-
-  if (phone.length !== 10 || isNaN(phone)) {
-    console.log("Invalid phone number:", phone);
-    return next(new ApiError(400, "Please enter a valid 10-digit phone number"));
-  }
-
-  try {
-    console.log("Sending SMS...");
-    const response = await client.messages.create({
-      body: message,
-      from: process.env.TWILIO_PHONE_NUMBER, 
-      to: `+91${phone}`, 
+    const transporter = nodemailer.createTransport({
+      service: "gmail",
+      auth: {
+        user: process.env.GMAIL_USER,
+        pass: process.env.GMAIL_PASS,
+      },
     });
 
-    console.log("Message sent successfully:", response.sid);
-    return res.status(200).json(new ApiResponse(200, { phone, message }, "Message sent successfully"));
-  } catch (err) {
-    console.error("Error sending SMS:", err);
-    return next(new ApiError(500, "Failed to send message"));
+    const mailOptions = {
+      from: `"TechAsia" <${process.env.GMAIL_USER}>`,
+      to: email,
+      subject: "⚠️ Electricity Consumption Alert",
+      text: `Hello,
+    
+    Alert: Your electricity consumption has exceeded the set limit.
+    
+    The current usage has surpassed ₹${threshold} with an amount of ₹${totalCost}. Please take necessary actions to avoid additional charges or service disruption.
+    
+    If you have any questions, please contact your service provider.
+    
+    Best regards,  
+    TechAsia Support Team`,
+    };
+
+    await transporter.sendMail(mailOptions);
+
+    console.log(`Email successfully sent to: ${email}`);
+};
+
+const setThershold = asyncHandler(async (req, res, next) => {
+  try {
+    console.log("Request body:", req.body);
+    const { threshold } = req.body;
+
+    console.log("Authenticated user:", req.user);
+    const phone = req.user.id;
+
+    console.log(
+      "Updating threshold for phone:",
+      phone,
+      "with threshold:",
+      threshold
+    );
+
+    const updateQuery = `
+      UPDATE client_dets SET threshold=?
+      WHERE phoneno = ?
+    `;
+    const updateParams = [threshold, phone];
+
+    console.log("Executing update query...");
+    const [result] = await db.promise().query(updateQuery, updateParams);
+
+    console.log("Database query result:", result);
+
+    if (result.affectedRows === 0) {
+      console.log("No rows affected. User not found or no changes made.");
+      return next(new ApiError(404, "User not found or no changes made"));
+    }
+
+    console.log("Threshold updated successfully.");
+    return res
+      .status(200)
+      .json(new ApiResponse(200, result, "Threshold set successfully"));
+  } catch (error) {
+    console.error("Error setting threshold:", error);
+    return next(new ApiError(500, "Internal Server Error"));
   }
 });
 
@@ -1041,5 +1161,5 @@ export {
   updateProfile,
   retiveCostToday,
   sendMail,
-  sendMessage
+  setThershold,
 };

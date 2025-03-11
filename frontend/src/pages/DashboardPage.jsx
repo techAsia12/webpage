@@ -66,31 +66,6 @@ const Dashboard = () => {
     withCredentials: true,
   };
 
-  const costCalc = (unit) => {
-    const calc = (unit, cos, index) => {
-      const base = unit * cos + billDets.base;
-      const tax1 = unit * billDets.percentPerUnit;
-      const tax2 = unit * billDets.range[index].taxPerUnit;
-      const tax3 = (billDets.totalTaxPercent / 100) * (base + tax1 + tax2);
-      const total = base + tax1 + tax2 + tax3 + billDets.tax;
-
-      return { base, total };
-    };
-
-    let { base, total } = { base: 0, total: 0 };
-
-    if (unit > billDets.range[3].unitRange) {
-      ({ base, total } = calc(unit, billDets.range[3].cost, 3));
-    } else if (unit > billDets.range[2].unitRange) {
-      ({ base, total } = calc(unit, billDets.range[2].cost, 2));
-    } else if (unit > billDets.range[1].unitRange) {
-      ({ base, total } = calc(unit, billDets.range[1].cost, 1));
-    } else {
-      ({ base, total } = calc(unit, billDets.range[0].cost, 0));
-    }
-    return parseFloat(total.toFixed());
-  };
-
   useEffect(() => {
     const fetchUserData = () => {
       axios
@@ -99,51 +74,20 @@ const Dashboard = () => {
           setUser(res.data.data);
           const time =
             (new Date() - new Date(res.data.data.date_time)) / (1000 * 60 * 60);
-          console.log(res.data.data.watt);
           setkwh(parseFloat(res.data.data.watt.toFixed(3)));
+          setTotalCost(res.data.data.totalCost);
+          setCost(res.data.data.costToday);
+          setPerMonth((totalCost / 12).toFixed(2));
         })
         .catch((err) =>
           console.log("User data error:", err.response?.data?.message || err)
         );
     };
 
-    const fetchBillDetails = () => {
-      axios
-        .get(
-          `${import.meta.env.VITE_BACKEND_URL}/api/admin/data-dets?state=${
-            user.state
-          }`,
-          options
-        )
-        .then((res) => {
-          const [range, range3, range2, range1] = res.data.data.costDetails;
-
-          setBillDet({
-            base: res.data.data.billDetails.base,
-            percentPerUnit: res.data.data.billDetails.percentPerUnit,
-            state: res.data.data.billDetails.state,
-            tax: res.data.data.billDetails.tax,
-            totalTaxPercent: res.data.data.billDetails.totalTaxPercent,
-            range: [range, range1, range2, range3],
-          });
-          costCalc(kwh);
-          setPerMonth(parseFloat(totalCost / 12).toFixed());
-        })
-        .catch((err) =>
-          console.log("Bill details error:", err.response?.data?.message || err)
-        );
-    };
-
     fetchUserData();
-    if (user) {
-      fetchBillDetails();
-    }
 
     const interval = setInterval(() => {
       fetchUserData();
-      if (user) {
-        fetchBillDetails();
-      }
     }, 5000);
 
     return () => clearInterval(interval);
@@ -193,56 +137,6 @@ const Dashboard = () => {
   }, []);
 
   useEffect(() => {
-    if (!user || kwh <= 0) return;
-
-    const fetchBillDetails = () => {
-      axios
-        .get(
-          `${import.meta.env.VITE_BACKEND_URL}/api/admin/data-dets?state=${
-            user.state
-          }`,
-          options
-        )
-        .then((res) => {
-          const [range, range3, range2, range1] = res.data.data.costDetails;
-
-          setBillDet({
-            base: res.data.data.billDetails.base,
-            percentPerUnit: res.data.data.billDetails.percentPerUnit,
-            state: res.data.data.billDetails.state,
-            tax: res.data.data.billDetails.tax,
-            totalTaxPercent: res.data.data.billDetails.totalTaxPercent,
-            range: [range, range1, range2, range3],
-          });
-
-          setTotalCost(costCalc(kwh));
-          setPerMonth(parseFloat(totalCost / 12).toFixed());
-        })
-        .catch((err) =>
-          console.log("Bill details error:", err.response?.data?.message || err)
-        );
-    };
-
-    const fetchCostToday = async () => {
-      try {
-        const response = await axios.get(
-          `${import.meta.env.VITE_BACKEND_URL}/api/user//retrive-costToday`,
-          { withCredentials: true }
-        );
-
-        if (response.status === 200) {
-          setCost(costCalc(response.data.data));
-        }
-      } catch (error) {
-        console.error("Error fetching hourly usage data:", error);
-      }
-    };
-
-    fetchBillDetails();
-    fetchCostToday();
-  }, [user, kwh]);
-
-  useEffect(() => {
     if (kwh > maxKwh) {
       setMaxKwh(Math.ceil(kwh / 10000) * 100000);
     }
@@ -261,6 +155,7 @@ const Dashboard = () => {
               name={"COST TODAY"}
               value={cost}
               color={"text-indigo-400"}
+              hidden={"hidden"}
             />
           </motion.div>
           <motion.div
@@ -306,7 +201,7 @@ const Dashboard = () => {
             <Barchart data={data} />
           </div>
 
-          <div className="w-full lg:w-1/3 flex flex-col space-y-6 ">
+          <div className="w-full lg:w-1/3 flex flex-col space-y-6 py-2 ">
             <Meter
               color={"#34d399"}
               value={user?.current || 0}
@@ -325,6 +220,7 @@ const Dashboard = () => {
                 name={"COST/MONTH"}
                 value={costPerMonth}
                 color={"text-rose-500"}
+                hidden={"hidden"}
               />
             </motion.div>
           </div>
