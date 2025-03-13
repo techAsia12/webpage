@@ -6,7 +6,7 @@ Welcome to the Smart Energy Meter Webpage repository! This project is a dedicate
 
 ### **Table of Contents**
 
-1.[Project Overview](#projectOverview)
+1.[Project Overview](#project-overview)
 
 2.Features
 
