@@ -19,6 +19,64 @@ import {
 } from "@tanstack/react-table";
 import { useSelector } from "react-redux";
 
+// SEO Component to add meta tags
+const SEO = () => (
+  <>
+    <title>Client Data Dashboard</title>
+    <meta
+      name="description"
+      content="View and manage client data including phone numbers, emails, MAC addresses, and energy metrics."
+    />
+    <meta
+      name="keywords"
+      content="client data, energy metrics, dashboard, admin panel"
+    />
+    <meta name="author" content="Your Company Name" />
+  </>
+);
+
+// Table Header Component
+const TableHeader = ({ table, theme }) => (
+  <TableHead>
+    {table.getHeaderGroups().map((headerGroup) => (
+      <TableRow key={headerGroup.id}>
+        {headerGroup.headers.map((header) => (
+          <TableCell
+            key={header.id}
+            align="right"
+            sx={{
+              background: theme === "dark" ? "#030712" : "#e2e8f0",
+              color: theme === "dark" ? "white" : "black",
+            }}
+          >
+            {flexRender(header.column.columnDef.header, header.getContext())}
+          </TableCell>
+        ))}
+      </TableRow>
+    ))}
+  </TableHead>
+);
+
+// Table Body Component
+const TableBodyContent = ({ table }) => (
+  <TableBody>
+    {table.getRowModel().rows.map((row) => (
+      <TableRow hover key={row.id}>
+        {row.getVisibleCells().map((cell) => (
+          <TableCell
+            key={cell.id}
+            align="right"
+            className="dark:bg-gray-950 dark:text-white"
+          >
+            {flexRender(cell.column.columnDef.cell, cell.getContext())}
+          </TableCell>
+        ))}
+      </TableRow>
+    ))}
+  </TableBody>
+);
+
+// Main Component
 const Home = () => {
   const [clientData, setClientData] = React.useState([]);
   const [loading, setLoading] = React.useState(true);
@@ -27,6 +85,7 @@ const Home = () => {
 
   const options = { withCredentials: true };
 
+  // Fetch client data from the API
   const fetchClientData = React.useCallback(async () => {
     try {
       const response = await axios.get(
@@ -47,8 +106,8 @@ const Home = () => {
     fetchClientData();
   }, [fetchClientData]);
 
+  // Define table columns
   const columnHelper = createColumnHelper();
-
   const columns = React.useMemo(
     () => [
       columnHelper.accessor("phoneno", { header: "Phone No" }),
@@ -73,6 +132,7 @@ const Home = () => {
     []
   );
 
+  // Initialize the table
   const table = useReactTable({
     data: clientData,
     columns,
@@ -80,13 +140,16 @@ const Home = () => {
     getPaginationRowModel: getPaginationRowModel(),
   });
 
-  if (loading) return <div className="text-center py-10 dark:text-white">Loading...</div>;
+  // Loading and error states
+  if (loading)
+    return <div className="text-center py-10 dark:text-white">Loading...</div>;
   if (error)
     return <div className="text-center py-10 text-red-500">{error}</div>;
 
   return (
     <div className="w-screen flex justify-center items-center">
-      <div className="flex justify-center dark:text-white h-fit w-full mt-10 ">
+      <SEO /> {/* Add SEO meta tags */}
+      <div className="flex justify-center dark:text-white h-fit w-full mt-10">
         <ToastContainer />
         <Paper
           sx={{
@@ -97,46 +160,9 @@ const Home = () => {
           className="dark:text-white"
         >
           <TableContainer sx={{ maxHeight: 600 }}>
-            <Table stickyHeader>
-              <TableHead>
-                {table.getHeaderGroups().map((headerGroup) => (
-                  <TableRow key={headerGroup.id}>
-                    {headerGroup.headers.map((header) => (
-                      <TableCell
-                        key={header.id}
-                        align="right"
-                        sx={{
-                          background: theme === "dark" ? "#030712" : "#e2e8f0",
-                          color: theme === "dark" ? "white" : "black",
-                        }}
-                      >
-                        {flexRender(
-                          header.column.columnDef.header,
-                          header.getContext()
-                        )}
-                      </TableCell>
-                    ))}
-                  </TableRow>
-                ))}
-              </TableHead>
-              <TableBody>
-                {table.getRowModel().rows.map((row) => (
-                  <TableRow hover key={row.id}>
-                    {row.getVisibleCells().map((cell) => (
-                      <TableCell
-                        key={cell.id}
-                        align="right"
-                        className="dark:bg-gray-950 dark:text-white"
-                      >
-                        {flexRender(
-                          cell.column.columnDef.cell,
-                          cell.getContext()
-                        )}
-                      </TableCell>
-                    ))}
-                  </TableRow>
-                ))}
-              </TableBody>
+            <Table stickyHeader aria-label="client data table">
+              <TableHeader table={table} theme={theme} />
+              <TableBodyContent table={table} />
             </Table>
           </TableContainer>
 

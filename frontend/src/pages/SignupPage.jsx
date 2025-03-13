@@ -15,6 +15,7 @@ import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import SideBarAnimation from "../components/SideBarAnimation.jsx";
 import ElectricBoltIcon from "@mui/icons-material/ElectricBolt";
+import { Helmet } from "react-helmet";
 
 const Signup = () => {
   const [name, setName] = useState("");
@@ -29,15 +30,18 @@ const Signup = () => {
   const navigate = useNavigate();
   const mode = useSelector((state) => state.theme.mode);
 
+  // Handle state change
   const handleStateChange = (event) => {
     setSelectedState(event.target.value);
     setSelectedServiceProvider("");
   };
 
+  // Handle form submission
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
 
+    // Validate form fields
     if (
       !name ||
       !password ||
@@ -85,6 +89,7 @@ const Signup = () => {
     }
   };
 
+  // Fetch states on component mount
   useEffect(() => {
     axios
       .get(`${import.meta.env.VITE_BACKEND_URL}/api/user/retrive-stateDets`)
@@ -92,6 +97,7 @@ const Signup = () => {
       .catch((err) => console.log(err));
   }, []);
 
+  // Helper functions to extract state and service provider names
   const getStateName = (stateString) => stateString.split("_")[1];
   const getServiceProvider = (stateString) => stateString.split("_")[0];
   const uniqueStates = Array.from(
@@ -102,6 +108,15 @@ const Signup = () => {
     <div
       className={`w-screen h-screen flex justify-center items-center bg-white bg-[radial-gradient(ellipse_80%_80%_at_50%_-20%,rgba(0,0,0,0.2),rgba(0,0,0,0))] dark:bg-neutral-950 dark:bg-[radial-gradient(ellipse_80%_80%_at_50%_-20%,rgba(120,119,198,0.3),rgba(255,255,255,0))] dark:text-white selection:bg-gray-400 selection:text-gray-800`}
     >
+      <Helmet>
+        <title>Sign Up - Your App Name</title>
+        <meta
+          name="description"
+          content="Sign up for an account on Your App Name. Register as a client and start managing your services."
+        />
+        <meta name="keywords" content="sign up, register, client, your app name" />
+      </Helmet>
+
       <ToastContainer />
       <SideBarAnimation />
 
@@ -353,7 +368,7 @@ const Signup = () => {
               to="/login"
               className="text-blue-400 text-center hover:underline"
             >
-              Sigin?
+              Sign In?
             </Link>
           </p>
         </form>

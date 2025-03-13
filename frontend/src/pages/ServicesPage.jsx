@@ -5,6 +5,7 @@ import axios from "axios";
 import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import { useSelector } from "react-redux";
+import { Helmet } from "react-helmet";
 
 const Services = () => {
   const options = { withCredentials: true };
@@ -13,6 +14,20 @@ const Services = () => {
   const [data, setData] = useState([]);
   const [btnState, setBtnState] = useState("d");
 
+  // Constants for labels and endpoints
+  const LABELS = {
+    d: "Units Used Today",
+    w: "Units Used This Week",
+    y: "Units Used This Year",
+  };
+
+  const ENDPOINTS = {
+    d: `${import.meta.env.VITE_BACKEND_URL}/api/user/retrive-hourly`,
+    w: `${import.meta.env.VITE_BACKEND_URL}/api/user/retrive-weekly`,
+    y: `${import.meta.env.VITE_BACKEND_URL}/api/user/retrive-yearly`,
+  };
+
+  // Fetch data based on the current button state
   const fetchData = async (endpoint, label, currentBtnState) => {
     try {
       const res = await axios.get(endpoint, options);
@@ -47,25 +62,22 @@ const Services = () => {
   };
 
   useEffect(() => {
-    let endpoint = "";
-    let label = "";
-
-    if (btnState === "y") {
-      endpoint = `${import.meta.env.VITE_BACKEND_URL}/api/user/retrive-yearly`;
-      label = "Units Used This Year";
-    } else if (btnState === "w") {
-      endpoint = `${import.meta.env.VITE_BACKEND_URL}/api/user/retrive-weekly`;
-      label = "Units Used This Week";
-    } else {
-      endpoint = `${import.meta.env.VITE_BACKEND_URL}/api/user/retrive-hourly`;
-      label = "Units Used Today";
-    }
-
+    const endpoint = ENDPOINTS[btnState];
+    const label = LABELS[btnState];
     fetchData(endpoint, label, btnState);
   }, [btnState, mode]);
 
   return (
     <div className="w-full lg:w-4/5 h-fit lg:ml-44 lg:pt-10 p-4">
+      <Helmet>
+        <title>Usage Statistics - Your App Name</title>
+        <meta
+          name="description"
+          content="View your usage statistics on Your App Name. Track daily, weekly, and yearly usage with interactive charts."
+        />
+        <meta name="keywords" content="usage statistics, charts, daily usage, weekly usage, yearly usage, your app name" />
+      </Helmet>
+
       <h2 className={mode === "dark" ? "text-white" : "text-black"}>Usage Statistics</h2>
       <div className="h-96 lg:h-[500px]">
         {data.length === 0 ? (
@@ -93,7 +105,7 @@ const Services = () => {
               <Legend />
               <Line
                 type="monotone"
-                dataKey={btnState === "y" ? "Units Used This Year" : btnState === "w" ? "Units Used This Week" : "Units Used Today"}
+                dataKey={LABELS[btnState]}
                 stroke="#8884d8"
                 strokeWidth={2}
                 dot={{ r: 4 }}

@@ -10,7 +10,7 @@ const options = {
   httpOnly: true,
   secure: true,
   sameSite: "None",
-  path:"/",
+  path: "/",
 };
 
 const dbQuery = async (query, params) => {
@@ -18,6 +18,7 @@ const dbQuery = async (query, params) => {
     const [results] = await db.promise().query(query, params);
     return results;
   } catch (error) {
+    console.log(error);
     throw new ApiError(500, "Database Error");
   }
 };
@@ -224,9 +225,17 @@ const register = asyncHandler(async (req, res, next) => {
 });
 
 const login = asyncHandler(async (req, res, next) => {
-  const { email, password, role } = req.body;
-  console.log("Request body:", req.body);
+  const { email, password, role, recaptcha } = req.body;
+
   try {
+    const response = await axios.post(
+      `https://www.google.com/recaptcha/api/siteverify?secret=${process.env.RECAPTCHA_SECRET_KEY}&response=${recaptcha}`
+    );
+
+    if (!response.data.success) {
+      return next(new ApiError(400, "reCAPTCHA verification failed"));
+    }
+
     const user = await dbQuery(
       "SELECT * FROM users WHERE email = ? AND role = ?",
       [email, role]
@@ -248,7 +257,7 @@ const login = asyncHandler(async (req, res, next) => {
     return res
       .status(200)
       .json(
-        new ApiResponse(200, { ...user[0],token}, "Successfully logged in")
+        new ApiResponse(200, { ...user[0], token }, "Successfully logged in")
       );
   } catch (err) {
     if (err.code === "ER_BAD_DB_ERROR") {
@@ -287,10 +296,10 @@ const googleLogin = asyncHandler(async (req, res, next) => {
           )
         );
     } else {
-      await dbQuery(
-        "INSERT INTO users (phoneno, name, email) VALUES (?, ?, ?)",
-        [0, name, email]
-      );
+      await dbQuery("INSERT INTO users (name, email) VALUES (?, ?)", [
+        name,
+        email,
+      ]);
       return res
         .status(201)
         .json(
@@ -570,5 +579,4 @@ export {
   getClientDets,
   updateBilldets,
   updateProfile,
-
 };

@@ -129,9 +129,17 @@ const register = asyncHandler(async (req, res, next) => {
 });
 
 const login = asyncHandler(async (req, res, next) => {
-  const { email, password, role } = req.body;
+  const { email, password, role, recaptcha } = req.body;
 
   try {
+    const response = await axios.post(
+      `https://www.google.com/recaptcha/api/siteverify?secret=${process.env.RECAPTCHA_SECRET_KEY}&response=${recaptcha}`
+    );
+
+    if (!response.data.success) {
+      return next(new ApiError(400, "reCAPTCHA verification failed"));
+    }
+
     const user = await dbQuery(
       "SELECT * FROM users WHERE email = ? AND role = ?",
       [email, role]
@@ -145,16 +153,23 @@ const login = asyncHandler(async (req, res, next) => {
     if (!isMatch) {
       return next(new ApiError(401, "Invalid credentials: Incorrect password"));
     }
-
     const token = generateToken(user[0]);
 
+    const options = {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production", 
+      sameSite: "strict",
+    };
+
     res.cookie("authToken", token, options);
+
     return res
       .status(200)
       .json(
         new ApiResponse(200, { ...user[0], token }, "Successfully logged in")
       );
   } catch (err) {
+
     if (err.code === "ER_BAD_DB_ERROR") {
       return next(new ApiError(500, "Database connection error"));
     }
@@ -168,13 +183,13 @@ const login = asyncHandler(async (req, res, next) => {
 });
 
 const googleLogin = asyncHandler(async (req, res, next) => {
-  const { token } = req.body;
+  const { token,role } = req.body;
 
   try {
     const decoded = jwt.decode(token, { complete: true });
     const { name, email } = decoded.payload;
 
-    const user = await dbQuery("SELECT * FROM users WHERE email = ?", [email]);
+    const user = await dbQuery("SELECT * FROM users WHERE email = ? AND role=?", [email,role]);
 
     if (user.length > 0) {
       const { phoneno, role } = user[0];
@@ -191,10 +206,10 @@ const googleLogin = asyncHandler(async (req, res, next) => {
           )
         );
     } else {
-      await dbQuery(
-        "INSERT INTO users (phoneno, name, email) VALUES (?, ?, ?)",
-        [0, name, email]
-      );
+      await dbQuery("INSERT INTO users (name, email) VALUES (?, ?)", [
+        name,
+        email,
+      ]);
       return res
         .status(201)
         .json(
@@ -802,7 +817,7 @@ const sentData = asyncHandler(async (req, res, next) => {
       costToday = 0;
     }
 
-    if (threshold < totalCost && emailSent===0) {
+    if (threshold < totalCost && emailSent === 0) {
       const [userResult] = await db
         .promise()
         .query("SELECT email FROM users WHERE phoneno = ?", [phoneno]);
@@ -812,8 +827,8 @@ const sentData = asyncHandler(async (req, res, next) => {
         console.log("Sending email to:", userEmail);
         await sendMessage(userEmail, totalCost, threshold);
 
-        emailSent = 0; 
-        threshold *= 10; 
+        emailSent = 0;
+        threshold *= 10;
       }
     }
 
@@ -1069,21 +1084,20 @@ const sendMail = asyncHandler(async (req, res, next) => {
   }
 });
 
-const sendMessage =async(email,totalCost,threshold)=> {
+const sendMessage = async (email, totalCost, threshold) => {
+  const transporter = nodemailer.createTransport({
+    service: "gmail",
+    auth: {
+      user: process.env.GMAIL_USER,
+      pass: process.env.GMAIL_PASS,
+    },
+  });
 
-    const transporter = nodemailer.createTransport({
-      service: "gmail",
-      auth: {
-        user: process.env.GMAIL_USER,
-        pass: process.env.GMAIL_PASS,
-      },
-    });
-
-    const mailOptions = {
-      from: `"TechAsia" <${process.env.GMAIL_USER}>`,
-      to: email,
-      subject: "⚠️ Electricity Consumption Alert",
-      text: `Hello,
+  const mailOptions = {
+    from: `"TechAsia" <${process.env.GMAIL_USER}>`,
+    to: email,
+    subject: "⚠️ Electricity Consumption Alert",
+    text: `Hello,
     
     Alert: Your electricity consumption has exceeded the set limit.
     
@@ -1093,11 +1107,11 @@ const sendMessage =async(email,totalCost,threshold)=> {
     
     Best regards,  
     TechAsia Support Team`,
-    };
+  };
 
-    await transporter.sendMail(mailOptions);
+  await transporter.sendMail(mailOptions);
 
-    console.log(`Email successfully sent to: ${email}`);
+  console.log(`Email successfully sent to: ${email}`);
 };
 
 const setThershold = asyncHandler(async (req, res, next) => {

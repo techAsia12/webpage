@@ -1,20 +1,29 @@
 import React, { useState } from "react";
 import { Button, Card, TextField } from "@mui/material";
-import { easeInOut, motion } from "motion/react";
+import { motion } from "motion/react"; // Corrected import from "framer-motion"
 import { useSelector } from "react-redux";
 import axios from "axios";
 import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
-import SendIcon from '@mui/icons-material/Send';
+import SendIcon from "@mui/icons-material/Send";
 
+/**
+ * Contact Component
+ * 
+ * A contact form component that allows users to send messages. It includes an address card,
+ * a Google Maps embed, and a form with fields for name, phone number, email, and message.
+ * 
+ * @returns {JSX.Element} - Rendered Contact component
+ */
 const Contact = () => {
   const [name, setName] = useState("");
-  const [phoneno, setPhonenno] = useState("");
+  const [phoneno, setPhoneno] = useState("");
   const [email, setEmail] = useState("");
   const [message, setMessage] = useState("");
 
   const mode = useSelector((state) => state.theme.mode);
 
+  // Styles for input fields based on theme
   const inputStyles = {
     "& .MuiInputLabel-root": {
       color: mode === "dark" ? "white" : "black",
@@ -34,6 +43,7 @@ const Contact = () => {
     },
   };
 
+  // Styles for the submit button based on theme
   const buttonStyles = {
     backgroundColor: mode === "dark" ? "#374151" : "#000000",
     "&:hover": {
@@ -41,18 +51,18 @@ const Contact = () => {
     },
   };
 
+  /**
+   * Handle form submission.
+   * 
+   * @param {React.FormEvent} e - The form submission event
+   */
   const handleSubmit = async (e) => {
     e.preventDefault();
 
     try {
       const response = await axios.post(
         `${import.meta.env.VITE_BACKEND_URL}/api/user/send-Mail`,
-        {
-          name,
-          email,
-          phoneno,
-          message,
-        }
+        { name, email, phoneno, message }
       );
 
       console.log(response);
@@ -65,7 +75,9 @@ const Contact = () => {
 
   return (
     <div className="w-screen h-fit lg:flex overflow-hidden px-10 dark:text-white">
+      {/* Address and Map Section */}
       <div className="space-y-6">
+        {/* Address Card */}
         <motion.Card
           className="w-1/4 h-1/3 items-start"
           initial={{ opacity: 0, x: 50 }}
@@ -75,18 +87,21 @@ const Contact = () => {
           <h1 className="my-10 text-center lg:text-5xl text-2xl">Address</h1>
           <div className="text-center font-thin">
             <p className="my-4 lg:text-xl px-5">
-              A-101, Ganpati Krupa Niwas, Opp. NKGSB Bank,Pt. Dindayal Road,
+              A-101, Ganpati Krupa Niwas, Opp. NKGSB Bank, Pt. Dindayal Road,
               Dombivli(W), Pin – 421202
             </p>
             <p className="my-4">+91 7666308198</p>
             <a
               href={`mailto:info@techasiamechatronics.com`}
               className="border-b"
+              aria-label="Email Address"
             >
               info@techasiamechatronics.com
             </a>
           </div>
         </motion.Card>
+
+        {/* Google Maps Embed */}
         <motion.Card
           className="flex justify-center"
           initial={{ y: 100, opacity: 0 }}
@@ -99,10 +114,12 @@ const Contact = () => {
             allowFullScreen
             loading="lazy"
             referrerPolicy="no-referrer-when-downgrade"
+            aria-label="Google Maps Embed"
           ></iframe>
         </motion.Card>
       </div>
 
+      {/* Contact Form Section */}
       <motion.div
         className="lg:w-2/3 pl-5 pt-20 h-full text-center"
         initial={{ opacity: 0, x: 50 }}
@@ -119,108 +136,73 @@ const Contact = () => {
         >
           <h1 className="text-3xl">Get In Touch</h1>
 
+          {/* Name Field */}
           <TextField
             label="Name"
             variant="outlined"
             className="w-full"
-            sx={{
-              ...inputStyles,
-              "& .MuiInputBase-input": {
-                color: mode === "dark" ? "white" : "black",
-              },
-              "& .MuiOutlinedInput-notchedOutline": {
-                borderColor: mode === "dark" ? "white" : "black",
-              },
-              "& .MuiInputLabel-root": {
-                color: mode === "dark" ? "white" : "black",
-              },
-            }}
+            sx={inputStyles}
             required
             onChange={(e) => setName(e.target.value)}
+            aria-label="Name Input"
           />
 
+          {/* Phone Number and Email Fields */}
           <div className="lg:flex space-y-5 lg:space-x-8">
             <TextField
               label="Mobile No"
               variant="outlined"
               className="lg:w-1/2 w-full"
-              sx={{
-                ...inputStyles,
-                "& .MuiInputBase-input": {
-                  color: mode === "dark" ? "white" : "black",
-                },
-                "& .MuiOutlinedInput-notchedOutline": {
-                  borderColor: mode === "dark" ? "white" : "black",
-                },
-                "& .MuiInputLabel-root": {
-                  color: mode === "dark" ? "white" : "black",
-                },
-              }}
+              sx={inputStyles}
               required
-              onChange={(e) => setPhonenno(e.target.value)}
+              onChange={(e) => setPhoneno(e.target.value)}
+              aria-label="Mobile Number Input"
             />
             <TextField
               label="Email"
               variant="outlined"
-              multiline
               className="lg:w-1/2 w-full"
-              sx={{
-                ...inputStyles,
-                "& .MuiInputBase-input": {
-                  color: mode === "dark" ? "white" : "black",
-                },
-                "& .MuiOutlinedInput-notchedOutline": {
-                  borderColor: mode === "dark" ? "white" : "black",
-                },
-                "& .MuiInputLabel-root": {
-                  color: mode === "dark" ? "white" : "black",
-                },
-              }}
+              sx={inputStyles}
               required
               onChange={(e) => setEmail(e.target.value)}
+              aria-label="Email Input"
             />
           </div>
 
+          {/* Message Field */}
           <TextField
             label="Message"
             multiline
             rows={6}
             className="w-full"
-            sx={{
-              ...inputStyles,
-              "& .MuiInputBase-input": {
-                color: mode === "dark" ? "white" : "black",
-              },
-              "& .MuiOutlinedInput-notchedOutline": {
-                borderColor: mode === "dark" ? "white" : "black",
-              },
-              "& .MuiInputLabel-root": {
-                color: mode === "dark" ? "white" : "black",
-              },
-            }}
+            sx={inputStyles}
             onChange={(e) => setMessage(e.target.value)}
+            aria-label="Message Input"
           />
 
+          {/* Submit Button */}
           <Button
             variant="contained"
             className="w-44 h-9 text-xl text-center"
             sx={{
               ...buttonStyles,
               backgroundColor: mode === "dark" ? "black" : "",
-              border:"1px solid white",
-              color:"white" ,
+              border: "1px solid white",
+              color: "white",
               "&:hover": {
-                backgroundColor: mode === "dark" ? "#374151" : "balck",
+                backgroundColor: mode === "dark" ? "#374151" : "black",
               },
             }}
             type="submit"
+            aria-label="Submit Button"
           >
             <p className="mt-0.5">Send</p>
-            <SendIcon className="ml-2"/>
+            <SendIcon className="ml-2" />
           </Button>
         </form>
       </motion.div>
 
+      {/* Toast Notifications */}
       <ToastContainer />
     </div>
   );

@@ -23,6 +23,64 @@ import {
   getPaginationRowModel,
 } from "@tanstack/react-table";
 
+// SEO Component to add meta tags
+const SEO = () => (
+  <>
+    <title>Bill Details Management</title>
+    <meta
+      name="description"
+      content="Manage and update bill details including state, base, percent per unit, and total tax percent."
+    />
+    <meta
+      name="keywords"
+      content="bill details, tax management, state billing, admin panel"
+    />
+    <meta name="author" content="Your Company Name" />
+  </>
+);
+
+// Table Header Component
+const TableHeader = ({ table, theme }) => (
+  <TableHead>
+    {table.getHeaderGroups().map((headerGroup) => (
+      <TableRow key={headerGroup.id}>
+        {headerGroup.headers.map((header) => (
+          <TableCell
+            key={header.id}
+            sx={{
+              background: theme === "dark" ? "#030712" : "",
+              color: theme === "dark" ? "white" : "black",
+            }}
+            align="right"
+          >
+            {flexRender(header.column.columnDef.header, header.getContext())}
+          </TableCell>
+        ))}
+      </TableRow>
+    ))}
+  </TableHead>
+);
+
+// Table Body Component
+const TableBodyContent = ({ table, theme, editingRowIndex, editedValues, setEditedValues, handleSave, handleCancel, handleEdit }) => (
+  <TableBody>
+    {table.getRowModel().rows.map((row) => (
+      <TableRow hover key={row.id}>
+        {row.getVisibleCells().map((cell) => (
+          <TableCell
+            key={cell.id}
+            className="dark:bg-gray-950 dark:text-white"
+            align="right"
+          >
+            {flexRender(cell.column.columnDef.cell, cell.getContext())}
+          </TableCell>
+        ))}
+      </TableRow>
+    ))}
+  </TableBody>
+);
+
+// Main Component
 const BillDets = () => {
   const [billDetails, setBillDetails] = React.useState([]);
   const [costDetails, setCostDetails] = React.useState([]);
@@ -37,6 +95,7 @@ const BillDets = () => {
     withCredentials: true,
   };
 
+  // Fetch data from the API
   const fetchData = React.useCallback(async () => {
     try {
       const response = await axios.get(
@@ -58,6 +117,7 @@ const BillDets = () => {
     fetchData();
   }, [fetchData]);
 
+  // Generate unit range columns
   const unitRangeColumns = React.useMemo(() => {
     const unitRanges = new Set();
     costDetails.forEach((cost) => unitRanges.add(cost.unitRange));
@@ -67,6 +127,7 @@ const BillDets = () => {
     });
   }, [costDetails]);
 
+  // Generate rows for the table
   const rows = React.useMemo(() => {
     const rows = [];
     billDetails.forEach((bill) => {
@@ -86,8 +147,8 @@ const BillDets = () => {
     return rows;
   }, [billDetails, costDetails]);
 
+  // Define table columns
   const columnHelper = createColumnHelper();
-
   const columns = React.useMemo(() => {
     const cols = [
       columnHelper.accessor("state", {
@@ -241,6 +302,7 @@ const BillDets = () => {
     return cols;
   }, [unitRangeColumns, editingRowIndex, editedValues]);
 
+  // Initialize the table
   const table = useReactTable({
     data: rows,
     columns,
@@ -248,11 +310,13 @@ const BillDets = () => {
     getPaginationRowModel: getPaginationRowModel(),
   });
 
+  // Handle edit action
   const handleEdit = (rowIndex) => {
     setEditingRowIndex(rowIndex);
     setEditedValues({ ...rows[rowIndex] });
   };
 
+  // Handle save action
   const handleSave = async () => {
     if (editingRowIndex !== null) {
       try {
@@ -285,15 +349,18 @@ const BillDets = () => {
     }
   };
 
+  // Handle cancel action
   const handleCancel = () => {
     setEditingRowIndex(null);
     setEditedValues({});
   };
 
+  // Handle add action
   const handleClick = () => {
     dispatch(billDetsPage());
   };
 
+  // Loading and error states
   if (loading) {
     return <div className="text-center py-10 dark:text-white">Loading...</div>;
   }
@@ -304,6 +371,7 @@ const BillDets = () => {
 
   return (
     <div className="w-screen flex items-center ">
+      <SEO /> {/* Add SEO meta tags */}
       <div className="flex justify-center dark:text-white h-fit w-full mt-20 lg:ml-40">
         <ToastContainer />
         <Paper
@@ -315,46 +383,18 @@ const BillDets = () => {
           className=" dark:text-white"
         >
           <TableContainer sx={{ maxHeight: 520 }}>
-            <Table stickyHeader>
-              <TableHead>
-                {table.getHeaderGroups().map((headerGroup) => (
-                  <TableRow key={headerGroup.id}>
-                    {headerGroup.headers.map((header) => (
-                      <TableCell
-                        key={header.id}
-                        sx={{
-                          background: theme === "dark" ? "#030712" : "",
-                          color: theme === "dark" ? "white" : "black",
-                        }}
-                        align="right"
-                      >
-                        {flexRender(
-                          header.column.columnDef.header,
-                          header.getContext()
-                        )}
-                      </TableCell>
-                    ))}
-                  </TableRow>
-                ))}
-              </TableHead>
-              <TableBody>
-                {table.getRowModel().rows.map((row) => (
-                  <TableRow hover key={row.id}>
-                    {row.getVisibleCells().map((cell) => (
-                      <TableCell
-                        key={cell.id}
-                        className="dark:bg-gray-950 dark:text-white"
-                        align="right"
-                      >
-                        {flexRender(
-                          cell.column.columnDef.cell,
-                          cell.getContext()
-                        )}
-                      </TableCell>
-                    ))}
-                  </TableRow>
-                ))}
-              </TableBody>
+            <Table stickyHeader aria-label="bill details table">
+              <TableHeader table={table} theme={theme} />
+              <TableBodyContent
+                table={table}
+                theme={theme}
+                editingRowIndex={editingRowIndex}
+                editedValues={editedValues}
+                setEditedValues={setEditedValues}
+                handleSave={handleSave}
+                handleCancel={handleCancel}
+                handleEdit={handleEdit}
+              />
             </Table>
           </TableContainer>
           <TablePagination

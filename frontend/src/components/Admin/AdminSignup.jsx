@@ -1,24 +1,74 @@
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import axios from "axios";
 import TextField from "@mui/material/TextField";
-import { Button, IconButton } from "@mui/material";
+import { Button } from "@mui/material";
 import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import SideBarAnimation from "../SideBarAnimation.jsx";
-import { useSelector } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
+import { GoogleLogin } from "@react-oauth/google";
+import { login } from "../../Features/auth/auth.slice.js";
 
+// SEO Component to add meta tags
+const SEO = () => (
+  <>
+    <title>Admin Signup | SmartEnergyMeter</title>
+    <meta
+      name="description"
+      content="Sign up as an admin to manage your account. Enter your name, email, phone number, and password to get started."
+    />
+    <meta
+      name="keywords"
+      content="admin signup, admin registration, create admin account"
+    />
+    <meta name="author" content="Your Company Name" />
+  </>
+);
+
+// Form Input Component
+const FormInput = ({ label, type, value, onChange, mode }) => (
+  <TextField
+    label={label}
+    type={type}
+    variant="outlined"
+    className="lg:w-5/6"
+    value={value}
+    onChange={onChange}
+    sx={{
+      "& .MuiOutlinedInput-root": {
+        "& fieldset": {
+          borderColor: mode === "dark" ? "white" : "black",
+        },
+        "&:hover fieldset": {
+          borderColor: mode === "dark" ? "white" : "black",
+        },
+        "&.Mui-focused fieldset": {
+          borderColor: mode === "dark" ? "white" : "black",
+        },
+      },
+      "& .MuiInputLabel-root": {
+        color: mode === "dark" ? "white" : "black",
+      },
+    }}
+  />
+);
+
+// Main Component
 const AdminSignup = () => {
   const [name, setName] = useState("");
   const [password, setPassword] = useState("");
   const [confirm, setConfirm] = useState("");
   const [phoneno, setPhoneno] = useState("");
   const [email, setEmail] = useState("");
-  const mode = useSelector((state) => state.theme.mode);
   const [loading, setLoading] = useState(false);
-
+  const mode = useSelector((state) => state.theme.mode);
   const navigate = useNavigate();
+  const dispatch = useDispatch();
 
+  const options = { withCredentials: true };
+
+  // Handle form submission
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
@@ -60,14 +110,50 @@ const AdminSignup = () => {
     }
   };
 
+  // Handle Google login success
+  const handleGoogleLoginSuccess = (credentialResponse) => {
+    const idToken = credentialResponse.credential;
+    if (!idToken) {
+      toast.error("No token received", { position: "top-right" });
+      return;
+    }
+
+    axios
+      .post(
+        `${import.meta.env.VITE_BACKEND_URL}/api/admin/google-login`,
+        { token: idToken },
+        options
+      )
+      .then((response) => {
+        toast.success("Google login successful!", {
+          position: "top-right",
+        });
+        setTimeout(() => {
+          if (response?.status === 201) {
+            navigate(
+              `/admin/add-phone?email=${response.data.data.email}&name=${response.data.data.name}`
+            );
+          } else if (response?.status === 200) {
+            dispatch(login(response.data.data));
+            navigate(`/admin/home`);
+          }
+        }, 2000);
+      })
+      .catch((error) => {
+        toast.error("Google login failed!", {
+          position: "top-right",
+        });
+      });
+  };
+
   return (
     <div className="w-screen h-screen flex justify-center items-center transition-all bg-white bg-[radial-gradient(ellipse_80%_80%_at_50%_-20%,rgba(0,0,0,0.2),rgba(0,0,0,0))] dark:bg-neutral-950 dark:bg-[radial-gradient(ellipse_80%_80%_at_50%_-20%,rgba(120,119,198,0.3),rgba(255,255,255,0))] dark:text-white selection:bg-gray-400 selection:text-gray-800">
+      <SEO /> {/* Add SEO meta tags */}
       <ToastContainer />
       <SideBarAnimation />
 
       {loading && (
         <div className="fixed top-0 left-0 w-full h-full bg-black/50 flex justify-center items-center z-50">
-          <ElectricBoltIcon className="z-50 transform translate-x-14 dark:text-white" />
           <CircularProgress
             size={80}
             color="inherit"
@@ -84,125 +170,44 @@ const AdminSignup = () => {
         </h1>
         <form
           onSubmit={handleSubmit}
-          className="self-center mx-10 mt-10 space-y-10  flex flex-col justify-center items-center h-3/4"
+          className="self-center mx-10 mt-10 space-y-5 flex flex-col justify-center items-center h-3/4"
         >
-          <TextField
+          <FormInput
             label="Enter Name"
-            variant="outlined"
-            className="lg:w-5/6"
-            onChange={(e) => setName(e.target.value)}
+            type="text"
             value={name}
-            sx={{
-              "& .MuiOutlinedInput-root": {
-                "& fieldset": {
-                  borderColor: mode==="dark"?"white":"black",
-                },
-                "&:hover fieldset": {
-                  borderColor: mode==="dark"?"white":"black",
-                },
-                "&.Mui-focused fieldset": {
-                  borderColor: mode==="dark"?"white":"black",
-                },
-              },
-              "& .MuiInputLabel-root": {
-                color: mode==="dark"?"white":"black",
-              },
-            }}
+            onChange={(e) => setName(e.target.value)}
+            mode={mode}
           />
-          <TextField
+          <FormInput
             label="Enter Password"
             type="password"
-            variant="outlined"
-            className="lg:w-5/6"
-            onChange={(e) => setPassword(e.target.value)}
             value={password}
-            sx={{
-              "& .MuiOutlinedInput-root": {
-                "& fieldset": {
-                  borderColor: mode==="dark"?"white":"black",
-                },
-                "&:hover fieldset": {
-                  borderColor: mode==="dark"?"white":"black",
-                },
-                "&.Mui-focused fieldset": {
-                  borderColor: mode==="dark"?"white":"black",
-                },
-              },
-              "& .MuiInputLabel-root": {
-                color: mode==="dark"?"white":"black",
-              },
-            }}
+            onChange={(e) => setPassword(e.target.value)}
+            mode={mode}
           />
-          <TextField
+          <FormInput
             label="Confirm Password"
             type="password"
-            variant="outlined"
-            className="lg:w-5/6"
-            onChange={(e) => setConfirm(e.target.value)}
             value={confirm}
-            sx={{
-              "& .MuiOutlinedInput-root": {
-                "& fieldset": {
-                  borderColor: mode==="dark"?"white":"black",
-                },
-                "&:hover fieldset": {
-                  borderColor: mode==="dark"?"white":"black",
-                },
-                "&.Mui-focused fieldset": {
-                  borderColor: mode==="dark"?"white":"black",
-                },
-              },
-              "& .MuiInputLabel-root": {
-                color: mode==="dark"?"white":"black",
-              },
-            }}
+            onChange={(e) => setConfirm(e.target.value)}
+            mode={mode}
           />
-          <TextField
+          <FormInput
             label="Enter Phone Number"
-            variant="outlined"
-            className="lg:w-5/6"
-            onChange={(e) => setPhoneno(e.target.value)}
+            type="text"
             value={phoneno}
-            sx={{
-              "& .MuiOutlinedInput-root": {
-                "& fieldset": {
-                  borderColor: mode==="dark"?"white":"black",
-                },
-                "&:hover fieldset": {
-                  borderColor: mode==="dark"?"white":"black",
-                },
-                "&.Mui-focused fieldset": {
-                  borderColor: mode==="dark"?"white":"black",
-                },
-              },
-              "& .MuiInputLabel-root": {
-                color: mode==="dark"?"white":"black",
-              },
-            }}
+            onChange={(e) => setPhoneno(e.target.value)}
+            mode={mode}
           />
-          <TextField
+          <FormInput
             label="Enter E-mail"
-            variant="outlined"
-            className="lg:w-5/6"
-            onChange={(e) => setEmail(e.target.value)}
+            type="email"
             value={email}
-            sx={{
-              "& .MuiOutlinedInput-root": {
-                "& fieldset": {
-                  borderColor: mode==="dark"?"white":"black",
-                },
-                "&:hover fieldset": {
-                  borderColor:mode==="dark"? "white":"black",
-                },
-                "&.Mui-focused fieldset": {
-                  borderColor: mode==="dark"?"white":"black",
-                },
-              },
-              "& .MuiInputLabel-root": {
-                color:mode==="dark"?"white":"black",
-              },
-            }}
+            onChange={(e) => setEmail(e.target.value)}
+            mode={mode}
           />
+
           <Button
             variant="contained"
             className="w-44 h-9 text-xl text-white"
@@ -217,9 +222,26 @@ const AdminSignup = () => {
           >
             {loading ? "Loading..." : "Signup"}
           </Button>
-          <Link to={"/"} className="text-sm text-blue-400 text-center">
+
+          <p className="text-center">OR</p>
+
+          <GoogleLogin
+            size="medium"
+            onSuccess={handleGoogleLoginSuccess}
+            onError={() => {
+              toast.error("Google Login Failed", { position: "top-right" });
+            }}
+          />
+
+          <p className="text-center text-xs lg:text-base">
             Already Have An Account?
-          </Link>
+            <Link
+              to={"/"}
+              className="text-sm text-blue-400 underline text-center"
+            >
+              SignIn
+            </Link>
+          </p>
         </form>
       </div>
     </div>

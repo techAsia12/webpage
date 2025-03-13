@@ -4,6 +4,14 @@ import { motion } from "framer-motion";
 import DownloadIcon from "@mui/icons-material/Download";
 import image from "../assets/phone.png";
 
+/**
+ * Download Component
+ * 
+ * A component that encourages users to download the mobile app. It includes a description,
+ * a download button, and an image of the mobile app.
+ * 
+ * @returns {JSX.Element} - Rendered Download component
+ */
 const Download = () => {
   return (
     <motion.div
@@ -12,6 +20,7 @@ const Download = () => {
       animate={{ opacity: 1 }}
       transition={{ duration: 1 }}
     >
+      {/* Text Content */}
       <motion.div
         className="lg:p-20 w-full lg:w-2/3 dark:text-white text-center lg:text-left"
         initial={{ x: -100, opacity: 0 }}
@@ -19,7 +28,7 @@ const Download = () => {
         transition={{ duration: 1 }}
       >
         <h1 className="font-bold lg:text-5xl text-3xl mb-6">
-          For the best experience download our mobile app!
+          For the best experience, download our mobile app!
         </h1>
         <p className="lg:text-2xl text-lg mb-8">
           Enjoy seamless monitoring, real-time energy tracking, and an optimized
@@ -27,6 +36,8 @@ const Download = () => {
           <br />
           Stay in control of your energy usage anytime, anywhere.
         </p>
+
+        {/* Download Button */}
         <motion.div
           initial={{ scale: 0.8 }}
           animate={{ scale: 1 }}
@@ -39,9 +50,10 @@ const Download = () => {
             sx={{
               border: "1px solid #ffffff",
               ":hover": {
-                backgroundColor:"#374151"
+                backgroundColor: "#374151",
               },
             }}
+            aria-label="Download Mobile App"
           >
             <DownloadIcon className="mr-2" />
             Download
@@ -49,6 +61,7 @@ const Download = () => {
         </motion.div>
       </motion.div>
 
+      {/* Mobile App Image */}
       <motion.img
         src={image}
         className="w-full lg:w-1/4 mt-10 lg:mt-0 lg:block p-5"
@@ -56,6 +69,7 @@ const Download = () => {
         animate={{ y: 0, opacity: 1 }}
         transition={{ duration: 1 }}
         alt="Mobile App"
+        aria-label="Mobile App Preview"
       />
     </motion.div>
   );

@@ -9,9 +9,18 @@ import TimelineIcon from "@mui/icons-material/Timeline";
 import LocationOnIcon from "@mui/icons-material/LocationOn";
 import NavDial from "../components/Navbar/NavDial.jsx";
 
+/**
+ * Layout Component
+ * 
+ * The main layout component for the dashboard. It includes a navbar, a floating action button (FAB),
+ * and dynamic overlays for updating user details.
+ * 
+ * @returns {JSX.Element} - Rendered Layout component
+ */
 const Layout = () => {
   const [visibility, setVisibility] = useState("hidden");
 
+  // Navigation links for the navbar
   const navLinks = [
     { path: "/dashboard", label: "Home" },
     { path: "/dashboard/services", label: "Usage" },
@@ -19,6 +28,7 @@ const Layout = () => {
     { path: "/dashboard/contact", label: "Contact" },
   ];
 
+  // Actions for the floating action button (FAB)
   const actions = [
     { icon: <HomeIcon />, name: "Home", path: "/dashboard" },
     { icon: <TimelineIcon />, name: "Usage", path: "/dashboard/services" },
@@ -27,13 +37,14 @@ const Layout = () => {
   ];
 
   const isUpdate = useSelector((state) => state.pages?.isUpdate);
+  const mode = useSelector((state) => state.theme.mode);
 
+  // Update visibility state based on Redux state changes
   useEffect(() => {
     setVisibility(isUpdate ? "block" : "hidden");
   }, [isUpdate]);
 
-  const mode = useSelector((state) => state.theme.mode);
-
+  // Dynamic background class based on theme
   const backgroundClass =
     mode === "dark"
       ? "bg-neutral-950 bg-[radial-gradient(ellipse_80%_80%_at_50%_-20%,rgba(120,119,198,0.3),rgba(255,255,255,0))]"
@@ -41,19 +52,24 @@ const Layout = () => {
 
   return (
     <div
-      className={`min-h-screen  ${backgroundClass} bg-cover bg-center lg:overflow-x-hidden  ${
+      className={`min-h-screen ${backgroundClass} bg-cover bg-center lg:overflow-x-hidden ${
         visibility === "block" ? "overflow-hidden" : ""
       }`}
     >
+      {/* Navbar */}
       <Navbar navLinks={navLinks} />
-      <div className=" z-10 text-center">
+
+      {/* Main Content */}
+      <div className="z-10 text-center">
         <Outlet />
-        <div
-          className={`fixed z-20  inset-0 backdrop-blur-sm ${visibility}`}
-        >
+
+        {/* Overlay for Update Component */}
+        <div className={`fixed z-20 inset-0 backdrop-blur-sm ${visibility}`}>
           <Update />
         </div>
       </div>
+
+      {/* Floating Action Button (FAB) for Mobile */}
       <div className="lg:hidden bottom-0 right-0 sticky">
         <NavDial actions={actions} />
       </div>

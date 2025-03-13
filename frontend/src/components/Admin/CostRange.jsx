@@ -17,6 +17,23 @@ import "react-toastify/dist/ReactToastify.css";
 import { useDispatch, useSelector } from "react-redux";
 import { costRangePage } from "../../Features/pages/pages.slice";
 
+// SEO Component to add meta tags
+const SEO = () => (
+  <>
+    <title>Cost Range Configuration</title>
+    <meta
+      name="description"
+      content="Configure cost ranges and tax per unit for energy billing. Manage unit ranges, costs, and taxes efficiently."
+    />
+    <meta
+      name="keywords"
+      content="cost range, energy billing, tax per unit, unit range, admin panel"
+    />
+    <meta name="author" content="Your Company Name" />
+  </>
+);
+
+// Unit range options
 const range = [
   { value: 100, label: "0-100" },
   { value: 300, label: "101-300" },
@@ -24,6 +41,88 @@ const range = [
   { value: 1000, label: "501-1000" },
 ];
 
+// Table Header Component
+const TableHeader = () => (
+  <TableHead>
+    <TableRow>
+      <TableCell align="center" className="dark:text-white">
+        Unit
+      </TableCell>
+      <TableCell align="center" className="dark:text-white">
+        Cost
+      </TableCell>
+      <TableCell align="center" className="dark:text-white">
+        Tax Per Unit
+      </TableCell>
+    </TableRow>
+  </TableHead>
+);
+
+// Table Row Component
+const TableRowComponent = ({ row, index, handleChange, theme }) => (
+  <TableRow key={index}>
+    <TableCell align="center">
+      <TextField
+        select
+        label="Select Unit Range"
+        className="w-52 bg-transparent dark:text-white dark:border-white"
+        value={row.unitRange}
+        onChange={(e) => handleChange(e, index, "unitRange")}
+        sx={{
+          border: theme === "dark" ? "1px solid white" : "1px solid black",
+        }}
+        InputLabelProps={{
+          className: "dark:text-white",
+        }}
+        InputProps={{
+          className: "dark:text-white",
+        }}
+      >
+        {range.map((option) => (
+          <MenuItem key={option.value} value={option.value}>
+            {option.label}
+          </MenuItem>
+        ))}
+      </TextField>
+    </TableCell>
+
+    <TableCell align="center">
+      <TextField
+        label="Select Cost"
+        className="w-52 bg-transparent dark:text-white dark:border-white"
+        onChange={(e) => handleChange(e, index, "cost")}
+        sx={{
+          border: theme === "dark" ? "1px solid white" : "1px solid black",
+        }}
+        InputLabelProps={{
+          className: "dark:text-white",
+        }}
+        InputProps={{
+          className: "dark:text-white",
+        }}
+      />
+    </TableCell>
+
+    <TableCell align="center">
+      <TextField
+        label="Select Tax Per Unit"
+        className="w-52 bg-transparent dark:text-white"
+        onChange={(e) => handleChange(e, index, "taxPerUnit")}
+        sx={{
+          border: theme === "dark" ? "1px solid white" : "1px solid black",
+        }}
+        InputLabelProps={{
+          className: "dark:text-white",
+        }}
+        InputProps={{
+          className: "dark:text-white",
+        }}
+      />
+    </TableCell>
+  </TableRow>
+);
+
+// Main Component
 const CostRangePage = () => {
   const state = useSelector((state) => state.bill?.state);
   const theme = useSelector((state) => state.theme?.mode);
@@ -38,6 +137,7 @@ const CostRangePage = () => {
 
   const [loading, setLoading] = useState(false);
 
+  // Handle input changes
   const handleChange = (e, index, field) => {
     const selectedValue = e.target.value;
     const updatedRows = [...rows];
@@ -45,6 +145,7 @@ const CostRangePage = () => {
     setRows(updatedRows);
   };
 
+  // Handle form submission
   const handleSubmit = () => {
     setLoading(true);
 
@@ -81,7 +182,8 @@ const CostRangePage = () => {
   };
 
   return (
-    <div className="flex flex-col justify-center items-center dark:text-white lg:p-40 pt-20 ">
+    <div className="flex flex-col justify-center items-center dark:text-white lg:p-40 pt-20">
+      <SEO /> {/* Add SEO meta tags */}
       <ToastContainer
         position="top-right"
         autoClose={5000}
@@ -89,8 +191,8 @@ const CostRangePage = () => {
         newestOnTop
         closeButton
       />
-      <TableContainer className="lg:flex lg:justify-center w-1/2 ">
-        <Table 
+      <TableContainer className="lg:flex lg:justify-center w-1/2">
+        <Table
           sx={{
             maxWidth: 900,
             borderCollapse: "collapse",
@@ -105,82 +207,18 @@ const CostRangePage = () => {
               color: "white",
             },
           }}
+          aria-label="cost range table"
         >
-          <TableHead>
-            <TableRow>
-              <TableCell align="center" className="dark:text-white">
-                Unit
-              </TableCell>
-              <TableCell align="center" className="dark:text-white">
-                Cost
-              </TableCell>
-              <TableCell align="center" className="dark:text-white">
-                Tax Per Unit
-              </TableCell>
-            </TableRow>
-          </TableHead>
+          <TableHeader />
           <TableBody>
             {rows.map((row, index) => (
-              <TableRow key={index}>
-                <TableCell align="center">
-                  <TextField
-                    select
-                    label="Select Unit Range"
-                    className="w-52 bg-transparent dark:text-white dark:border-white"
-                    value={row.unitRange}
-                    onChange={(e) => handleChange(e, index, "unitRange")}
-                    sx={{
-                      border:theme==="dark"?"1px solid white":"1px solid black"
-                    }}
-                    InputLabelProps={{
-                      className: "dark:text-white",
-                    }}
-                    InputProps={{
-                      className: "dark:text-white",
-                    }}
-                  >
-                    {range.map((option) => (
-                      <MenuItem key={option.value} value={option.value}>
-                        {option.label}
-                      </MenuItem>
-                    ))}
-                  </TextField>
-                </TableCell>
-
-                <TableCell align="center">
-                  <TextField
-                    label="Select Cost"
-                    className="w-52 bg-transparent dark:text-white dark:border-white"
-                    onChange={(e) => handleChange(e, index, "cost")}
-                    sx={{
-                      border:theme==="dark"?"1px solid white":"1px solid black"
-                    }}
-                    InputLabelProps={{
-                      className: "dark:text-white",
-                    }}
-                    InputProps={{
-                      className: "dark:text-white",
-                    }}
-                  />
-                </TableCell>
-
-                <TableCell align="center">
-                  <TextField
-                    label="Select Tax Per Unit"
-                    className="w-52 bg-transparent dark:text-white"
-                    onChange={(e) => handleChange(e, index, "taxPerUnit")}
-                    sx={{
-                      border:theme==="dark"?"1px solid white":"1px solid black"
-                    }}
-                    InputLabelProps={{
-                      className: "dark:text-white",
-                    }}
-                    InputProps={{
-                      className: "dark:text-white",
-                    }}
-                  />
-                </TableCell>
-              </TableRow>
+              <TableRowComponent
+                key={index}
+                row={row}
+                index={index}
+                handleChange={handleChange}
+                theme={theme}
+              />
             ))}
           </TableBody>
         </Table>

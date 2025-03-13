@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useRef, useState } from "react";
 import axios from "axios";
 import { Link, useNavigate } from "react-router-dom";
 import { GoogleLogin } from "@react-oauth/google";
@@ -19,13 +19,18 @@ import { useDispatch, useSelector } from "react-redux";
 import { login } from "../Features/auth/auth.slice";
 import SideBarAnimation from "../components/SideBarAnimation";
 import ElectricBoltIcon from "@mui/icons-material/ElectricBolt";
+import LogoutIcon from "@mui/icons-material/Logout";
+import ReCAPTCHA from "react-google-recaptcha";
+import { Helmet } from "react-helmet";
 
 const Login = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [recaptcha, setRecaptcha] = useState();
   const [role, setRole] = useState("Client");
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
+  const captchaRef = useRef();
   const navigate = useNavigate();
   const dispatch = useDispatch();
   const options = { withCredentials: true };
@@ -41,15 +46,16 @@ const Login = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    captchaRef.current.reset();
     setLoading(true);
 
-    let url;
-    role === "Admin"
-      ? (url = `${import.meta.env.VITE_BACKEND_URL}/api/admin/login`)
-      : (url = `${import.meta.env.VITE_BACKEND_URL}/api/user/login`);
+    const url =
+      role === "Admin"
+        ? `${import.meta.env.VITE_BACKEND_URL}/api/admin/login`
+        : `${import.meta.env.VITE_BACKEND_URL}/api/user/login`;
 
     axios
-      .post(`${url}`, { email, password, role }, options)
+      .post(url, { email, password, role, recaptcha }, options)
       .then((res) => {
         setLoading(false);
         if (res?.data?.success === true) {
@@ -74,6 +80,15 @@ const Login = () => {
     <div
       className={`w-screen h-screen flex justify-center items-center lg:flex-none bg-white bg-[radial-gradient(ellipse_80%_80%_at_50%_-20%,rgba(0,0,0,0.2),rgba(0,0,0,0))] dark:bg-neutral-950 dark:bg-[radial-gradient(ellipse_80%_80%_at_50%_-20%,rgba(120,119,198,0.3),rgba(255,255,255,0))] dark:text-white selection:bg-gray-400 selection:text-gray-800`}
     >
+      <Helmet>
+        <title>Login - Your App Name</title>
+        <meta
+          name="description"
+          content="Login to your account on Your App Name. Access your dashboard and manage your profile."
+        />
+        <meta name="keywords" content="login, account, dashboard, your app name" />
+      </Helmet>
+
       <ToastContainer />
       <SideBarAnimation />
 
@@ -88,13 +103,14 @@ const Login = () => {
         </div>
       )}
 
-      <div className="lg:w-3/4 w-4/5 h-3/4 lg:h-screen tracking-tighter border border-neutral-900 rounded-3xl lg:border-none lg:pt-20 backdrop-blur-3xl dark:border-gray-700">
-        <h1 className="text-center text-4xl pt-10 lg:pt-24 dark:text-white">
-          {" "}
-          Login
-        </h1>
+      <div className="lg:w-3/4 w-4/5 h-5/6 lg:h-screen tracking-tighter border border-neutral-900 rounded-3xl lg:border-none lg:pt-20 backdrop-blur-3xl dark:border-gray-700">
+        <LogoutIcon
+          className="fixed top-4 right-10 z-50 cursor-pointer"
+          onClick={() => navigate("/")}
+        />
+        <h1 className="text-center text-4xl pt-10 lg:pt-24 dark:text-white">Login</h1>
 
-        <form className="self-center mx-10 space-y-4 flex flex-col justify-center items-center lg:h-2/3 h-3/4">
+        <form className="self-center mx-10 space-y-3 flex flex-col justify-center items-center lg:h-2/3 h-3/4">
           <ToggleButtonGroup
             value={role}
             exclusive
@@ -133,6 +149,7 @@ const Login = () => {
               Admin
             </ToggleButton>
           </ToggleButtonGroup>
+
           <TextField
             label="Enter Email Id"
             variant="outlined"
@@ -200,6 +217,7 @@ const Login = () => {
               ),
             }}
           />
+
           <div className="flex text-gray-900 dark:text-gray-300">
             <input type="checkbox" name="remember" />
             <p className="text-xs ml-2 lg:text-base">Remember Me</p>
@@ -210,6 +228,15 @@ const Login = () => {
               Forgot Password ?
             </Link>
           </div>
+
+          <div className="scale-50 lg:scale-90 origin-center">
+            <ReCAPTCHA
+              sitekey={import.meta.env.VITE_RECAPCHA_SITE_KEY}
+              onChange={(e) => setRecaptcha(e)}
+              ref={captchaRef}
+            />
+          </div>
+
           <Button
             variant="contained"
             className="w-44 h-9 text-xl text-white"
@@ -238,16 +265,8 @@ const Login = () => {
 
               axios
                 .post(
-                  `${
-                    role === "Client"
-                      ? `${
-                          import.meta.env.VITE_BACKEND_URL
-                        }/api/user/google-login`
-                      : `${
-                          import.meta.env.VITE_BACKEND_URL
-                        }/api/admin/google-login`
-                  }`,
-                  { token: idToken },
+                  `${import.meta.env.VITE_BACKEND_URL}/api/user/google-login`,
+                  { token: idToken,role },
                   options
                 )
                 .then((response) => {
@@ -257,16 +276,12 @@ const Login = () => {
                   setTimeout(() => {
                     if (response?.status === 201) {
                       navigate(
-                        `${
-                          role === "Client"
-                            ? `/add-phone?email=${response.data.data.email}&name=${response.data.data.name}`
-                            : `/admin/add-phone?email=${response.data.data.email}&name=${response.data.data.name}`
-                        }`
+                        `${`/add-phone?email=${response.data.data.email}&name=${response.data.data.name}`}`
                       );
                     } else if (response?.status === 200) {
                       dispatch(login(response.data.data));
                       navigate(
-                        `${role === "Client" ? `/dashboard` : `/admin/home`}`
+                        `${response.data.data.role === "Client" ? `/dashboard` : `/admin/home`}`
                       );
                     }
                   }, 2000);
@@ -281,14 +296,14 @@ const Login = () => {
               toast.error("Google Login Failed", { position: "top-right" });
             }}
           />
-          <p>
-            Don't have an account {"  "}
+
+          <p className="text-center">
+            Don't have an account?{" "}
             <Link
               to="/register"
-              className=" text-blue-400 text-center hover:underline dark:text-blue-300"
+              className="text-blue-400 hover:underline dark:text-blue-300"
             >
-              {" "}
-              SignIn?
+              Sign Up
             </Link>
           </p>
         </form>

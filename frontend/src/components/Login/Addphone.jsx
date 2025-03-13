@@ -1,6 +1,6 @@
 import axios from "axios";
 import { React, useState, useEffect } from "react";
-import { Link, useLocation, useNavigate } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import CircularProgress from "@mui/material/CircularProgress";
@@ -8,6 +8,14 @@ import ElectricBoltIcon from "@mui/icons-material/ElectricBolt";
 import { FormControl, InputLabel, Select, MenuItem } from "@mui/material";
 import { useSelector } from "react-redux";
 
+/**
+ * Addphone Component
+ * 
+ * A form component for users to add their phone number and select their state and service provider.
+ * It includes validation, loading states, and error handling.
+ * 
+ * @returns {JSX.Element} - Rendered Addphone component
+ */
 const Addphone = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [phoneNumber, setPhoneNumber] = useState("");
@@ -18,12 +26,14 @@ const Addphone = () => {
   const location = useLocation();
   const navigate = useNavigate();
 
+  // Extract query parameters from the URL
   const queryParams = new URLSearchParams(location.search);
   const email = queryParams.get("email");
   const name = queryParams.get("name");
 
   const options = { withCredentials: true };
 
+  // Fetch states data on component mount
   useEffect(() => {
     axios
       .get(`${import.meta.env.VITE_BACKEND_URL}/api/user/retrive-stateDets`)
@@ -31,24 +41,27 @@ const Addphone = () => {
       .catch((err) => console.log(err));
   }, []);
 
+  // Handle state selection change
   const handleStateChange = (event) => {
     setSelectedState(event.target.value);
     setSelectedServiceProvider("");
   };
 
+  // Helper functions to extract state and service provider names
   const getStateName = (stateString) => stateString.split("_")[1];
   const getServiceProvider = (stateString) => stateString.split("_")[0];
   const uniqueStates = Array.from(
     new Set(states.map((s) => getStateName(s.state)))
   );
 
+  // Handle form submission
   const handleSubmit = async () => {
     setIsLoading(true);
 
     axios
       .post(
         `${import.meta.env.VITE_BACKEND_URL}/api/user/add-phoneno`,
-        { email, phone: phoneNumber, name, state, role: "Client" },
+        { email, phone: phoneNumber, name, state: selectedState, role: "Client" },
         options
       )
       .then((res) => {
@@ -71,25 +84,36 @@ const Addphone = () => {
   };
 
   return (
-    <div className="fixed inset-0 flex items-center justify-center bg-gray-500 bg-opacity-50 z-50 dark:bg-gray-900">
+    <div
+      className="fixed inset-0 flex items-center justify-center bg-gray-500 bg-opacity-50 z-50 dark:bg-gray-900"
+      role="dialog"
+      aria-label="Add Phone Number Form"
+    >
       <ToastContainer />
       {isLoading && (
-        <div className="fixed top-0 left-0 w-full h-full bg-black/50 flex justify-center items-center z-50">
+        <div
+          className="fixed top-0 left-0 w-full h-full bg-black/50 flex justify-center items-center z-50"
+          role="alert"
+          aria-label="Loading"
+        >
           <ElectricBoltIcon className="z-50 transform translate-x-14" />
           <CircularProgress size={80} color="inherit" />
         </div>
       )}
       <div className="bg-white p-8 rounded-lg shadow-lg w-96 dark:bg-gray-800">
-        <div className="flex justify-between items-center mb-4 ">
+        {/* Form Header */}
+        <div className="flex justify-between items-center mb-4">
           <h2 className="text-xl font-semibold text-gray-800 dark:text-gray-200">
             Enter Your Phone Number & State
           </h2>
         </div>
 
+        {/* Form Description */}
         <p className="text-gray-600 mb-4 dark:text-gray-300">
           Please enter your phone number & state to continue.
         </p>
 
+        {/* Phone Number Input */}
         <div className="mb-5">
           <label
             htmlFor="phone"
@@ -104,9 +128,11 @@ const Addphone = () => {
             onChange={(e) => setPhoneNumber(e.target.value)}
             placeholder="Enter your phone number"
             className="mt-2 w-full p-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 bg-transparent dark:border-gray-600 dark:text-gray-200"
+            aria-label="Phone Number Input"
           />
         </div>
 
+        {/* State Selection Dropdown */}
         <FormControl className="w-full">
           <InputLabel className="dark:text-white">State</InputLabel>
           <Select
@@ -133,6 +159,7 @@ const Addphone = () => {
                   borderColor: mode === "dark" ? "#BBBBBB" : "#333333",
                 },
             }}
+            aria-label="State Selection"
           >
             {uniqueStates.map((stateName) => (
               <MenuItem key={stateName} value={stateName}>
@@ -142,6 +169,7 @@ const Addphone = () => {
           </Select>
         </FormControl>
 
+        {/* Service Provider Selection Dropdown */}
         <FormControl
           className="w-full"
           disabled={!selectedState || isLoading}
@@ -169,6 +197,7 @@ const Addphone = () => {
                   borderColor: mode === "dark" ? "#BBBBBB" : "#333333",
                 },
             }}
+            aria-label="Service Provider Selection"
           >
             {states
               .filter((s) => getStateName(s.state) === selectedState)
@@ -180,6 +209,7 @@ const Addphone = () => {
           </Select>
         </FormControl>
 
+        {/* Submit Button */}
         <button
           onClick={handleSubmit}
           disabled={isLoading || !phoneNumber}
@@ -188,6 +218,7 @@ const Addphone = () => {
               ? "bg-gray-400"
               : "bg-blue-500 hover:bg-blue-600"
           }`}
+          aria-label="Submit Button"
         >
           {isLoading ? (
             <CircularProgress size={24} color="inherit" />
@@ -196,6 +227,7 @@ const Addphone = () => {
           )}
         </button>
 
+        {/* Terms and Conditions */}
         <div className="mt-4 text-center text-sm text-gray-500 dark:text-gray-400">
           <p>
             By submitting, you agree to our{" "}

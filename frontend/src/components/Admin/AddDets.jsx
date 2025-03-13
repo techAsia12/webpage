@@ -10,49 +10,96 @@ import { set } from "../../Features/auth/billDets.slice";
 import { billDetsPage, costRangePage } from "../../Features/pages/pages.slice";
 import CancelIcon from "@mui/icons-material/Cancel";
 
+// SEO Component to add meta tags
+const SEO = () => (
+  <>
+    <title>Add Bill Details | Admin Panel</title>
+    <meta
+      name="description"
+      content="Add bill details including fixed tax, tax per unit, tax percentage, interest, and provider state."
+    />
+    <meta
+      name="keywords"
+      content="bill details, tax management, admin panel, add bill details"
+    />
+    <meta name="author" content="Your Company Name" />
+  </>
+);
+
+// Form Input Component
+const FormInput = ({ label, value, onChange, theme }) => (
+  <TextField
+    label={label}
+    variant="outlined"
+    className="w-full lg:w-5/6"
+    value={value}
+    onChange={onChange}
+    sx={{
+      "& .MuiInputBase-input": {
+        color: theme === "dark" ? "white" : "black",
+      },
+      "& .MuiOutlinedInput-notchedOutline": {
+        borderColor: theme === "dark" ? "white" : "black",
+      },
+      "& .MuiInputLabel-root": {
+        color: theme === "dark" ? "white" : "black",
+      },
+    }}
+  />
+);
+
+// Main Component
 const AddDets = () => {
   const navigate = useNavigate();
-  const [base, setBase] = useState();
-  const [percentPerUnit, setPercentPerUnit] = useState();
-  const [totalTaxPercent, setTotalTaxPercent] = useState();
-  const [tax, setTax] = useState();
-  const [state, setState] = useState();
+  const [base, setBase] = useState("");
+  const [percentPerUnit, setPercentPerUnit] = useState("");
+  const [totalTaxPercent, setTotalTaxPercent] = useState("");
+  const [tax, setTax] = useState("");
+  const [state, setState] = useState("");
   const dispatch = useDispatch();
   const theme = useSelector((state) => state.theme.mode);
   const [loading, setLoading] = useState(false);
 
+  // Handle form submission
   const handleSubmit = async (e) => {
     e.preventDefault();
 
+    if (!base || !percentPerUnit || !totalTaxPercent || !tax || !state) {
+      toast.error("All fields are required.");
+      return;
+    }
+
     setLoading(true);
 
-    axios
-      .post(`${import.meta.env.VITE_BACKEND_URL}/api/admin/bill-dets`, {
-        base,
-        percentPerUnit,
-        totalTaxPercent,
-        tax,
-        state,
-      })
-      .then((res) => {
-        if (res?.data?.success === true) {
-          toast.success("Bill details submitted successfully!");
-          dispatch(set(state));
-          dispatch(billDetsPage());
-          dispatch(costRangePage());
+    try {
+      const response = await axios.post(
+        `${import.meta.env.VITE_BACKEND_URL}/api/admin/bill-dets`,
+        {
+          base,
+          percentPerUnit,
+          totalTaxPercent,
+          tax,
+          state,
         }
-      })
-      .catch((error) => {
-        toast.error("Error submitting bill details!");
-        console.log(error?.response?.data?.message);
-      })
-      .finally(() => {
-        setLoading(false);
-      });
+      );
+
+      if (response?.data?.success === true) {
+        toast.success("Bill details submitted successfully!");
+        dispatch(set(state));
+        dispatch(billDetsPage());
+        dispatch(costRangePage());
+      }
+    } catch (error) {
+      toast.error("Error submitting bill details!");
+      console.log(error?.response?.data?.message);
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
-    <div className="flex justify-center items-center  dark:text-white lg:p-10  pt-20 ">
+    <div className="flex justify-center items-center dark:text-white lg:p-10 pt-20">
+      <SEO /> {/* Add SEO meta tags */}
       <CancelIcon
         className="absolute top-10 lg:top-6 right-1 lg:right-[30%] cursor-pointer"
         color="error"
@@ -64,90 +111,35 @@ const AddDets = () => {
           Bill Details
         </h1>
 
-        <TextField
+        <FormInput
           label="Enter Fixed Tax"
-          variant="outlined"
-          className={`w-full lg:w-5/6 ${theme === "dark" ? "text-white" : ""}`}
-          sx={{
-            "& .MuiInputBase-input": {
-              color: theme === "dark" ? "white" : "black",
-            },
-            "& .MuiOutlinedInput-notchedOutline": {
-              borderColor: theme === "dark" ? "white" : "black",
-            },
-            "& .MuiInputLabel-root": {
-              color: theme === "dark" ? "white" : "black", // Add this for label color
-            },
-          }}
+          value={base}
           onChange={(e) => setBase(e.target.value)}
+          theme={theme}
         />
-        <TextField
+        <FormInput
           label="Enter Tax Per Unit"
-          variant="outlined"
-          className={`w-full lg:w-5/6 ${theme === "dark" ? "text-white" : ""}`}
-          sx={{
-            "& .MuiInputBase-input": {
-              color: theme === "dark" ? "white" : "black",
-            },
-            "& .MuiOutlinedInput-notchedOutline": {
-              borderColor: theme === "dark" ? "white" : "black",
-            },
-            "& .MuiInputLabel-root": {
-              color: theme === "dark" ? "white" : "black", // Add this for label color
-            },
-          }}
+          value={percentPerUnit}
           onChange={(e) => setPercentPerUnit(e.target.value)}
+          theme={theme}
         />
-        <TextField
+        <FormInput
           label="Enter Tax Percentage"
-          variant="outlined"
-          className={`w-full lg:w-5/6 ${theme === "dark" ? "text-white" : ""}`}
-          sx={{
-            "& .MuiInputBase-input": {
-              color: theme === "dark" ? "white" : "black",
-            },
-            "& .MuiOutlinedInput-notchedOutline": {
-              borderColor: theme === "dark" ? "white" : "black",
-            },
-            "& .MuiInputLabel-root": {
-              color: theme === "dark" ? "white" : "black", 
-            },
-          }}
+          value={totalTaxPercent}
           onChange={(e) => setTotalTaxPercent(e.target.value)}
+          theme={theme}
         />
-        <TextField
+        <FormInput
           label="Enter Interest"
-          variant="outlined"
-          className={`w-full lg:w-5/6 ${theme === "dark" ? "text-white" : ""}`}
-          sx={{
-            "& .MuiInputBase-input": {
-              color: theme === "dark" ? "white" : "black",
-            },
-            "& .MuiOutlinedInput-notchedOutline": {
-              borderColor: theme === "dark" ? "white" : "black",
-            },
-            "& .MuiInputLabel-root": {
-              color: theme === "dark" ? "white" : "black", // Add this for label color
-            },
-          }}
+          value={tax}
           onChange={(e) => setTax(e.target.value)}
+          theme={theme}
         />
-        <TextField
+        <FormInput
           label="Enter Provider_State"
-          variant="outlined"
-          className={`w-full lg:w-5/6 ${theme === "dark" ? "text-white" : ""}`}
-          sx={{
-            "& .MuiInputBase-input": {
-              color: theme === "dark" ? "white" : "black",
-            },
-            "& .MuiOutlinedInput-notchedOutline": {
-              borderColor: theme === "dark" ? "white" : "black",
-            },
-            "& .MuiInputLabel-root": {
-              color: theme === "dark" ? "white" : "black",
-            },
-          }}
+          value={state}
           onChange={(e) => setState(e.target.value)}
+          theme={theme}
         />
 
         {loading ? (
@@ -157,8 +149,8 @@ const AddDets = () => {
             variant="contained"
             className="w-full lg:w-44 h-9 text-xl dark:hover:bg-gray-600 mt-4 lg:mt-0"
             sx={{
-              backgroundColor:theme==="dark"?"black":"",
-              border:"1px solid white"
+              backgroundColor: theme === "dark" ? "black" : "",
+              border: "1px solid white",
             }}
             onClick={handleSubmit}
             disabled={loading}

@@ -11,7 +11,6 @@ import {
   InputLabel,
   MenuItem,
   CircularProgress,
-  useTheme,
 } from "@mui/material";
 import { Edit as EditIcon, Check as CheckIcon } from "@mui/icons-material";
 import { toast } from "react-toastify";
@@ -21,6 +20,13 @@ import { updatePage } from "../Features/pages/pages.slice";
 import CancelIcon from "@mui/icons-material/Cancel";
 import ElectricBoltIcon from "@mui/icons-material/ElectricBolt";
 
+/**
+ * Update Component
+ * 
+ * A form component for updating user information, including name, email, and service provider (for clients).
+ * 
+ * @returns {JSX.Element} - Rendered Update component
+ */
 const Update = () => {
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
@@ -34,31 +40,10 @@ const Update = () => {
 
   const dispatch = useDispatch();
   const theme = useSelector((state) => state.theme.mode);
-  const toggleFieldReadOnly = (field) => {
-    switch (field) {
-      case "name":
-        setIsNameReadOnly((prev) => !prev);
-        break;
-      case "email":
-        setIsEmailReadOnly((prev) => !prev);
-        break;
-      default:
-        break;
-    }
-  };
 
-  const options = {
-    withCredentials: true,
-  };
+  const options = { withCredentials: true };
 
-  const handleStateChange = (event) => {
-    setSelectedState(event.target.value);
-    setSelectedServiceProvider("");
-  };
-
-  const getStateName = (stateString) => stateString.split("_")[1];
-  const getServiceProvider = (stateString) => stateString.split("_")[0];
-
+  // Fetch states and user data on component mount
   useEffect(() => {
     setLoading(true);
     axios
@@ -79,6 +64,37 @@ const Update = () => {
       .finally(() => setLoading(false));
   }, []);
 
+  /**
+   * Toggle the read-only state of a field.
+   * 
+   * @param {string} field - The field to toggle (e.g., "name" or "email")
+   */
+  const toggleFieldReadOnly = (field) => {
+    switch (field) {
+      case "name":
+        setIsNameReadOnly((prev) => !prev);
+        break;
+      case "email":
+        setIsEmailReadOnly((prev) => !prev);
+        break;
+      default:
+        break;
+    }
+  };
+
+  /**
+   * Handle state selection change.
+   * 
+   * @param {Object} event - The change event
+   */
+  const handleStateChange = (event) => {
+    setSelectedState(event.target.value);
+    setSelectedServiceProvider("");
+  };
+
+  /**
+   * Handle form submission.
+   */
   const handleSubmit = () => {
     setLoading(true);
     const endpoint = role === "Client" ? "user/update" : "admin/update";
@@ -107,10 +123,37 @@ const Update = () => {
       .finally(() => setLoading(false));
   };
 
+  /**
+   * Extract the state name from a state string.
+   * 
+   * @param {string} stateString - The state string (e.g., "Provider_State")
+   * @returns {string} - The state name
+   */
+  const getStateName = (stateString) => stateString.split("_")[1];
+
+  /**
+   * Extract the service provider name from a state string.
+   * 
+   * @param {string} stateString - The state string (e.g., "Provider_State")
+   * @returns {string} - The service provider name
+   */
+  const getServiceProvider = (stateString) => stateString.split("_")[0];
+
+  // Get unique states from the states array
   const uniqueStates = Array.from(
     new Set(states.map((stateObj) => getStateName(stateObj.state)))
   );
 
+  /**
+   * Render a text field with a toggleable read-only state.
+   * 
+   * @param {string} label - The label for the text field
+   * @param {string} value - The value of the text field
+   * @param {Function} setValue - The function to update the value
+   * @param {boolean} isReadOnly - Whether the field is read-only
+   * @param {string} field - The field name (e.g., "name" or "email")
+   * @returns {JSX.Element} - Rendered TextField component
+   */
   const renderTextField = (label, value, setValue, isReadOnly, field) => (
     <TextField
       variant="outlined"
@@ -138,9 +181,11 @@ const Update = () => {
           borderColor: theme === "dark" ? "white" : "black",
         },
       }}
+      aria-label={label}
     />
   );
 
+  // Loading state
   if (loading) {
     return (
       <div className="fixed w-full h-full bg-black/50 flex justify-center items-center z-40">
@@ -151,20 +196,27 @@ const Update = () => {
   }
 
   return (
-    <div className="flex justify-center items-center  dark:text-white lg:p-40  pt-20 ">
+    <div className="flex justify-center items-center dark:text-white lg:p-40 pt-20">
+      {/* Close Button */}
       <CancelIcon
         className="absolute top-10 lg:top-24 right-1 lg:right-1/3 cursor-pointer"
         color="error"
         onClick={() => dispatch(updatePage())}
         fontSize="large"
+        aria-label="Close Update Form"
       />
 
-      <Box className="flex flex-col items-center justify-center space-y-10 w-3/4 lg:w-1/3 lg:p-10 p-5 border  rounded-3xl ">
+      {/* Update Form */}
+      <Box className="flex flex-col items-center justify-center space-y-10 w-3/4 lg:w-1/3 lg:p-10 p-5 border rounded-3xl">
         <Avatar alt="User Avatar" src="" sx={{ width: 60, height: 60 }} />
 
+        {/* Name Field */}
         {renderTextField("Name", name, setName, isNameReadOnly, "name")}
+
+        {/* Email Field */}
         {renderTextField("Email", email, setEmail, isEmailReadOnly, "email")}
 
+        {/* State and Service Provider Fields (for Clients) */}
         {role === "Client" && (
           <>
             <FormControl className="lg:w-5/6 w-3/4" margin="normal">
@@ -184,6 +236,7 @@ const Update = () => {
                     borderColor: theme === "dark" ? "white" : "black",
                   },
                 }}
+                aria-label="Select State"
               >
                 {uniqueStates.map((stateName) => (
                   <MenuItem key={stateName} value={stateName}>
@@ -214,6 +267,7 @@ const Update = () => {
                     borderColor: theme === "dark" ? "white" : "black",
                   },
                 }}
+                aria-label="Select Service Provider"
               >
                 {states
                   .filter(
@@ -229,6 +283,7 @@ const Update = () => {
           </>
         )}
 
+        {/* Submit Button */}
         <Button
           variant="contained"
           className="w-44 h-9 text-xl"
@@ -241,6 +296,7 @@ const Update = () => {
               backgroundColor: theme === "dark" ? "gray.600" : "gray.100",
             },
           }}
+          aria-label="Submit Update"
         >
           Submit
         </Button>

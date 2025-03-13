@@ -4,21 +4,29 @@ import axios from "axios";
 import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 
+/**
+ * ForgotPassword Component
+ * 
+ * A multi-step form for resetting a user's password. It includes email verification,
+ * code verification, and password reset functionality.
+ * 
+ * @returns {JSX.Element} - Rendered ForgotPassword component
+ */
 const ForgotPassword = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [email, setEmail] = useState("");
-  const [veriferdCode, setVerfiedCode] = useState("");
+  const [verificationCode, setVerificationCode] = useState("");
   const [role, setRole] = useState("");
   const [password, setPassword] = useState("");
-  const [confirm, setConfirmPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
   const [label, setLabel] = useState("Forgot password");
-  const [desc, setDesc] = useState(
+  const [description, setDescription] = useState(
     "Enter your email for the verification process. We will send a 4-digit code to your email."
   );
   const [input, setInput] = useState();
-  const [isEmail, setIsEmail] = useState(true);
-  const [isCode, setIsCode] = useState(false);
-  const [isPassword, setIsPassword] = useState(false);
+  const [isEmailStep, setIsEmailStep] = useState(true);
+  const [isCodeStep, setIsCodeStep] = useState(false);
+  const [isPasswordStep, setIsPasswordStep] = useState(false);
 
   const navigate = useNavigate();
 
@@ -26,28 +34,40 @@ const ForgotPassword = () => {
     withCredentials: true,
   };
 
-  const handleChange = (e, index) => {
+  /**
+   * Handles input changes for the verification code.
+   * 
+   * @param {React.ChangeEvent<HTMLInputElement>} e - The input change event
+   * @param {number} index - The index of the input field
+   */
+  const handleCodeChange = (e, index) => {
     const value = e.target.value;
-    const updatedCode = veriferdCode.split("");
+    const updatedCode = verificationCode.split("");
     updatedCode[index] = value;
-    setVerfiedCode(updatedCode.join(""));
+    setVerificationCode(updatedCode.join(""));
 
     if (value && index < 3) {
       document.getElementById(`input-${index + 1}`).focus();
     }
-    console.log(veriferdCode);
   };
 
+  /**
+   * Handles backspace key press for the verification code inputs.
+   * 
+   * @param {React.KeyboardEvent<HTMLInputElement>} e - The keyboard event
+   * @param {number} index - The index of the input field
+   */
   const handleKeyDown = (e, index) => {
-    if (e.key === "Backspace" && !veriferdCode[index] && index > 0) {
+    if (e.key === "Backspace" && !verificationCode[index] && index > 0) {
       document.getElementById(`input-${index - 1}`).focus();
     }
   };
 
+  // Update the form UI based on the current step
   useEffect(() => {
-    if (isEmail && !isCode && !isPassword) {
+    if (isEmailStep && !isCodeStep && !isPasswordStep) {
       setLabel("Forgot password");
-      setDesc(
+      setDescription(
         "Enter your email for the verification process. We will send a 4-digit code to your email."
       );
       setInput(
@@ -60,12 +80,13 @@ const ForgotPassword = () => {
             onChange={(e) => setEmail(e.target.value)}
             placeholder="Enter your email id"
             className="mt-2 w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-800 dark:border-gray-700 dark:text-gray-300"
+            aria-label="Email Input"
           />
         </>
       );
-    } else if (isEmail && isCode && !isPassword) {
+    } else if (isEmailStep && isCodeStep && !isPasswordStep) {
       setLabel("Enter 4 digits Code");
-      setDesc("Enter the 4-digit code that you received on your email.");
+      setDescription("Enter the 4-digit code that you received on your email.");
       setInput(
         <div className="flex space-x-2 justify-center mt-8">
           {Array(4)
@@ -75,18 +96,19 @@ const ForgotPassword = () => {
                 key={index}
                 id={`input-${index}`}
                 type="text"
-                value={veriferdCode[index] || ""}
-                onChange={(e) => handleChange(e, index)}
+                value={verificationCode[index] || ""}
+                onChange={(e) => handleCodeChange(e, index)}
                 onKeyDown={(e) => handleKeyDown(e, index)}
                 maxLength="1"
                 className="w-12 h-12 text-center text-2xl border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-800 dark:border-gray-700 dark:text-gray-300"
+                aria-label={`Verification Code Input ${index + 1}`}
               />
             ))}
         </div>
       );
-    } else if (isEmail && isCode && isPassword) {
+    } else if (isEmailStep && isCodeStep && isPasswordStep) {
       setLabel("Reset password");
-      setDesc(
+      setDescription(
         "Set a new password for your account so you can log in and access all features."
       );
       setInput(
@@ -99,6 +121,7 @@ const ForgotPassword = () => {
             onChange={(e) => setPassword(e.target.value)}
             placeholder="Enter your new password"
             className="mt-2 w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-800 dark:border-gray-700 dark:text-gray-300"
+            aria-label="Password Input"
           />
           <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
             Confirm Password
@@ -108,22 +131,25 @@ const ForgotPassword = () => {
             onChange={(e) => setConfirmPassword(e.target.value)}
             placeholder="Confirm your new password"
             className="mt-2 w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-800 dark:border-gray-700 dark:text-gray-300"
+            aria-label="Confirm Password Input"
           />
         </>
       );
     }
-  }, [isEmail, isCode, isPassword, veriferdCode]);
+  }, [isEmailStep, isCodeStep, isPasswordStep, verificationCode]);
 
+  /**
+   * Handles form submission based on the current step.
+   */
   const handleSubmit = () => {
     setIsLoading(true);
 
-    if (isEmail && !isCode && !isPassword) {
-      setIsCode(true);
+    if (isEmailStep && !isCodeStep && !isPasswordStep) {
+      // Step 1: Send verification code
+      setIsCodeStep(true);
       axios
         .get(
-          `${
-            import.meta.env.VITE_BACKEND_URL
-          }/api/user/receive-mail?email=${email}`,
+          `${import.meta.env.VITE_BACKEND_URL}/api/user/receive-mail?email=${email}`,
           options
         )
         .then((res) => {
@@ -138,11 +164,12 @@ const ForgotPassword = () => {
           });
           console.log(error.response);
         });
-    } else if (isEmail && isCode && !isPassword) {
+    } else if (isEmailStep && isCodeStep && !isPasswordStep) {
+      // Step 2: Verify code
       axios
         .post(
           `${import.meta.env.VITE_BACKEND_URL}/api/user/verifyCode`,
-          { verificationCode: veriferdCode },
+          { verificationCode },
           options
         )
         .then((res) => {
@@ -150,7 +177,7 @@ const ForgotPassword = () => {
             position: "top-right",
           });
           setRole(res.data.data.role);
-          setIsPassword(true);
+          setIsPasswordStep(true);
           setIsLoading(false);
         })
         .catch((error) => {
@@ -160,15 +187,13 @@ const ForgotPassword = () => {
           setIsLoading(false);
           console.log(error.response);
         });
-    } else if (isEmail && isCode && isPassword) {
-      if (confirm === password) {
+    } else if (isEmailStep && isCodeStep && isPasswordStep) {
+      // Step 3: Reset password
+      if (confirmPassword === password) {
         axios
           .post(
             `${import.meta.env.VITE_BACKEND_URL}/api/user/reset-password`,
-            {
-              email,
-              password,
-            },
+            { email, password },
             options
           )
           .then((res) => {
@@ -176,7 +201,7 @@ const ForgotPassword = () => {
               toast.success("Password reset successfully!", {
                 position: "top-right",
               });
-              if (role == "Client") {
+              if (role === "Client") {
                 navigate("/");
               } else {
                 navigate("/admin/login");
@@ -200,19 +225,27 @@ const ForgotPassword = () => {
   };
 
   return (
-    <div className="fixed inset-0 flex items-center justify-center bg-gray-500 bg-opacity-50 z-50 dark:bg-gray-900 dark:bg-opacity-50">
+    <div
+      className="fixed inset-0 flex items-center justify-center bg-gray-500 bg-opacity-50 z-50 dark:bg-gray-900 dark:bg-opacity-50"
+      role="dialog"
+      aria-label="Forgot Password Form"
+    >
       <ToastContainer />
       <div className="bg-white p-8 rounded-lg shadow-lg w-96 dark:bg-gray-800">
+        {/* Form Header */}
         <div className="flex justify-between items-center mb-4">
           <h2 className="text-xl font-semibold text-gray-800 dark:text-gray-200">
             {label}
           </h2>
         </div>
 
-        <p className="text-gray-600 mb-4 dark:text-gray-400">{desc}</p>
+        {/* Form Description */}
+        <p className="text-gray-600 mb-4 dark:text-gray-400">{description}</p>
 
+        {/* Dynamic Input Fields */}
         <div className="mb-4">{input}</div>
 
+        {/* Submit Button */}
         <button
           onClick={handleSubmit}
           disabled={isLoading || !email}
@@ -221,6 +254,7 @@ const ForgotPassword = () => {
               ? "bg-gray-400"
               : "bg-blue-500 hover:bg-blue-600"
           }`}
+          aria-label="Submit Button"
         >
           {isLoading ? (
             <div className="w-6 h-6 border-4 border-blue-500 border-t-transparent rounded-full animate-spin mx-auto" />
@@ -229,6 +263,7 @@ const ForgotPassword = () => {
           )}
         </button>
 
+        {/* Terms and Conditions */}
         <div className="mt-4 text-center text-sm text-gray-500 dark:text-gray-400">
           <p>
             By submitting, you agree to our{" "}
