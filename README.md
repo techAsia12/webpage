@@ -6,19 +6,19 @@ Welcome to the Smart Energy Meter Webpage repository! The website is dedicated t
 
 ### **Table of Contents**
 
-1.[Project Overview](#project-overview)
+1. [Project Overview](#project-overview)
 
-2.[Features](#-features)
+2. [Features](#-features)
 
-3.[Technologies Used](#-technologies-used)
+3. [Technologies Used](#-technologies-used)
 
-4.[Installation](#-installation)
+4. [Installation](#-installation)
 
-5.[Directory Structure](#-directory-structure)
+5. [Directory Structure](#-directory-structure)
 
-6.[Usage]()
+6. [Usage](#usage)
 
-7.[Contact](#contact)
+7. [Contact](#contact)
 
 ---
 
@@ -49,105 +49,105 @@ The live site is hosted at: https://smartenergymeter.techasiamechatronics.com/.
 
 ## **Technologies Used**
 
-1.**Backend**
+1. **Backend**
 
-**Core**
+- **Core**
 
-- **Node.js**: JavaScript runtime.
-- **Express.js**: Web framework for building APIs.
-- **ES6 Modules**: Modern JavaScript module syntax.
+  - **Node.js**: JavaScript runtime.
+  - **Express.js**: Web framework for building APIs.
+  - **ES6 Modules**: Modern JavaScript module syntax.
 
-**Authentication**
+- **Authentication**
 
-- **Google OAuth**: Google-based authentication.
-- **JWT**: JSON Web Tokens for secure authentication.
-- **Bcrypt.js**: Password hashing.
-- **Express Session**: Session management.
-- **Cookie Parser**: Parse cookies in requests.
+  - **Google OAuth**: Google-based authentication.
+  - **JWT**: JSON Web Tokens for secure authentication.
+  - **Bcrypt.js**: Password hashing.
+  - **Express Session**: Session management.
+  - **Cookie Parser**: Parse cookies in requests.
 
-**Database and Storage**
+- **Database and Storage**
 
-- **MySQL**: Relational database.
-- **Cloudinary**: Media file storage and management.
-- **Multer**: File upload handling.
+  - **MySQL**: Relational database.
+  - **Cloudinary**: Media file storage and management.
+  - **Multer**: File upload handling.
 
-**APIs and External Services**
+- **APIs and External Services**
 
-- **Axios**: HTTP client for API requests.
-- **Nodemailer**: Send emails.
+  - **Axios**: HTTP client for API requests.
+  - **Nodemailer**: Send emails.
 
-**Utilities**
+- **Utilities**
 
-- **Dotenv**: Load environment variables.
-- **Moment.js**: Date and time manipulation.
-- **CORS**: Enable Cross-Origin Resource Sharing.
+  - **Dotenv**: Load environment variables.
+  - **Moment.js**: Date and time manipulation.
+  - **CORS**: Enable Cross-Origin Resource Sharing.
 
-**Development Tools**
-- **Nodemon**: Automatically restart the server during development.
+- **Development Tools**
+  - **Nodemon**: Automatically restart the server during development.
 
----
+--
 
-2 **Frontend**
+2. **Frontend**
 
-**Core**
+- **Core**
 
-- **React**: JavaScript library for building user interfaces.
-- **Vite**: Fast build tool for modern web development.
-- **Tailwind CSS**: Utility-first CSS framework for styling.
-- **Type: Module**: ES6 module syntax (import/export).
+  - **React**: JavaScript library for building user interfaces.
+  - **Vite**: Fast build tool for modern web development.
+  - **Tailwind CSS**: Utility-first CSS framework for styling.
+  - **Type: Module**: ES6 module syntax (import/export).
 
-**State Management**
+- **State Management**
 
-- **Redux Toolkit**: State management library.
-- **Redux Persist**: Persist Redux state to local storage.
+  - **Redux Toolkit**: State management library.
+  - **Redux Persist**: Persist Redux state to local storage.
 
-**Routing**
+- **Routing**
 
-- **React Router DOM**: Client-side routing.
-- **React Router Hash Link**: Smooth scrolling to hash links.
+  - **React Router DOM**: Client-side routing.
+  - **React Router Hash Link**: Smooth scrolling to hash links.
 
-**UI Components**
+- **UI Components**
 
-- **Material-UI (MUI)**: React component library.
-- **shadcn/ui**: Customizable UI components.
-- **Lucide React**: Beautiful and customizable icons.
-- **React Icons**: Popular icon library.
+  - **Material-UI (MUI)**: React component library.
+  - **shadcn/ui**: Customizable UI components.
+  - **Lucide React**: Beautiful and customizable icons.
+  - **React Icons**: Popular icon library.
 
-**Charts and Data Visualization**
+- **Charts and Data Visualization**
 
-- **Recharts**: Composable charting library.
-- **Chart.js**: Simple yet flexible charting library.
+  - **Recharts**: Composable charting library.
+  - **Chart.js**: Simple yet flexible charting library.
 
-**3D Rendering**
+- **3D Rendering**
 
-- **Three.js**: 3D library for the web.
-- **React Three Fiber**: React renderer for Three.js.
-- **Drei**: Useful helpers for React Three Fiber.
+  - **Three.js**: 3D library for the web.
+  - **React Three Fiber**: React renderer for Three.js.
+  - **Drei**: Useful helpers for React Three Fiber.
 
-**Animations**
-- **GSAP**: Animation library for smooth transitions.
-- **Framer Motion**: Animation library for React.
+- **Animations**
+  - **GSAP**: Animation library for smooth transitions.
+  - **Framer Motion**: Animation library for React.
 
-**Authentication**
+- **Authentication**
 
-- **React OAuth Google**: Google OAuth integration.
-- **JWT Decode**: Decode JWT tokens.
+  - **React OAuth Google**: Google OAuth integration.
+  - **JWT Decode**: Decode JWT tokens.
 
-**Notifications**
+- **Notifications**
 
-- **React Toastify**: Toast notifications.
+  - **React Toastify**: Toast notifications.
 
-**Utilities**
+- **Utilities**
 
-- **Axios**: HTTP client for API requests.
-- **React Helmet**: Manage document head (e.g., meta tags).
-- **React Scroll**: Smooth scrolling.
-- **React Cookie**: Manage cookies in React.
+  - **Axios**: HTTP client for API requests.
+  - **React Helmet**: Manage document head (e.g., meta tags).
+  - **React Scroll**: Smooth scrolling.
+  - **React Cookie**: Manage cookies in React.
 
-**Development Tools**
+- **Development Tools**
 
-- **PostCSS**: CSS processing.
-- **Autoprefixer**: Add vendor prefixes to CSS.
+  - **PostCSS**: CSS processing.
+  - **Autoprefixer**: Add vendor prefixes to CSS.
 
 --
 
