@@ -8,19 +8,17 @@ Welcome to the Smart Energy Meter Webpage repository! This project is a dedicate
 
 1.[Project Overview](#project-overview)
 
-2.Features
+2.[Features](#-features)
 
-3.Technologies Used
+3.[Technologies Used]()
 
-4.Installation
+4.[Installation](#-installation)
 
-5.Usage
+5.[Directory Structure](#-directory-structure)
 
-6.Contributing
+6.[Usage]()
 
-7.License
-
-8.Contact
+7.[Contact](#-contact)
 
 ---
 
@@ -141,12 +139,12 @@ This will launch the frontend at http://localhost:5173/ in your browser. 🎉
 
 The server will automatically reload if you make changes to the frontend files. Now your frontend will be fully connected to the backend, fetching data and displaying it in real time! 🌐
 
-#### 🗂 **Directory Structure**
+## 🗂 **Directory Structure**
 Here’s an overview of the directory structure of the project:
 
 
 
-#### **Contact**
+## **Contact**
 
 If you have any questions or suggestions, feel free to reach out:
 
