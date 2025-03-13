@@ -1,13 +1,49 @@
 # 🚀 Smart Energy Meter Webpage
 
 Welcome to the Smart Energy Meter Webpage repository! This project is a dedicated webpage for showcasing and managing smart energy meters developed by TechAsia Mechatronics. The site provides information about the product, its features, and how it can be integrated into modern energy systems.
--------------------------------------------------------------------------------------------------------------------
+
+--- 
+
+### **Table of Contents**
+
+1.[Project Overview](#projectOverview)
+
+2.Features
+
+3.Technologies Used
+
+4.Installation
+
+5.Usage
+
+6.Contributing
+
+7.License
+
+8.Contact
+
+---
+
+## **Project Overview**
+
+This repository contains the source code for the Smart Energy Meter webpage. The site is designed to:
+
+- **Provide detailed information about the smart energy meter.**
+- **Highlight the product's features and benefits.**
+- **Offer a user-friendly interface for potential customers and partners.**
+- **Serve as a platform for integrating IoT-based energy monitoring solutions.**
+
+The live site is hosted at: https://smartenergymeter.techasiamechatronics.com/.
+
+---
+
 ## 🌟 Features
 
-- **Backend (Node.js)**: API routes to handle requests and return responses.
-- **Frontend (HTML/CSS/JS)**: User interface that interacts with the backend.
-- **Responsive Design**: Works well on both desktop and mobile devices.
-- **Deployment**: Deployed on Vercel for easy access.
+- **Responsive Design: Optimized for desktop, tablet, and mobile devices.**
+- **Product Showcase: Detailed descriptions and visuals of the smart energy meter.**
+- **Interactive Elements: Buttons, forms, and animations for user engagement.**
+- **Dynamic Content: JavaScript-powered dynamic updates for real-time data display .**
+- **Cross-Browser Compatibility: Tested on major browsers like Chrome, Firefox, and Safari.**
 
 ---
 
@@ -107,3 +143,13 @@ The server will automatically reload if you make changes to the frontend files. 
 
 #### 🗂 **Directory Structure**
 Here’s an overview of the directory structure of the project:
+
+
+
+#### **Contact**
+
+If you have any questions or suggestions, feel free to reach out:
+
+- **GitHub**: [techAsia12](https://github.com/techAsia12)
+- **Website**: [TechAsia Mechatronics](https://techasiamechatronics.com/)
+- **Email**: [techasiamechatronics1@gmail.com](techasiamechatronics1@gmail.com)
