@@ -570,5 +570,5 @@ If you have any questions or suggestions, feel free to reach out:
 
 - **GitHub**: [techAsia12](https://github.com/techAsia12)
 - **Website**: [TechAsia Mechatronics](https://techasiamechatronics.com/)
-- **Email**: <a href="techasiamechatronics1@gmail.com">Send us an email</a>
+- **Email**: <a href="techasiamechatronics1@gmail.com">techasiamechatronics1@gmail.com</a>
 
