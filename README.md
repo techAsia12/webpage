@@ -85,7 +85,7 @@ The live site is hosted at: https://smartenergymeter.techasiamechatronics.com/.
 - **Development Tools**
   - **Nodemon**: Automatically restart the server during development.
 
---
+---
 
 2. **Frontend**
 
