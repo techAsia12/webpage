@@ -299,45 +299,45 @@ backend/
 3. **src/**
 - The main source code for the backend application.
 
-**controllers/**
-- Contains the logic for handling incoming requests.
-
-  - **admin.controller.js**: Handles admin-specific operations.
-  - **user.controller.js**: Handles user-related operations (e.g., authentication, profile management).
-
-**db/**
-- Manages the database connection and models.
-
-  - **index.js**: Configures the connection to the database (e.g., MongoDB).
-
-**middleware/**
-- Contains custom middleware functions for processing requests.
-
-  - **authCode.middleware.js**: Middleware for handling authentication codes.
-  - **authUser.middleware.js**: Middleware for authenticating users.
-  - **errorHandling.middleware.js**: Middleware for handling errors globally.
-  - **multer.middleware.js**: Middleware for handling file uploads using Multer.
-
-**routes/**
-- Defines the API endpoints and maps them to their respective controllers.
-
-  - **admin.routes.js**: Routes for admin-related endpoints.
-  - **user.routes.js**: Routes for user-related endpoints.
-
-**utils/**
-- Contains utility functions and helpers.
-
-  - **ApiError.js: Custom error class for API errors.**
-  - **ApiResponse.js: Utility for sending consistent API responses.**
-  - **asyncHandler.js: Wrapper for handling asynchronous functions.**
-  - **cloudinary.js: Utility for uploading files to Cloudinary.**
-  - **googleConfig.js: Configuration for Google OAuth.**
-
-**app.js**
-- Configures the Express application (e.g., middleware, routes).
-
-**index.js**
-- The entry point for the backend server. Starts the server and listens for incoming requests.
+  - **controllers/**
+    - Contains the logic for handling incoming requests.
+    
+      - **admin.controller.js**: Handles admin-specific operations.
+      - **user.controller.js**: Handles user-related operations (e.g., authentication, profile management).
+  
+  - **db/**
+    - Manages the database connection and models.
+    
+      - **index.js**: Configures the connection to the database (e.g., MongoDB).
+  
+  - **middleware/**
+    - Contains custom middleware functions for processing requests.
+    
+      - **authCode.middleware.js**: Middleware for handling authentication codes.
+      - **authUser.middleware.js**: Middleware for authenticating users.
+      - **errorHandling.middleware.js**: Middleware for handling errors globally.
+      - **multer.middleware.js**: Middleware for handling file uploads using Multer.
+  
+  - **routes/**
+    - Defines the API endpoints and maps them to their respective controllers.
+    
+      - **admin.routes.js**: Routes for admin-related endpoints.
+      - **user.routes.js**: Routes for user-related endpoints.
+  
+  - **utils/**
+    - Contains utility functions and helpers.
+    
+      - **ApiError.js: Custom error class for API errors.**
+      - **ApiResponse.js: Utility for sending consistent API responses.**
+      - **asyncHandler.js: Wrapper for handling asynchronous functions.**
+      - **cloudinary.js: Utility for uploading files to Cloudinary.**
+      - **googleConfig.js: Configuration for Google OAuth.**
+  
+  - **app.js**
+    - Configures the Express application (e.g., middleware, routes).
+  
+  - **index.js**
+    - The entry point for the backend server. Starts the server and listens for incoming requests.
 
 4. **.env**
 - Stores environment variables (e.g., database connection string, API keys).
@@ -446,73 +446,73 @@ frontend/
 3. **public/**
 - Stores static assets like images, fonts, and other files that don’t need processing.
 
-4.** src/**
+4. ** src/**
 - The main source code for the frontend application.
-
-**app/**
-- Contains the Redux store configuration.
-
-- **store.js**: Configures the Redux store.
-
-**assets/**
-- Stores static assets like images, icons, and other media files.
-
-**components/**
-- Contains reusable UI components organized by feature or page.
-
-  - **Admin/**: Components specific to the admin interface.
-  - **Dashboard/**: Components for the dashboard.
-  - **LandingPage/**: Components for the landing page.
-  - **Login/**: Components for the login and authentication flow.
-  - **Navbar/**: Components for the navigation bar and sidebar.
-
-**constants/**
-- Contains constants and configuration values.
-
-  - **index.js**: Exports constants used across the application.
-
-**Features/**
-- Contains Redux slices for state management.
-
-  - **auth/**: Slice for authentication state.
-  - **billDets/**: Slice for bill details state.
-  - **pages/**: Slice for page-related state.
-  - **theme/**: Slice for theme management.
-
-**pages/**
-- Contains page components that represent different routes in the application.
   
-  - **AdminLayout.jsx**: Layout for admin pages.
-  - **AdminPage.jsx**: Main admin page.
-  - **ContactPage.jsx**: Contact page.
-  - **DashboardPage.jsx**: Dashboard page.
-  - **DownloadPage.jsx**: Download page.
-  - **LandingPage.jsx**: Landing page.
-  - **Layout.jsx**: Main layout for the application.
-  - **LoginPage.jsx**: Login page.
-  - **ServicesPage.jsx**: Services page.
-  - **SignupPage.jsx**: Signup page.
-
-**utils/**
-- Contains utility functions and helpers.
-
- - **index.js**: Exports utility functions.
- - **routes.jsx**: Defines the routing configuration for the application.
-
-**AdminAuth.jsx**
-- Handles admin authentication logic.
-
-**App.jsx**
-- The main application component that renders the entire app.
-
-**AuthLogin.jsx**
-- Handles user authentication logic.
-
-**index.css**
-- Global styles for the application.
-
-**main.jsx**
-- The entry point for the frontend application. Renders the App component into the DOM.
+  - **app/**
+    - Contains the Redux store configuration.
+    
+    - **store.js**: Configures the Redux store.
+  
+  - **assets/**
+    - Stores static assets like images, icons, and other media files.
+  
+  - **components/**
+    - Contains reusable UI components organized by feature or page.
+    
+      - **Admin/**: Components specific to the admin interface.
+      - **Dashboard/**: Components for the dashboard.
+      - **LandingPage/**: Components for the landing page.
+      - **Login/**: Components for the login and authentication flow.
+      - **Navbar/**: Components for the navigation bar and sidebar.
+  
+  - **constants/**
+    - Contains constants and configuration values.
+    
+      - **index.js**: Exports constants used across the application.
+  
+  - **Features/**
+    - Contains Redux slices for state management.
+    
+      - **auth/**: Slice for authentication state.
+      - **billDets/**: Slice for bill details state.
+      - **pages/**: Slice for page-related state.
+      - **theme/**: Slice for theme management.
+  
+  - **pages/**
+    - Contains page components that represent different routes in the application.
+      
+      - **AdminLayout.jsx**: Layout for admin pages.
+      - **AdminPage.jsx**: Main admin page.
+      - **ContactPage.jsx**: Contact page.
+      - **DashboardPage.jsx**: Dashboard page.
+      - **DownloadPage.jsx**: Download page.
+      - **LandingPage.jsx**: Landing page.
+      - **Layout.jsx**: Main layout for the application.
+      - **LoginPage.jsx**: Login page.
+      - **ServicesPage.jsx**: Services page.
+      - **SignupPage.jsx**: Signup page.
+  
+  - **utils/**
+    - Contains utility functions and helpers.
+    
+     - **index.js**: Exports utility functions.
+     - **routes.jsx**: Defines the routing configuration for the application.
+  
+  - **AdminAuth.jsx**
+    - Handles admin authentication logic.
+  
+  - **App.jsx**
+    - The main application component that renders the entire app.
+  
+  - **AuthLogin.jsx**
+    - Handles user authentication logic.
+  
+  - **index.css**
+    - Global styles for the application.
+  
+  - **main.jsx**
+    - The entry point for the frontend application. Renders the App component into the DOM.
 
 5. **.env**
 - Stores environment variables (e.g., API keys, base URLs).
