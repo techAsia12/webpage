@@ -46,8 +46,20 @@ const Login = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    captchaRef.current.reset();
     setLoading(true);
+
+    // Trigger invisible reCAPTCHA
+    captchaRef.current.execute();
+  };
+
+  const onRecaptchaChange = (token) => {
+    if (!token) {
+      toast.error("reCAPTCHA verification failed!", { position: "top-right" });
+      setLoading(false);
+      return;
+    }
+
+    setRecaptcha(token);
 
     const url =
       role === "Admin"
@@ -55,7 +67,7 @@ const Login = () => {
         : `${import.meta.env.VITE_BACKEND_URL}/api/user/login`;
 
     axios
-      .post(url, { email, password, role, recaptcha }, options)
+      .post(url, { email, password, role, recaptcha: token }, options)
       .then((res) => {
         setLoading(false);
         if (res?.data?.success === true) {
@@ -74,11 +86,14 @@ const Login = () => {
         const errorMsg = error?.response?.data?.message || "Login failed!";
         toast.error(errorMsg, { position: "top-right" });
       });
+
+    // Reset reCAPTCHA after submission
+    captchaRef.current.reset();
   };
 
   return (
     <div
-      className={`w-screen h-screen flex justify-center items-center lg:flex-none bg-white bg-[radial-gradient(ellipse_80%_80%_at_50%_-20%,rgba(0,0,0,0.2),rgba(0,0,0,0))] dark:bg-neutral-950 dark:bg-[radial-gradient(ellipse_80%_80%_at_50%_-20%,rgba(120,119,198,0.3),rgba(255,255,255,0))] dark:text-white selection:bg-gray-400 selection:text-gray-800`}
+      className={`w-screen h-screen flex justify-center items-center lg:flex-none bg-white bg-[radial-gradient(ellipse_80%_80%_at_50%_-20%,rgba(0,0,0,0.2),rgba(0,0,0,0))] dark:bg-neutral-950 dark:bg-[radial-gradient(ellipse_80%_80%_at_50%_-20%,rgba(120,119,198,0.3),rgba(255,255,255,0))] dark:text-white selection:bg-gray-400 selection:text-gray-800 overflow-x-hidden`}
     >
       <Helmet>
         <title>Login - Your App Name</title>
@@ -229,13 +244,12 @@ const Login = () => {
             </Link>
           </div>
 
-          <div className="scale-50 lg:scale-90 origin-center">
-            <ReCAPTCHA
-              sitekey={import.meta.env.VITE_RECAPCHA_SITE_KEY}
-              onChange={(e) => setRecaptcha(e)}
-              ref={captchaRef}
-            />
-          </div>
+          <ReCAPTCHA
+            sitekey={import.meta.env.VITE_RECAPCHA_SITE_KEY}
+            size="invisible"
+            onChange={onRecaptchaChange}
+            ref={captchaRef}
+          />
 
           <Button
             variant="contained"

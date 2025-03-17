@@ -136,6 +136,7 @@ const login = asyncHandler(async (req, res, next) => {
       `https://www.google.com/recaptcha/api/siteverify?secret=${process.env.RECAPTCHA_SECRET_KEY}&response=${recaptcha}`
     );
 
+    console.log("reCAPTCHA verification response:", response.data);
     if (!response.data.success) {
       return next(new ApiError(400, "reCAPTCHA verification failed"));
     }
