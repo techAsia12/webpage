@@ -11,6 +11,7 @@ const options = {
   secure: true,
   sameSite: "None",
   path: "/",
+  maxAge:process.env.JWT_EXPIRATION,
 };
 
 const dbQuery = async (query, params) => {
@@ -366,12 +367,6 @@ const addPhoneno = asyncHandler(async (req, res, next) => {
     // Generate token and set it in the cookie
     const user = { id: phone, email, name, role };
     const token = generateToken(user);
-
-    const options = {
-      httpOnly: true, // Ensure the cookie is only accessible via HTTP (not JS)
-      secure: process.env.NODE_ENV === "production", // Only set secure cookies in production
-      maxAge: 3600000, // 1 hour
-    };
 
     console.log("Setting auth token in cookie");
 

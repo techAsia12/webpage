@@ -13,6 +13,7 @@ const options = {
   secure: true,
   sameSite: "None",
   path: "/",
+  maxAge:process.env.JWT_EXPIRATION,
 };
 
 const generateVerificationCode = () => {
