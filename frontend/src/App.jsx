@@ -1,17 +1,28 @@
 import { GoogleOAuthProvider } from "@react-oauth/google";
 import React, { useEffect } from "react";
-import { Outlet } from "react-router-dom";
+import { Outlet, useNavigate } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
 import { initializeTheme } from "./Features/theme/theme.slice";
 
 function App() {
   const dispatch = useDispatch();
   const themeMode = useSelector((state) => state.theme.mode);
+  const authStatus = useSelector((state) => state.auth?.status);
+  const navigate = useNavigate();
+  console.log("authStatus", authStatus);
 
   // Initialize theme on component mount
   useEffect(() => {
     dispatch(initializeTheme());
   }, [dispatch]);
+
+  useEffect(() => {
+    if (authStatus === true) {
+      navigate("/dashboard");
+    } else {
+      navigate("/");
+    }
+  }, [authStatus, navigate]);
 
   // Apply theme styles based on the current theme mode
   useEffect(() => {
@@ -37,7 +48,10 @@ function App() {
         <meta name="keywords" content="your, keywords, here" />
         <meta name="author" content="Your Name" />
         <meta property="og:title" content="Your App Title" />
-        <meta property="og:description" content="Your app description for SEO." />
+        <meta
+          property="og:description"
+          content="Your app description for SEO."
+        />
         <meta property="og:type" content="website" />
         <meta property="og:url" content="https://yourapp.com" />
         <meta property="og:image" content="https://yourapp.com/logo.png" />

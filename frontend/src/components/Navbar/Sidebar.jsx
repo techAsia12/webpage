@@ -138,8 +138,9 @@ const Sidebar = () => {
   const handleLogout = () => {
     if (isUpdate) dispatch(updatePage());
     if (isDrawer) dispatch(drawerToogle());
-    removeCookie("authToken", { path: "/" });
     dispatch(logout());
+    removeCookie("authToken", { path: "/" });
+    navigate("/login");
   };
 
   // Handle opening the delete confirmation dialog
@@ -289,7 +290,7 @@ const Sidebar = () => {
         variant="contained"
         className="border border-neutral-900 w-44 h-9 text-xl dark:bg-[#3f51b5] dark:hover:bg-[#4963c7] hover:bg-white hover:text-black dark:hover:text-white"
         onClick={() => {
-          handleLogout, navigate("/login");
+          handleLogout();
         }}
         aria-label="Logout"
       >
