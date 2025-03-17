@@ -160,7 +160,7 @@ const CostRangePage = () => {
       axios
         .post(
           `${import.meta.env.VITE_BACKEND_URL}/api/admin/range-dets`,
-          rowData
+          rowData,{withCredentials:true}
         )
         .then((res) => {
           if (res?.status === 200) {

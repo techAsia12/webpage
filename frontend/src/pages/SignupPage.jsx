@@ -92,7 +92,7 @@ const Signup = () => {
   // Fetch states on component mount
   useEffect(() => {
     axios
-      .get(`${import.meta.env.VITE_BACKEND_URL}/api/user/retrive-stateDets`)
+      .get(`${import.meta.env.VITE_BACKEND_URL}/api/user/retrive-stateDets`,{withCredentials:true})
       .then((res) => setStates(res.data.data))
       .catch((err) => console.log(err));
   }, []);

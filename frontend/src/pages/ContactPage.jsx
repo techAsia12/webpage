@@ -62,7 +62,7 @@ const Contact = () => {
     try {
       const response = await axios.post(
         `${import.meta.env.VITE_BACKEND_URL}/api/user/send-Mail`,
-        { name, email, phoneno, message }
+        { name, email, phoneno, message },{withCredentials:true}
       );
 
       console.log(response);

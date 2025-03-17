@@ -337,7 +337,8 @@ const BillDets = () => {
             unitRanges,
             costs,
             state: editedValues.state,
-          }
+          },
+          options
         );
 
         toast.success("Data updated successfully!");

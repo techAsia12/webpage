@@ -80,7 +80,8 @@ const AddDets = () => {
           totalTaxPercent,
           tax,
           state,
-        }
+        },
+        { withCredentials: true }
       );
 
       if (response?.data?.success === true) {

@@ -47,7 +47,7 @@ const Update = () => {
   useEffect(() => {
     setLoading(true);
     axios
-      .get(`${import.meta.env.VITE_BACKEND_URL}/api/user/retrive-stateDets`)
+      .get(`${import.meta.env.VITE_BACKEND_URL}/api/user/retrive-stateDets`, options)
       .then((res) => setStates(res.data.data))
       .catch((err) =>
         toast.error(err.response?.data?.message || "Failed to load states.")
