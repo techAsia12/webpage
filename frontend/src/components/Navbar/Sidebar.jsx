@@ -214,7 +214,7 @@ const Sidebar = () => {
 
   // Render the sidebar based on the user role
   return (
-    <Box className="flex flex-col items-center justify-center space-y-10 lg:w-80 w-64 h-screen dark:bg-gray-900 dark:text-white">
+    <Box className="flex flex-col items-center justify-center space-y-8  lg:w-80 w-64 h-screen dark:bg-gray-900 dark:text-white">
       <ToastContainer />
       <MessageDialog
         open={open}
@@ -227,11 +227,11 @@ const Sidebar = () => {
         <Avatar
           alt="User Avatar"
           src={`${profile}` || ""}
-          className="mt-10 z-0"
+          className="z-0"
           sx={{ width: 100, height: 100 }}
           aria-label="User Avatar"
         />
-        <label className="z-30 absolute mt-12 transform -translate-x-4 hover:cursor-pointer overflow-hidden">
+        <label className="z-30 absolute mt-1 transform -translate-x-4 hover:cursor-pointer overflow-hidden">
           <IoCameraOutline
             className="backdrop-blur-[2px] opacity-0 hover:opacity-100 transition-opacity rounded-full"
             size={85}
@@ -247,7 +247,7 @@ const Sidebar = () => {
         </label>
         <EditIcon
           onClick={handleEdit}
-          className="mt-16"
+          className="mt-8"
           aria-label="Edit Profile"
         />
       </div>

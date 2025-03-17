@@ -5,9 +5,7 @@ import { asyncHandler } from '../utils/asyncHaldler.js';
 export const verifyJWT = asyncHandler(async (req, res, next) => {
   try {
     const token = req.cookies?.authToken || req.header("Authorization")?.replace("Bearer ", "");
-    
-    console.log('Cookies:', req.cookies);
-    console.log('Token:', token);
+   
     if (!token) {
       return next(new ApiError(403, "Unauthorized request: Token missing"));
     }
