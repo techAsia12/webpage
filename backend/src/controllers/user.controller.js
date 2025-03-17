@@ -155,12 +155,6 @@ const login = asyncHandler(async (req, res, next) => {
     }
     const token = generateToken(user[0]);
 
-    const options = {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === "production", 
-      sameSite: "strict",
-    };
-
     res.cookie("authToken", token, options);
 
     return res
