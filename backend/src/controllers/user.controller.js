@@ -459,7 +459,7 @@ const insertHourly = asyncHandler(async (phoneno, unit) => {
     hour12: false, 
   };
 
-  const currentHour = date.toLocaleString("en-US", istOptions).padStart(2, "0");
+  const currentHour = currentDate.toLocaleString("en-US", istOptions).padStart(2, "0");
   console.log("Current Hour:", currentHour);
   try {
     const [existingEntry] = await db
