@@ -459,21 +459,21 @@ const insertHourly = asyncHandler(async (phoneno, unit) => {
     hour12: false, 
   };
 
-  const currentHour = currentDate.toLocaleString("en-US", istOptions).padStart(2, "0");
+  const currentHour = date.toLocaleString("en-US", istOptions).padStart(2, "0");
   console.log("Current Hour:", currentHour);
   try {
     const [existingEntry] = await db
       .promise()
-      .query("SELECT * FROM daily_usage WHERE phoneno = ? AND time = ?", [
+      .query("SELECT * FROM daily_usage WHERE phoneno = ? AND HOUR(time) = ?", [
         phoneno,
         currentHour,
       ]);
-
+      console.log("Existing Entry:", existingEntry[0]);
     if (existingEntry.length > 0) {
       await db
         .promise()
         .query(
-          "UPDATE daily_usage SET unit = ?,time=? WHERE phoneno = ? AND time = ?",
+          "UPDATE daily_usage SET unit = ?,time=? WHERE phoneno = ? AND HOUR(time) = ?",
           [unit, currentDate, phoneno, currentHour]
         );
       console.log("Hourly data updated successfully");
@@ -833,7 +833,6 @@ const sentData = asyncHandler(async (req, res, next) => {
     };
 
     const totalCost = costCalc(newWatt, billDets);
-
     const [dailyUsageResult] = await db
       .promise()
       .query(
