@@ -453,7 +453,13 @@ const resetPassword = asyncHandler(async (req, res, next) => {
 
 const insertHourly = asyncHandler(async (phoneno, unit) => {
   const currentDate = new Date();
-  const currentHour = String(currentDate.getHours()).padStart(2, "0");
+  const istOptions = {
+    timeZone: "Asia/Kolkata",
+    hour: "numeric",
+    hour12: false, 
+  };
+
+  const currentHour = date.toLocaleString("en-US", istOptions).padStart(2, "0");
   console.log("Current Hour:", currentHour);
   try {
     const [existingEntry] = await db
@@ -827,7 +833,18 @@ const sentData = asyncHandler(async (req, res, next) => {
     };
 
     const totalCost = costCalc(newWatt, billDets);
-    let costToday = costCalc(kwh, billDets);
+    
+    const [dailyUsageResult] = await db
+      .promise()
+      .query(
+        "SELECT SUM(unit) AS totalDailyUsage FROM daily_usage WHERE phoneno = ? AND DATE(time) = CURDATE()",
+        [phoneno]
+      );
+
+    const totalDailyUsage = dailyUsageResult[0].totalDailyUsage || 0;
+
+    // Calculate costToday based on daily usage
+    const costToday = costCalc(totalDailyUsage, billDets);
 
     if (threshold < totalCost && emailSent === 0) {
       const [userResult] = await db
