@@ -452,8 +452,8 @@ const resetPassword = asyncHandler(async (req, res, next) => {
 });
 
 const insertHourly = asyncHandler(async (phoneno, unit) => {
-  const currentDate = new Date();
-  const currentHour = currentDate.getHours();
+  const currentDate = new Date.now();
+  const currentHour = String(currentDate.getUTCHours()).padStart(2, '0');
 
   try {
     const [existingEntry] = await db
@@ -636,7 +636,7 @@ const retiveHourlyUsage = asyncHandler(async (req, res, next) => {
       const hour = new Date(entry.time).getHours();
       unitsPerHour[hour] = entry.unit;
     });
-
+    console.log("Hourly Usage:", unitsPerHour);
     return res
       .status(200)
       .json(new ApiResponse(200, unitsPerHour, "Data Sent"));
