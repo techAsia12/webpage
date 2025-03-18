@@ -464,7 +464,7 @@ const insertHourly = asyncHandler(async (phoneno, unit) => {
   try {
     const [existingEntry] = await db
       .promise()
-      .query("SELECT * FROM daily_usage WHERE phoneno = ? AND HOUR(time) = ?", [
+      .query("SELECT * FROM daily_usage WHERE phoneno = ? AND time = ?", [
         phoneno,
         currentHour,
       ]);
@@ -473,7 +473,7 @@ const insertHourly = asyncHandler(async (phoneno, unit) => {
       await db
         .promise()
         .query(
-          "UPDATE daily_usage SET unit = ?,time=? WHERE phoneno = ? AND HOUR(time) = ?",
+          "UPDATE daily_usage SET unit = ?,time=? WHERE phoneno = ? AND time = ?",
           [unit, currentDate, phoneno, currentHour]
         );
       console.log("Hourly data updated successfully");
