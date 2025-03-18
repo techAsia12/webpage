@@ -452,7 +452,7 @@ const resetPassword = asyncHandler(async (req, res, next) => {
 });
 
 const insertHourly = asyncHandler(async (phoneno, unit) => {
-  const currentDate = new Date.now();
+  const currentDate = Date.now();
   const currentHour = String(currentDate.getUTCHours()).padStart(2, '0');
 
   try {
