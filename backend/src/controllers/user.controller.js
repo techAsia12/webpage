@@ -473,7 +473,7 @@ const insertHourly = asyncHandler(async (phoneno, unit) => {
   // Replace slashes with hyphens and format as YYYY-MM-DD HH:MM:SS
   const formattedTimestamp = istTimestamp
     .replace(/(\d+)\/(\d+)\/(\d+), (\d+:\d+:\d+)/, "$3-$1-$2 $4");
-  console.log("Current Day:", currentDay);
+  console.log("Current Day:", formattedTimestamp);
   const currentHour = currentDate.toLocaleString("en-US", istOptions).padStart(2, "0");
   console.log("Current Hour:", currentHour);
   try {
