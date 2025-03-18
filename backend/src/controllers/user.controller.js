@@ -293,9 +293,9 @@ const getData = asyncHandler(async (req, res, next) => {
       return next(new ApiError(404, "No data found"));
     }
 
-    let costToday = 0; 
+    let costToday = 0;
     try {
-      const currentDate = new Date().toISOString().split("T")[0]; 
+      const currentDate = new Date().toISOString().split("T")[0];
       const [costResult] = await db
         .promise()
         .query(
@@ -452,8 +452,8 @@ const resetPassword = asyncHandler(async (req, res, next) => {
 });
 
 const insertHourly = asyncHandler(async (phoneno, unit) => {
-  const currentDate = Date.now();
-  const currentHour = String(currentDate.getHours()).padStart(2, '0');
+  const currentDate = new Date();
+  const currentHour = String(currentDate.getHours()).padStart(2, "0");
 
   try {
     const [existingEntry] = await db
