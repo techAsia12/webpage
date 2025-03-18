@@ -107,8 +107,8 @@ const Dashboard = () => {
   return (
     <div className="w-full min-h-screen bg-transparent p-4 lg:p-10">
       {/* Top Section: Cost Cards */}
-      <div className="flex flex-col lg:flex-row lg:space-x-4 space-y-6 lg:space-y-0">
-        <div className="w-full lg:w-1/2 flex flex-col space-y-4">
+      <div className="flex flex-col lg:flex-row lg:space-x-10 space-y-6 lg:space-y-0">
+        <div className="w-full lg:w-[45%] flex flex-col space-y-4">
           <motion.div
             initial={{ y: -100, opacity: 0 }}
             animate={{ y: 0, opacity: 1 }}
