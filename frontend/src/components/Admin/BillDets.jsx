@@ -22,6 +22,7 @@ import {
   getCoreRowModel,
   getPaginationRowModel,
 } from "@tanstack/react-table";
+import LoadingSpinner from "../LoadingSpinner";
 
 // SEO Component to add meta tags
 const SEO = () => (
@@ -363,7 +364,7 @@ const BillDets = () => {
 
   // Loading and error states
   if (loading) {
-    return <div className="text-center py-10 dark:text-white">Loading...</div>;
+    return <LoadingSpinner/>;
   }
 
   if (error) {

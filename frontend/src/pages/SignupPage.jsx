@@ -109,7 +109,7 @@ const Signup = () => {
       className={`w-screen h-screen flex justify-center items-center bg-white bg-[radial-gradient(ellipse_80%_80%_at_50%_-20%,rgba(0,0,0,0.2),rgba(0,0,0,0))] dark:bg-neutral-950 dark:bg-[radial-gradient(ellipse_80%_80%_at_50%_-20%,rgba(120,119,198,0.3),rgba(255,255,255,0))] dark:text-white selection:bg-gray-400 selection:text-gray-800`}
     >
       <Helmet>
-        <title>Sign Up - Your App Name</title>
+        <title>Sign Up - Smart Energy Meter</title>
         <meta
           name="description"
           content="Sign up for an account on Your App Name. Register as a client and start managing your services."

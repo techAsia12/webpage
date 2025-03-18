@@ -18,6 +18,7 @@ import {
   getPaginationRowModel,
 } from "@tanstack/react-table";
 import { useSelector } from "react-redux";
+import LoadingSpinner from "../LoadingSpinner";
 
 // SEO Component to add meta tags
 const SEO = () => (
@@ -142,7 +143,7 @@ const Home = () => {
 
   // Loading and error states
   if (loading)
-    return <div className="text-center py-10 dark:text-white">Loading...</div>;
+    return <LoadingSpinner />;
   if (error)
     return <div className="text-center py-10 text-red-500">{error}</div>;
 

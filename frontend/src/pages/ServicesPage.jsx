@@ -70,7 +70,7 @@ const Services = () => {
   return (
     <div className="w-full lg:w-4/5 h-fit lg:ml-44 lg:pt-10 p-4">
       <Helmet>
-        <title>Usage Statistics - Your App Name</title>
+        <title>Usage Statistics - Smart Energy Meter</title>
         <meta
           name="description"
           content="View your usage statistics on Your App Name. Track daily, weekly, and yearly usage with interactive charts."
