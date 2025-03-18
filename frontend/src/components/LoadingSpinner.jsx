@@ -1,6 +1,7 @@
 import React from "react";
 import CircularProgress from "@mui/material/CircularProgress";
 import Box from "@mui/material/Box";
+import ElectricBoltIcon from "@mui/icons-material/ElectricBolt";
 
 const LoadingSpinner = () => {
   return (
