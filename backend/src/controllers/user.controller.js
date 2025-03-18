@@ -13,7 +13,7 @@ const options = {
   secure: true,
   sameSite: "None",
   path: "/",
-  maxAge:process.env.JWT_EXPIRATION,
+  maxAge: process.env.JWT_EXPIRATION,
 };
 
 const generateVerificationCode = () => {
@@ -165,7 +165,6 @@ const login = asyncHandler(async (req, res, next) => {
         new ApiResponse(200, { ...user[0], token }, "Successfully logged in")
       );
   } catch (err) {
-
     if (err.code === "ER_BAD_DB_ERROR") {
       return next(new ApiError(500, "Database connection error"));
     }
@@ -179,13 +178,16 @@ const login = asyncHandler(async (req, res, next) => {
 });
 
 const googleLogin = asyncHandler(async (req, res, next) => {
-  const { token,role } = req.body;
+  const { token, role } = req.body;
 
   try {
     const decoded = jwt.decode(token, { complete: true });
     const { name, email } = decoded.payload;
 
-    const user = await dbQuery("SELECT * FROM users WHERE email = ? AND role=?", [email,role]);
+    const user = await dbQuery(
+      "SELECT * FROM users WHERE email = ? AND role=?",
+      [email, role]
+    );
 
     if (user.length > 0) {
       const { phoneno, role } = user[0];
@@ -283,7 +285,7 @@ const getData = asyncHandler(async (req, res, next) => {
     const [result] = await db
       .promise()
       .query(
-        "SELECT phoneno, MACadd, voltage, current, watt, date_time, state, totalCost, costToday,threshold FROM client_dets WHERE phoneno = ?",
+        "SELECT phoneno, MACadd, voltage, current, watt, date_time, state, totalCost, costToday, threshold FROM client_dets WHERE phoneno = ?",
         [user.id]
       );
 
@@ -291,12 +293,31 @@ const getData = asyncHandler(async (req, res, next) => {
       return next(new ApiError(404, "No data found"));
     }
 
-    console.log("Data fetched successfully:", result[0]);
+    let costToday = 0; 
+    try {
+      const currentDate = new Date().toISOString().split("T")[0]; 
+      const [costResult] = await db
+        .promise()
+        .query(
+          "SELECT costToday FROM client_dets WHERE phoneno = ? AND DATE(date_time) = ?",
+          [user.id, currentDate]
+        );
+
+      if (costResult.length > 0) {
+        costToday = costResult[0].costToday;
+      }
+    } catch (error) {
+      console.error("Error fetching costToday:", error);
+    }
+
+    const data = { ...result[0], costToday };
+    console.log("Data fetched successfully:", data);
 
     return res
       .status(200)
-      .json(new ApiResponse(200, result[0], "Data successfully fetched"));
+      .json(new ApiResponse(200, data, "Data successfully fetched"));
   } catch (err) {
+    console.error("Database error:", err);
     return next(new ApiError(500, "Database error"));
   }
 });
@@ -807,11 +828,6 @@ const sentData = asyncHandler(async (req, res, next) => {
 
     const totalCost = costCalc(newWatt, billDets);
     let costToday = costCalc(kwh, billDets);
-
-    if (currentDate.getDate() !== prevtime.getDate()) {
-      console.log("Midnight detected. Resetting costToday to 0.");
-      costToday = 0;
-    }
 
     if (threshold < totalCost && emailSent === 0) {
       const [userResult] = await db
