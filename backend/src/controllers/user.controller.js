@@ -459,7 +459,20 @@ const insertHourly = asyncHandler(async (phoneno, unit) => {
     hour12: false, 
   };
 
-  const currentDay = currentDate.toLocaleString("en-US", {timeZone:"Asia/Kolkata", day: "numeric"}).padStart(2, "0");
+  const istTimestamp = currentDate.toLocaleString("en-US", {
+    timeZone: "Asia/Kolkata",
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+    hour: "2-digit",
+    minute: "2-digit",
+    second: "2-digit",
+    hour12: false, // Use 24-hour format
+  });
+  
+  // Replace slashes with hyphens and format as YYYY-MM-DD HH:MM:SS
+  const formattedTimestamp = istTimestamp
+    .replace(/(\d+)\/(\d+)\/(\d+), (\d+:\d+:\d+)/, "$3-$1-$2 $4");
   console.log("Current Day:", currentDay);
   const currentHour = currentDate.toLocaleString("en-US", istOptions).padStart(2, "0");
   console.log("Current Hour:", currentHour);
@@ -476,7 +489,7 @@ const insertHourly = asyncHandler(async (phoneno, unit) => {
         .promise()
         .query(
           "UPDATE daily_usage SET unit = ?,time=? WHERE phoneno = ? AND HOUR(time) = ?",
-          [unit, currentDay, phoneno, currentHour]
+          [unit, formattedTimestamp, phoneno, currentHour]
         );
       console.log("Hourly data updated successfully");
     } else {
@@ -484,7 +497,7 @@ const insertHourly = asyncHandler(async (phoneno, unit) => {
         .promise()
         .query(
           "INSERT INTO daily_usage (phoneno, unit, time) VALUES (?, ?, ?)",
-          [phoneno, unit, currentDay]
+          [phoneno, unit, formattedTimestamp]
         );
       console.log("Hourly data inserted successfully");
     }
