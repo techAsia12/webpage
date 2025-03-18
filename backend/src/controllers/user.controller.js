@@ -468,7 +468,7 @@ const insertHourly = asyncHandler(async (phoneno, unit) => {
         phoneno,
         currentHour,
       ]);
-      console.log("Existing Entry:", existingEntry[0]);
+      console.log("Existing Entry:", existingEntry);
     if (existingEntry.length > 0) {
       await db
         .promise()
