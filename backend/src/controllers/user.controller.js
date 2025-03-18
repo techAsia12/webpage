@@ -460,6 +460,7 @@ const insertHourly = asyncHandler(async (phoneno, unit) => {
   };
 
   const currentDay = currentDate.toLocaleString("en-US", {timeZone:"Asia/Kolkata", day: "numeric"}).padStart(2, "0");
+  console.log("Current Day:", currentDay);
   const currentHour = currentDate.toLocaleString("en-US", istOptions).padStart(2, "0");
   console.log("Current Hour:", currentHour);
   try {
