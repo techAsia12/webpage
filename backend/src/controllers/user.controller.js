@@ -453,7 +453,7 @@ const resetPassword = asyncHandler(async (req, res, next) => {
 
 const insertHourly = asyncHandler(async (phoneno, unit) => {
   const currentDate = Date.now();
-  const currentHour = String(currentDate.getUTCHours()).padStart(2, '0');
+  const currentHour = String(currentDate.getHours()).padStart(2, '0');
 
   try {
     const [existingEntry] = await db
