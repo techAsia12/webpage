@@ -456,7 +456,7 @@ const insertHourly = asyncHandler(async (phoneno, unit) => {
   const istOptions = {
     timeZone: "Asia/Kolkata",
     hour: "numeric",
-    hour12: false, 
+    hour12: false,
   };
 
   const istTimestamp = currentDate.toLocaleString("en-US", {
@@ -467,15 +467,40 @@ const insertHourly = asyncHandler(async (phoneno, unit) => {
     hour: "2-digit",
     minute: "2-digit",
     second: "2-digit",
-    hour12: false, // Use 24-hour format
+    hour12: false,
   });
-  
-  // Replace slashes with hyphens and format as YYYY-MM-DD HH:MM:SS
-  const formattedTimestamp = istTimestamp
-    .replace(/(\d+)\/(\d+)\/(\d+), (\d+:\d+:\d+)/, "$3-$1-$2 $4");
+
+  const formattedTimestamp = istTimestamp.replace(
+    /(\d+)\/(\d+)\/(\d+), (\d+:\d+:\d+)/,
+    "$3-$1-$2 $4"
+  );
   console.log("Current Day:", formattedTimestamp);
-  const currentHour = currentDate.toLocaleString("en-US", istOptions).padStart(2, "0");
+
+  const currentHour = currentDate
+    .toLocaleString("en-US", istOptions)
+    .padStart(2, "0");
   console.log("Current Hour:", currentHour);
+
+  if (currentHour === "00") {
+    await db
+      .promise()
+      .query("INSERT INTO daily_usage (phoneno, unit, time) VALUES (?, ?, ?)", [
+        phoneno,
+        0,
+        formattedTimestamp,
+      ]);
+    return;
+  }
+
+  const currentDay = new Date().toISOString().split("T")[0];
+  const [existingEntry] = await db
+    .promise()
+    .query(
+      "SELECT * FROM daily_usage WHERE phoneno = ? AND DATE(time) = ? ORDER BY time DESC LIMIT 1",
+      [phoneno, currentDay]
+    );
+  const newUnit = unit + existingEntry[0].unit;
+
   try {
     const [existingEntry] = await db
       .promise()
@@ -483,13 +508,15 @@ const insertHourly = asyncHandler(async (phoneno, unit) => {
         phoneno,
         currentHour,
       ]);
-      console.log("Existing Entry:", existingEntry);
+
+    console.log("Existing Entry:", existingEntry);
+
     if (existingEntry.length > 0) {
       await db
         .promise()
         .query(
           "UPDATE daily_usage SET unit = ?,time=? WHERE phoneno = ? AND HOUR(time) = ?",
-          [unit, formattedTimestamp, phoneno, currentHour]
+          [newUnit, formattedTimestamp, phoneno, currentHour]
         );
       console.log("Hourly data updated successfully");
     } else {
@@ -497,7 +524,7 @@ const insertHourly = asyncHandler(async (phoneno, unit) => {
         .promise()
         .query(
           "INSERT INTO daily_usage (phoneno, unit, time) VALUES (?, ?, ?)",
-          [phoneno, unit, formattedTimestamp]
+          [phoneno, newUnit, formattedTimestamp]
         );
       console.log("Hourly data inserted successfully");
     }
@@ -510,6 +537,28 @@ const insertDaily = asyncHandler(async (phoneno, unit) => {
   const currentDate = new Date();
   const currentDay = currentDate.toISOString().split("T")[0];
 
+  const dateObj = new Date(currentDay);
+
+  const days = [
+    "Sunday",
+    "Monday",
+    "Tuesday",
+    "Wednesday",
+    "Thursday",
+    "Friday",
+    "Saturday",
+  ];
+  const day = days[dateObj.getDay()];
+
+  if (day === "Sunday") {
+    await db
+      .promise()
+      .query(
+        "INSERT INTO weekly_usage (phoneno, unit, time) VALUES (?, ?, ?)",
+        [phoneno, 0, currentDay]
+      );
+    return;
+  }
   try {
     const [existingData] = await db
       .promise()
@@ -545,6 +594,20 @@ const insertMonthly = asyncHandler(async (phoneno, unit) => {
   const currentMonth = currentDate.getMonth() + 1;
   const currentYear = currentDate.getFullYear();
 
+  if (
+    currentMonth === 1 &&
+    currentDate.getDate() === 1 &&
+    currentDate.getHours() === 0
+  ) {
+    await db
+      .promise()
+      .query(
+        "INSERT INTO yearly_usage (phoneno, unit, time) VALUES (?, ?, ?)",
+        [phoneno, 0, currentDate.toISOString().split("T")[0]]
+      );
+    return;
+  }
+
   try {
     const [existingData] = await db
       .promise()
@@ -553,12 +616,13 @@ const insertMonthly = asyncHandler(async (phoneno, unit) => {
         [phoneno, currentYear, currentMonth]
       );
 
+    const newUnit = unit + existingData[0].unit;
     if (existingData.length > 0) {
       await db
         .promise()
         .query(
           `UPDATE yearly_usage SET unit = ? WHERE phoneno = ? AND YEAR(time) = ? AND MONTH(time) = ?`,
-          [unit, phoneno, currentYear, currentMonth]
+          [newUnit, phoneno, currentYear, currentMonth]
         );
       console.log("Monthly data updated for yearly tracking");
     } else {
@@ -812,9 +876,9 @@ const sentData = asyncHandler(async (req, res, next) => {
     console.log(`New watt value calculated: ${newWatt}`);
 
     if (watt !== newWatt || prevtime.getHours() !== currentDate.getHours()) {
-      await insertHourly(phoneno, newWatt);
-      await insertDaily(phoneno, newWatt);
-      await insertMonthly(phoneno, newWatt);
+      await insertHourly(phoneno, watt);
+      await insertDaily(phoneno, watt);
+      await insertMonthly(phoneno, watt);
     }
 
     const [billDetailsResult] = await db
@@ -856,8 +920,7 @@ const sentData = asyncHandler(async (req, res, next) => {
       );
 
     const totalDailyUsage = dailyUsageResult[0].totalDailyUsage || 0;
-
-    // Calculate costToday based on daily usage
+    
     const costToday = costCalc(totalDailyUsage, billDets);
 
     if (threshold < totalCost && emailSent === 0) {
