@@ -186,7 +186,7 @@ const googleLogin = asyncHandler(async (req, res, next) => {
   try {
     const decoded = jwt.decode(token, { complete: true });
     const { name, email } = decoded.payload;
-  
+
     const [user] = await db
       .promise()
       .query("SELECT * FROM users WHERE email = ? AND role=?", [email, role]);
@@ -912,7 +912,7 @@ const sentData = asyncHandler(async (req, res, next) => {
     const prevHour = prevDate.getHours();
 
     console.log(`Current hour: ${currentHour}, Previous hour: ${prevHour}`);
-
+    let newWatt;
     // Check if the hour has changed
     if (currentHour !== prevHour) {
       console.log("New hour detected. Calculating new watt...");
@@ -925,7 +925,7 @@ const sentData = asyncHandler(async (req, res, next) => {
 
       // Calculate newWatt
       const kwh = (voltage * current * timeInHours) / 1000;
-      const newWatt = watt + kwh;
+      newWatt = watt + kwh;
       console.log(`New watt value calculated: ${newWatt}`);
 
       // Update hourly, daily, and monthly data
@@ -978,25 +978,25 @@ const sentData = asyncHandler(async (req, res, next) => {
 
       // Calculate cost for today
       const costToday = costCalc(totalDailyUsage, billDets);
+    }
+    // Check if threshold is exceeded and send email
+    if (threshold < totalCost && emailSent === 0) {
+      const [userResult] = await db
+        .promise()
+        .query("SELECT email FROM users WHERE phoneno = ?", [phoneno]);
 
-      // Check if threshold is exceeded and send email
-      if (threshold < totalCost && emailSent === 0) {
-        const [userResult] = await db
-          .promise()
-          .query("SELECT email FROM users WHERE phoneno = ?", [phoneno]);
+      if (userResult.length > 0) {
+        const userEmail = userResult[0].email;
+        console.log("Sending email to:", userEmail);
+        await sendMessage(userEmail, totalCost, threshold);
 
-        if (userResult.length > 0) {
-          const userEmail = userResult[0].email;
-          console.log("Sending email to:", userEmail);
-          await sendMessage(userEmail, totalCost, threshold);
-
-          emailSent = 0;
-          threshold *= 10;
-        }
+        emailSent = 0;
+        threshold *= 10;
       }
+    }
 
-      // Update client_dets table
-      const updateQuery = `
+    // Update client_dets table
+    const updateQuery = `
         UPDATE client_dets SET
           voltage = ?,
           current = ?,
@@ -1010,41 +1010,34 @@ const sentData = asyncHandler(async (req, res, next) => {
           emailSent = ?
         WHERE phoneno = ?
       `;
-      const updateParams = [
-        voltage,
-        current,
-        MACadd,
-        newWatt,
-        (voltage * current) ,
-        mysqlTimestamp,
-        totalCost,
-        costToday,
-        threshold,
-        emailSent,
-        phoneno,
-      ];
+    const updateParams = [
+      voltage,
+      current,
+      MACadd,
+      newWatt,
+      voltage * current,
+      mysqlTimestamp,
+      totalCost,
+      costToday,
+      threshold,
+      emailSent,
+      phoneno,
+    ];
 
-      console.log("Executing update query...");
-      const [updateResult] = await db.promise().query(updateQuery, updateParams);
+    console.log("Executing update query...");
+    const [updateResult] = await db.promise().query(updateQuery, updateParams);
 
-      if (updateResult.affectedRows === 0) {
-        console.log("No rows affected, client data update failed.");
-        return next(new ApiError(404, "No matching client found"));
-      }
-
-      console.log("Client data updated successfully.");
-      return res.status(200).json({
-        status: 200,
-        message: "Client data updated successfully",
-        data: updateResult,
-      });
-    } else {
-      console.log("No new hour has passed. Skipping watt calculation.");
-      return res.status(200).json({
-        status: 200,
-        message: "No new hour has passed. Watt calculation skipped.",
-      });
+    if (updateResult.affectedRows === 0) {
+      console.log("No rows affected, client data update failed.");
+      return next(new ApiError(404, "No matching client found"));
     }
+
+    console.log("Client data updated successfully.");
+    return res.status(200).json({
+      status: 200,
+      message: "Client data updated successfully",
+      data: updateResult,
+    });
   } catch (err) {
     console.error("Database error:", err);
     return next(new ApiError(500, "Database error"));
