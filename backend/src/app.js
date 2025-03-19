@@ -6,12 +6,12 @@ const app=express()
 app.use(
   cors({
     origin: [
-      "http://localhost:5173", // Local development
-      "https://smartenergymeter.techasiamechatronics.com", // Your frontend domain
-      "https://webpage-pearl-sigma.vercel.app", // Another frontend domain
+      "http://localhost:5173", 
+      "https://smartenergymeter.techasiamechatronics.com", 
+      "https://webpage-pearl-sigma.vercel.app", 
     ],
-    methods: "GET,POST,PUT,DELETE", // Allowed HTTP methods
-    credentials: true, // Allow cookies and credentials
+    methods: "GET,POST,PUT,DELETE", 
+    credentials: true, 
   })
 );
 
