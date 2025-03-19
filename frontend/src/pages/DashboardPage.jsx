@@ -155,6 +155,15 @@ const Dashboard = () => {
               animate={{ x: 0, opacity: 1 }}
               transition={{ duration: 1, delay: 1.2 }}
             />
+            <Meter
+              color={"#ed9d00"}
+              value={user?.watt || 0}
+              maxValue={350}
+              unit={"v"}
+              initial={{ x: 100, opacity: 0 }}
+              animate={{ x: 0, opacity: 1 }}
+              transition={{ duration: 1, delay: 1.2 }}
+            />
           </div>
         </div>
       </div>

@@ -316,7 +316,7 @@ const getData = asyncHandler(async (req, res, next) => {
     const [result] = await db
       .promise()
       .query(
-        "SELECT phoneno, MACadd, voltage, current, units, date_time, state, totalCost, costToday, threshold FROM client_dets WHERE phoneno = ?",
+        "SELECT phoneno, MACadd, voltage, current, units,watt, date_time, state, totalCost, costToday, threshold FROM client_dets WHERE phoneno = ?",
         [user.id]
       );
 
@@ -1004,6 +1004,7 @@ const sentData = asyncHandler(async (req, res, next) => {
           current = ?,
           MACadd = ?,
           units = ?, 
+          watt=?,
           date_time = ?,
           totalCost = ?,
           costToday = ?,
@@ -1016,6 +1017,7 @@ const sentData = asyncHandler(async (req, res, next) => {
         current,
         MACadd,
         newWatt,
+        (voltage * current) ,
         mysqlTimestamp,
         totalCost,
         costToday,
