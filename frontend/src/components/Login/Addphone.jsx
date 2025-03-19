@@ -61,7 +61,7 @@ const Addphone = () => {
     axios
       .post(
         `${import.meta.env.VITE_BACKEND_URL}/api/user/add-phoneno`,
-        { email, phone: phoneNumber, name, state: selectedState, role: "Client" },
+        { email, phone: phoneNumber, name, state: selectedServiceProvider, role: "Client" },
         options
       )
       .then((res) => {
@@ -70,7 +70,7 @@ const Addphone = () => {
         });
 
         setTimeout(() => {
-          navigate("/");
+          navigate("/dashoboard");
         }, 2000);
       })
       .catch((error) => {

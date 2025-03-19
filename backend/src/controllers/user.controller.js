@@ -204,9 +204,10 @@ const googleLogin = asyncHandler(async (req, res, next) => {
           )
         );
     } else {
-      await dbQuery("INSERT INTO users (name, email) VALUES (?, ?)", [
+      await dbQuery("INSERT INTO users (name, email,role) VALUES (?, ?, ?)", [
         name,
         email,
+        role,
       ]);
       return res
         .status(201)
@@ -227,33 +228,53 @@ const googleLogin = asyncHandler(async (req, res, next) => {
 });
 
 const addPhoneno = asyncHandler(async (req, res, next) => {
-  const { email, phone, role, state } = req.body;
+  const { email, phone: phoneno, role, state } = req.body;
 
-  if (!phone || !email || !role || !state) {
+  if (!phoneno || !email || !role || !state) {
     return next(new ApiError(400, "Missing required fields"));
   }
 
+  console.log(
+    "Received phone number:",
+    phoneno,
+    "for email:",
+    email,
+    "role:",
+    role
+  );
   try {
-    await dbQuery("UPDATE users SET phoneno = ?, role = ? WHERE email = ?", [
-      phone,
-      role,
-      email,
-    ]);
+    await db
+      .promise()
+      .query("UPDATE users SET phoneno = ? WHERE email = ? AND role = ?", [
+        phoneno,
+        email,
+        role,
+      ]);
 
     if (role === "Client") {
       try {
-        await dbQuery(
-          "INSERT INTO client_dets (phoneno, state) VALUES (?, ?)",
-          [phone, state]
-        );
+        console.log("Inserting client details into 'client_dets' table...", {
+          phoneno,
+          state,
+        });
+
+        await db
+          .promise()
+          .query(
+            "INSERT INTO client_dets (phoneno, state, MACadd) VALUES (?, ?, ?)",
+            [phoneno, state, 0]
+          );
+
+        console.log("Data inserted successfully");
       } catch (error) {
-        await dbQuery("DELETE FROM client_dets WHERE phoneno=?", [phone]);
-        await dbQuery("DELETE FROM users WHERE phoneno=?", [phone]);
+        await dbQuery("DELETE FROM client_dets WHERE phoneno=?", [phoneno]);
+        await dbQuery("DELETE FROM users WHERE phoneno=?", [phoneno]);
+        console.error("Error adding phone number:", error);
         return next(new ApiError(500, "Something went wrong while try again"));
       }
     }
 
-    const token = generateToken({ id: phone, email });
+    const token = generateToken({ id: phoneno, email });
     res.cookie("authToken", token, options);
 
     return res
@@ -261,15 +282,16 @@ const addPhoneno = asyncHandler(async (req, res, next) => {
       .json(
         new ApiResponse(
           200,
-          { user: { id: phone, email }, token },
+          { user: { id: phoneno, email }, token },
           "Registered successfully"
         )
       );
   } catch (error) {
     if (error.code === "ER_DUP_ENTRY") {
+      console.error("Error adding phone number:", error);
       return next(new ApiError(400, "User already exists"));
     }
-
+    console.error("Error adding phone number:", error);
     return next(new ApiError(500, "Database error"));
   }
 });
@@ -601,7 +623,11 @@ const insertMonthly = asyncHandler(async (phoneno, unit) => {
   const currentYear = currentDate.getFullYear();
 
   // Handle January 1st
-  if (currentMonth === 1 && currentDate.getDate() === 1 && currentDate.getHours() === 0) {
+  if (
+    currentMonth === 1 &&
+    currentDate.getDate() === 1 &&
+    currentDate.getHours() === 0
+  ) {
     await db
       .promise()
       .query(
@@ -923,7 +949,7 @@ const sentData = asyncHandler(async (req, res, next) => {
       );
 
     const totalDailyUsage = dailyUsageResult[0].totalDailyUsage || 0;
-    
+
     const costToday = costCalc(totalDailyUsage, billDets);
 
     if (threshold < totalCost && emailSent === 0) {
