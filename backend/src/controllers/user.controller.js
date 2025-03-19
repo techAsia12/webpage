@@ -342,8 +342,6 @@ const getData = asyncHandler(async (req, res, next) => {
     }
 
     const data = { ...result[0], costToday };
-    console.log("Data fetched successfully:", data);
-
     return res
       .status(200)
       .json(new ApiResponse(200, data, "Data successfully fetched"));
