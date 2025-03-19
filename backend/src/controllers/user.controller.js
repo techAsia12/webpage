@@ -912,7 +912,7 @@ const sentData = asyncHandler(async (req, res, next) => {
     const prevHour = prevDate.getHours();
 
     console.log(`Current hour: ${currentHour}, Previous hour: ${prevHour}`);
-    let newWatt;
+    let newWatt=watt;
     // Check if the hour has changed
     if (currentHour !== prevHour) {
       console.log("New hour detected. Calculating new watt...");
