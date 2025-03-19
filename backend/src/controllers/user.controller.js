@@ -74,10 +74,12 @@ const register = asyncHandler(async (req, res, next) => {
     const hashPassword = await bcrypt.hash(password, 10);
 
     console.log("Inserting user into 'users' table...");
-    const insertUserResult = await dbQuery(
-      "INSERT INTO users (phoneno, name, password, email, role) VALUES (?, ?, ?, ?, ?)",
-      [phoneno, name, hashPassword, email, role]
-    );
+    const insertUserResult = await db
+      .promise()
+      .query(
+        "INSERT INTO users (phoneno, name, password, email, role) VALUES (?, ?, ?, ?, ?)",
+        [phoneno, name, hashPassword, email, role]
+      );
 
     if (!insertUserResult.affectedRows) {
       console.log("Failed to insert user into 'users' table");
@@ -85,16 +87,18 @@ const register = asyncHandler(async (req, res, next) => {
     }
 
     console.log("Inserting client details into 'client_dets' table...");
-    const insertClientResult = await dbQuery(
-      "INSERT INTO client_dets (phoneno, state, MACadd) VALUES (?, ?, ?)",
-      [phoneno, state, null]
-    );
+    const insertClientResult = await db
+      .promise()
+      .query(
+        "INSERT INTO client_dets (phoneno, state, MACadd) VALUES (?, ?, ?)",
+        [phoneno, state, null]
+      );
 
     if (!insertClientResult.affectedRows) {
       console.log(
         "Failed to insert client details. Rolling back user insert..."
       );
-      dbQuery("DELETE FROM users WHERE phoneno=?", [phoneno]);
+      db.promise().query("DELETE FROM users WHERE phoneno=?", [phoneno]);
       throw new Error(
         "Failed to insert client details into 'client_dets' table"
       );
@@ -142,10 +146,9 @@ const login = asyncHandler(async (req, res, next) => {
       return next(new ApiError(400, "reCAPTCHA verification failed"));
     }
 
-    const user = await dbQuery(
-      "SELECT * FROM users WHERE email = ? AND role = ?",
-      [email, role]
-    );
+    const user = await db
+      .promise()
+      .query("SELECT * FROM users WHERE email = ? AND role = ?", [email, role]);
 
     if (user.length === 0) {
       return next(new ApiError(401, "Invalid credentials: User not found"));
@@ -184,10 +187,9 @@ const googleLogin = asyncHandler(async (req, res, next) => {
     const decoded = jwt.decode(token, { complete: true });
     const { name, email } = decoded.payload;
 
-    const user = await dbQuery(
-      "SELECT * FROM users WHERE email = ? AND role=?",
-      [email, role]
-    );
+    const user = await db
+      .promise()
+      .query("SELECT * FROM users WHERE email = ? AND role=?", [email, role]);
 
     if (user.length > 0) {
       const { phoneno, role } = user[0];
@@ -204,11 +206,13 @@ const googleLogin = asyncHandler(async (req, res, next) => {
           )
         );
     } else {
-      await dbQuery("INSERT INTO users (name, email,role) VALUES (?, ?, ?)", [
-        name,
-        email,
-        role,
-      ]);
+      await db
+        .promise()
+        .query("INSERT INTO users (name, email,role) VALUES (?, ?, ?)", [
+          name,
+          email,
+          role,
+        ]);
       return res
         .status(201)
         .json(
@@ -268,8 +272,12 @@ const addPhoneno = asyncHandler(async (req, res, next) => {
 
         console.log("Data inserted successfully");
       } catch (error) {
-        await dbQuery("DELETE FROM client_dets WHERE phoneno=?", [phoneno]);
-        await dbQuery("DELETE FROM users WHERE phoneno=?", [phoneno]);
+        await db
+          .promise()
+          .query("DELETE FROM client_dets WHERE phoneno=?", [phoneno]);
+        await db
+          .promise()
+          .query("DELETE FROM users WHERE phoneno=?", [phoneno]);
         console.error("Error adding phone number:", error);
         return next(new ApiError(500, "Something went wrong while try again"));
       }
@@ -356,18 +364,23 @@ const update = asyncHandler(async (req, res, next) => {
 
   try {
     console.log("Updating user details in the database...");
-    const result = await dbQuery(
-      "UPDATE users SET name=?, email=? WHERE phoneno=?",
-      [name, email, user.id]
-    );
+    const result = await db
+      .promise()
+      .query("UPDATE users SET name=?, email=? WHERE phoneno=?", [
+        name,
+        email,
+        user.id,
+      ]);
     console.log("User details updated:", result);
 
     if (state) {
       console.log("Updating client state in the database...");
-      await dbQuery("UPDATE client_dets SET state = ? WHERE phoneno=?", [
-        state,
-        user.id,
-      ]);
+      await db
+        .promise()
+        .query("UPDATE client_dets SET state = ? WHERE phoneno=?", [
+          state,
+          user.id,
+        ]);
       console.log("Client state updated");
     }
 
