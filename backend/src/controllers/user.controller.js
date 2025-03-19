@@ -223,6 +223,7 @@ const googleLogin = asyncHandler(async (req, res, next) => {
     if (error.name === "JsonWebTokenError") {
       return next(new ApiError(400, "Invalid token"));
     }
+    console.error("Google login error:", error);
     return next(new ApiError(500, "Google login error"));
   }
 });
