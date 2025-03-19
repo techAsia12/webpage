@@ -316,7 +316,7 @@ const getData = asyncHandler(async (req, res, next) => {
     const [result] = await db
       .promise()
       .query(
-        "SELECT phoneno, MACadd, voltage, current, watt, date_time, state, totalCost, costToday, threshold FROM client_dets WHERE phoneno = ?",
+        "SELECT phoneno, MACadd, voltage, current, units, date_time, state, totalCost, costToday, threshold FROM client_dets WHERE phoneno = ?",
         [user.id]
       );
 
@@ -892,7 +892,7 @@ const sentData = asyncHandler(async (req, res, next) => {
     const [result] = await db
       .promise()
       .query(
-        "SELECT watt, date_time, state, threshold, emailSent FROM client_dets WHERE phoneno = ?",
+        "SELECT units, date_time, state, threshold, emailSent FROM client_dets WHERE phoneno = ?",
         [phoneno]
       );
 
@@ -901,126 +901,150 @@ const sentData = asyncHandler(async (req, res, next) => {
       return next(new ApiError(404, "Client not found"));
     }
 
-    const watt = result[0].watt === null ? 1 : result[0].watt;
+    const watt = result[0].units === null ? 1 : result[0].units;
     const prevtime = result[0].date_time;
     const state = result[0].state;
     let threshold = result[0].threshold;
     let emailSent = result[0].email_sent;
 
     const prevDate = new Date(prevtime);
-    const timeDifferenceInMs = currentDate - prevDate;
-    const timeInHours = timeDifferenceInMs / (1000 * 60 * 60);
 
-    console.log(`Previous time: ${timeInHours} hours ago`);
-    console.log(`Current watt: ${watt}, calculating new watt...`);
+    // Get the current hour and the previous hour
+    const currentHour = currentDate.getHours();
+    const prevHour = prevDate.getHours();
 
-    const kwh = (voltage * current * timeInHours) / 1000;
-    const newWatt = watt + kwh;
-    console.log(`New watt value calculated: ${newWatt}`);
+    console.log(`Current hour: ${currentHour}, Previous hour: ${prevHour}`);
 
-    if (watt !== newWatt || prevtime.getHours() !== currentDate.getHours()) {
-      await insertHourly(phoneno, watt);
-      await insertDaily(phoneno, watt);
-      await insertMonthly(phoneno, watt);
-    }
+    // Check if the hour has changed
+    if (currentHour !== prevHour) {
+      console.log("New hour detected. Calculating new watt...");
 
-    const [billDetailsResult] = await db
-      .promise()
-      .query("SELECT * FROM bill_details WHERE state=?", [state]);
+      // Calculate the time difference in hours
+      const timeDifferenceInMs = currentDate - prevDate;
+      const timeInHours = timeDifferenceInMs / (1000 * 60 * 60);
 
-    if (!billDetailsResult || billDetailsResult.length === 0) {
-      return next(new ApiError(404, "No Bill Details Found"));
-    }
+      console.log(`Time difference: ${timeInHours} hours`);
 
-    const billDetails = billDetailsResult[0];
+      // Calculate newWatt
+      const kwh = (voltage * current * timeInHours) / 1000;
+      const newWatt = watt + kwh;
+      console.log(`New watt value calculated: ${newWatt}`);
 
-    const [costDetailsResult] = await db
-      .promise()
-      .query(
-        "SELECT * FROM cost_per_unit WHERE state=? ORDER BY unitRange ASC",
-        [state]
-      );
+      // Update hourly, daily, and monthly data
+      await insertHourly(phoneno, newWatt);
+      await insertDaily(phoneno, newWatt);
+      await insertMonthly(phoneno, newWatt);
 
-    if (!costDetailsResult || costDetailsResult.length === 0) {
-      return next(new ApiError(404, "No Cost Details Found"));
-    }
-
-    const billDets = {
-      base: billDetails.base,
-      percentPerUnit: billDetails.percentPerUnit,
-      state: billDetails.state,
-      tax: billDetails.tax,
-      totalTaxPercent: billDetails.totalTaxPercent,
-      range: costDetailsResult,
-    };
-
-    const totalCost = costCalc(newWatt, billDets);
-    const [dailyUsageResult] = await db
-      .promise()
-      .query(
-        "SELECT SUM(unit) AS totalDailyUsage FROM daily_usage WHERE phoneno = ? AND DATE(time) = CURDATE()",
-        [phoneno]
-      );
-
-    const totalDailyUsage = dailyUsageResult[0].totalDailyUsage || 0;
-
-    const costToday = costCalc(totalDailyUsage, billDets);
-
-    if (threshold < totalCost && emailSent === 0) {
-      const [userResult] = await db
+      // Fetch bill details
+      const [billDetailsResult] = await db
         .promise()
-        .query("SELECT email FROM users WHERE phoneno = ?", [phoneno]);
+        .query("SELECT * FROM bill_details WHERE state=?", [state]);
 
-      if (userResult.length > 0) {
-        const userEmail = userResult[0].email;
-        console.log("Sending email to:", userEmail);
-        await sendMessage(userEmail, totalCost, threshold);
-
-        emailSent = 0;
-        threshold *= 10;
+      if (!billDetailsResult || billDetailsResult.length === 0) {
+        return next(new ApiError(404, "No Bill Details Found"));
       }
+
+      const billDetails = billDetailsResult[0];
+
+      const [costDetailsResult] = await db
+        .promise()
+        .query(
+          "SELECT * FROM cost_per_unit WHERE state=? ORDER BY unitRange ASC",
+          [state]
+        );
+
+      if (!costDetailsResult || costDetailsResult.length === 0) {
+        return next(new ApiError(404, "No Cost Details Found"));
+      }
+
+      const billDets = {
+        base: billDetails.base,
+        percentPerUnit: billDetails.percentPerUnit,
+        state: billDetails.state,
+        tax: billDetails.tax,
+        totalTaxPercent: billDetails.totalTaxPercent,
+        range: costDetailsResult,
+      };
+
+      const totalCost = costCalc(newWatt, billDets);
+
+      // Fetch daily usage
+      const [dailyUsageResult] = await db
+        .promise()
+        .query(
+          "SELECT SUM(unit) AS totalDailyUsage FROM daily_usage WHERE phoneno = ? AND DATE(time) = CURDATE()",
+          [phoneno]
+        );
+
+      const totalDailyUsage = dailyUsageResult[0].totalDailyUsage || 0;
+
+      // Calculate cost for today
+      const costToday = costCalc(totalDailyUsage, billDets);
+
+      // Check if threshold is exceeded and send email
+      if (threshold < totalCost && emailSent === 0) {
+        const [userResult] = await db
+          .promise()
+          .query("SELECT email FROM users WHERE phoneno = ?", [phoneno]);
+
+        if (userResult.length > 0) {
+          const userEmail = userResult[0].email;
+          console.log("Sending email to:", userEmail);
+          await sendMessage(userEmail, totalCost, threshold);
+
+          emailSent = 0;
+          threshold *= 10;
+        }
+      }
+
+      // Update client_dets table
+      const updateQuery = `
+        UPDATE client_dets SET
+          voltage = ?,
+          current = ?,
+          MACadd = ?,
+          units = ?, 
+          date_time = ?,
+          totalCost = ?,
+          costToday = ?,
+          threshold = ?,
+          emailSent = ?
+        WHERE phoneno = ?
+      `;
+      const updateParams = [
+        voltage,
+        current,
+        MACadd,
+        newWatt,
+        mysqlTimestamp,
+        totalCost,
+        costToday,
+        threshold,
+        emailSent,
+        phoneno,
+      ];
+
+      console.log("Executing update query...");
+      const [updateResult] = await db.promise().query(updateQuery, updateParams);
+
+      if (updateResult.affectedRows === 0) {
+        console.log("No rows affected, client data update failed.");
+        return next(new ApiError(404, "No matching client found"));
+      }
+
+      console.log("Client data updated successfully.");
+      return res.status(200).json({
+        status: 200,
+        message: "Client data updated successfully",
+        data: updateResult,
+      });
+    } else {
+      console.log("No new hour has passed. Skipping watt calculation.");
+      return res.status(200).json({
+        status: 200,
+        message: "No new hour has passed. Watt calculation skipped.",
+      });
     }
-
-    const updateQuery = `
-      UPDATE client_dets SET
-        voltage = ?,
-        current = ?,
-        MACadd = ?,
-        watt = ?, 
-        date_time = ?,
-        totalCost = ?,
-        costToday = ?,
-        threshold = ?,
-        emailSent = ?
-      WHERE phoneno = ?
-    `;
-    const updateParams = [
-      voltage,
-      current,
-      MACadd,
-      newWatt,
-      mysqlTimestamp,
-      totalCost,
-      costToday,
-      threshold,
-      emailSent,
-      phoneno,
-    ];
-
-    console.log("Executing update query...");
-    const [updateResult] = await db.promise().query(updateQuery, updateParams);
-
-    if (updateResult.affectedRows === 0) {
-      console.log("No rows affected, client data update failed.");
-      return next(new ApiError(404, "No matching client found"));
-    }
-
-    console.log("Client data updated successfully.");
-    return res.status(200).json({
-      status: 200,
-      message: "Client data updated successfully",
-      data: updateResult,
-    });
   } catch (err) {
     console.error("Database error:", err);
     return next(new ApiError(500, "Database error"));

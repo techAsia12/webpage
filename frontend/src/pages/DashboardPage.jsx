@@ -49,7 +49,7 @@ const Dashboard = () => {
       );
       const userData = response.data.data;
       setUser(userData);
-      setKwh(parseFloat(userData.watt.toFixed(3)));
+      setKwh(parseFloat(userData.units.toFixed(3)));
       setTotalCost(userData.totalCost);
       setCost(userData.costToday);
       setCostPerMonth((userData.totalCost / 12).toFixed(2));
