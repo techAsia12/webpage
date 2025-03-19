@@ -912,7 +912,8 @@ const sentData = asyncHandler(async (req, res, next) => {
     const prevHour = prevDate.getHours();
 
     console.log(`Current hour: ${currentHour}, Previous hour: ${prevHour}`);
-    let newWatt=watt;
+    let newWatt = watt;
+
     // Check if the hour has changed
     if (currentHour !== prevHour) {
       console.log("New hour detected. Calculating new watt...");
@@ -932,54 +933,55 @@ const sentData = asyncHandler(async (req, res, next) => {
       await insertHourly(phoneno, newWatt);
       await insertDaily(phoneno, newWatt);
       await insertMonthly(phoneno, newWatt);
-
-      // Fetch bill details
-      const [billDetailsResult] = await db
-        .promise()
-        .query("SELECT * FROM bill_details WHERE state=?", [state]);
-
-      if (!billDetailsResult || billDetailsResult.length === 0) {
-        return next(new ApiError(404, "No Bill Details Found"));
-      }
-
-      const billDetails = billDetailsResult[0];
-
-      const [costDetailsResult] = await db
-        .promise()
-        .query(
-          "SELECT * FROM cost_per_unit WHERE state=? ORDER BY unitRange ASC",
-          [state]
-        );
-
-      if (!costDetailsResult || costDetailsResult.length === 0) {
-        return next(new ApiError(404, "No Cost Details Found"));
-      }
-
-      const billDets = {
-        base: billDetails.base,
-        percentPerUnit: billDetails.percentPerUnit,
-        state: billDetails.state,
-        tax: billDetails.tax,
-        totalTaxPercent: billDetails.totalTaxPercent,
-        range: costDetailsResult,
-      };
-
-      const totalCost = costCalc(newWatt, billDets);
-
-      // Fetch daily usage
-      const [dailyUsageResult] = await db
-        .promise()
-        .query(
-          "SELECT SUM(unit) AS totalDailyUsage FROM daily_usage WHERE phoneno = ? AND DATE(time) = CURDATE()",
-          [phoneno]
-        );
-
-      const totalDailyUsage = dailyUsageResult[0].totalDailyUsage || 0;
-
-      // Calculate cost for today
-      const costToday = costCalc(totalDailyUsage, billDets);
     }
-    // Check if threshold is exceeded and send email
+
+    // Fetch bill details (always fetch, regardless of hour change)
+    const [billDetailsResult] = await db
+      .promise()
+      .query("SELECT * FROM bill_details WHERE state=?", [state]);
+
+    if (!billDetailsResult || billDetailsResult.length === 0) {
+      return next(new ApiError(404, "No Bill Details Found"));
+    }
+
+    const billDetails = billDetailsResult[0];
+
+    const [costDetailsResult] = await db
+      .promise()
+      .query(
+        "SELECT * FROM cost_per_unit WHERE state=? ORDER BY unitRange ASC",
+        [state]
+      );
+
+    if (!costDetailsResult || costDetailsResult.length === 0) {
+      return next(new ApiError(404, "No Cost Details Found"));
+    }
+
+    const billDets = {
+      base: billDetails.base,
+      percentPerUnit: billDetails.percentPerUnit,
+      state: billDetails.state,
+      tax: billDetails.tax,
+      totalTaxPercent: billDetails.totalTaxPercent,
+      range: costDetailsResult,
+    };
+
+    const totalCost = costCalc(newWatt, billDets);
+
+    // Fetch daily usage (always fetch, regardless of hour change)
+    const [dailyUsageResult] = await db
+      .promise()
+      .query(
+        "SELECT SUM(unit) AS totalDailyUsage FROM daily_usage WHERE phoneno = ? AND DATE(time) = CURDATE()",
+        [phoneno]
+      );
+
+    const totalDailyUsage = dailyUsageResult[0].totalDailyUsage || 0;
+
+    // Calculate cost for today (always calculate, regardless of hour change)
+    const costToday = costCalc(totalDailyUsage, billDets);
+
+    // Check if threshold is exceeded and send email (always check, regardless of hour change)
     if (threshold < totalCost && emailSent === 0) {
       const [userResult] = await db
         .promise()
@@ -995,27 +997,27 @@ const sentData = asyncHandler(async (req, res, next) => {
       }
     }
 
-    // Update client_dets table
+    // Update client_dets table (always update, regardless of hour change)
     const updateQuery = `
-        UPDATE client_dets SET
-          voltage = ?,
-          current = ?,
-          MACadd = ?,
-          units = ?, 
-          watt=?,
-          date_time = ?,
-          totalCost = ?,
-          costToday = ?,
-          threshold = ?,
-          emailSent = ?
-        WHERE phoneno = ?
-      `;
+      UPDATE client_dets SET
+        voltage = ?,
+        current = ?,
+        MACadd = ?,
+        units = ?, 
+        watt = ?,
+        date_time = ?,
+        totalCost = ?,
+        costToday = ?,
+        threshold = ?,
+        emailSent = ?
+      WHERE phoneno = ?
+    `;
     const updateParams = [
       voltage,
       current,
       MACadd,
       newWatt,
-      voltage * current,
+      voltage * current, // watt = voltage * current
       mysqlTimestamp,
       totalCost,
       costToday,
