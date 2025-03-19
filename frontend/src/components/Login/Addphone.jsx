@@ -70,7 +70,7 @@ const Addphone = () => {
         });
 
         setTimeout(() => {
-          navigate("/dashoboard");
+          navigate("/login");
         }, 2000);
       })
       .catch((error) => {

@@ -186,8 +186,8 @@ const googleLogin = asyncHandler(async (req, res, next) => {
   try {
     const decoded = jwt.decode(token, { complete: true });
     const { name, email } = decoded.payload;
-
-    const user = await db
+  
+    const [user] = await db
       .promise()
       .query("SELECT * FROM users WHERE email = ? AND role=?", [email, role]);
 
