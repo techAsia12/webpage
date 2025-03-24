@@ -578,44 +578,49 @@ const insertDaily = asyncHandler(async (phoneno, unit) => {
   ];
   const day = days[currentDate.getDay()];
 
-  // Handle Sunday
-  if (day === "Sunday") {
-    await db
-      .promise()
-      .query(
-        "INSERT INTO weekly_usage (phoneno, unit, time) VALUES (?, ?, ?)",
-        [phoneno, 0, currentDay]
-      );
-    return;
-  }
-
   try {
+    // Check if an entry already exists for the current day
     const [existingData] = await db
       .promise()
       .query(
-        `SELECT * FROM weekly_usage WHERE phoneno = ? AND DATE(time) = ?`,
+        "SELECT * FROM weekly_usage WHERE phoneno = ? AND DATE(time) = ?",
         [phoneno, currentDay]
       );
 
     if (existingData.length > 0) {
+      // Update the existing entry by adding the new unit value
+      const newUnit = unit + existingData[0].unit;
       await db
         .promise()
         .query(
-          `UPDATE weekly_usage SET unit = ? WHERE phoneno = ? AND DATE(time) = ?`,
-          [unit, phoneno, currentDay]
+          "UPDATE weekly_usage SET unit = ? WHERE phoneno = ? AND DATE(time) = ?",
+          [newUnit, phoneno, currentDay]
         );
-      console.log("Daily data updated for weekly tracking");
+      console.log("Weekly data updated successfully");
     } else {
+      // Insert a new entry
       await db
         .promise()
         .query(
-          `INSERT INTO weekly_usage (phoneno, unit, time) VALUES (?, ?, ?)`,
+          "INSERT INTO weekly_usage (phoneno, unit, time) VALUES (?, ?, ?)",
           [phoneno, unit, currentDay]
         );
-      console.log("Daily data inserted for weekly tracking");
+      console.log("Weekly data inserted successfully");
+    }
+
+    // Handle Sunday (reset weekly data)
+    if (day === "Sunday") {
+      await db
+        .promise()
+        .query(
+          "UPDATE weekly_usage SET unit = ? WHERE phoneno = ? AND DATE(time) = ?",
+          [0, phoneno, currentDay]
+        );
+      console.log("Weekly data reset for Sunday");
     }
   } catch (err) {
-    console.error("Error inserting/updating daily data:", err);
+    console.error("Error inserting/updating weekly data:", err);
+    throw err; // Propagate the error for handling in the calling function
   }
 });
 
