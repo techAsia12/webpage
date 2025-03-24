@@ -867,8 +867,8 @@ const sentData = asyncHandler(async (req, res, next) => {
   const { phoneno, voltage, current, MACadd } = req.query;
 
   // Get current date and time in Asia/Kolkata timezone
-  const currentDate = moment().tz('Asia/Kolkata');
-  const mysqlTimestamp = currentDate.format('YYYY-MM-DD HH:mm:ss');
+  const currentDate = moment().tz("Asia/Kolkata");
+  const mysqlTimestamp = currentDate.format("YYYY-MM-DD HH:mm:ss");
 
   console.log(
     `Received data: phoneno=${phoneno}, voltage=${voltage}, current=${current}, MACadd=${MACadd}`
@@ -894,7 +894,7 @@ const sentData = asyncHandler(async (req, res, next) => {
     let threshold = result[0].threshold;
     let emailSent = result[0].email_sent;
 
-    const prevDate = moment(prevtime).tz('Asia/Kolkata');
+    const prevDate = moment(prevtime).tz("Asia/Kolkata");
 
     // Get the current hour and the previous hour
     const currentHour = currentDate.hour();
@@ -903,25 +903,20 @@ const sentData = asyncHandler(async (req, res, next) => {
     console.log(`Current hour: ${currentHour}, Previous hour: ${prevHour}`);
     let newWatt = watt;
 
-    // Always calculate newWatt based on the latest voltage and current values
-    const timeDifferenceInMs = currentDate - prevDate;
-    const timeInHours = timeDifferenceInMs / (1000 * 60 * 60);
-
-    console.log(`Time difference: ${timeInHours} hours`);
-
-    // Calculate newWatt
-    const kwh = (voltage * current * timeInHours) / 1000;
-    newWatt = watt + kwh;
-    console.log(`New watt value calculated: ${newWatt}`);
-
     // Update hourly, daily, and monthly data if the hour has changed
     if (currentHour !== prevHour) {
-      console.log("New hour detected. Updating hourly, daily, and monthly data...");
-      await insertHourly(phoneno, newWatt);
-      await insertDaily(phoneno, newWatt);
-      await insertMonthly(phoneno, newWatt);
+      console.log(
+        "New hour detected. Updating hourly, daily, and monthly data..."
+      );
+      // Calculate newWatt
+      const kwh = (voltage * current) / 1000;
+      newWatt = watt + kwh;
+      console.log(`New watt value calculated: ${newWatt}`);
     }
 
+    await insertHourly(phoneno, newWatt);
+    await insertDaily(phoneno, newWatt);
+    await insertMonthly(phoneno, newWatt);
     // Fetch bill details (always fetch, regardless of hour change)
     const [billDetailsResult] = await db
       .promise()
@@ -985,7 +980,8 @@ const sentData = asyncHandler(async (req, res, next) => {
     }
 
     // Check if it's the last day of the month
-    const isLastDayOfMonth = currentDate.date() === currentDate.endOf('month').date();
+    const isLastDayOfMonth =
+      currentDate.date() === currentDate.endOf("month").date();
 
     // Reset totalCost, units, and watt if it's the last day of the month
     if (isLastDayOfMonth) {
