@@ -861,24 +861,43 @@ const sentData = asyncHandler(async (req, res, next) => {
     let newWatt = watt;
 
     // Only calculate and update if hour has changed
+
     if (currentHour !== prevHour) {
       console.log("New hour detected. Calculating new watt...");
 
-      // Calculate time difference in hours
-      const timeDifferenceInMs = currentDate - prevDate;
+      // Calculate time difference in hours with safeguards
+      const timeDifferenceInMs = Math.max(0, currentDate - prevDate); // Prevent negative time
       const timeInHours = timeDifferenceInMs / (1000 * 60 * 60);
 
-      console.log(`Time difference: ${timeInHours} hours`);
+      // Validate voltage and current
+      const validVoltage = Math.max(0, parseFloat(voltage));
+      const validCurrent = Math.max(0, parseFloat(current));
 
-      // Calculate newWatt (energy in kWh)
-      const kwh = (voltage * current * timeInHours) / 1000;
+      console.log(`Time difference: ${timeInHours} hours`);
+      console.log(`Voltage: ${validVoltage}V, Current: ${validCurrent}A`);
+
+      // Calculate newWatt (energy in kWh) with validation
+      const kwh = Math.max(
+        0,
+        (validVoltage * validCurrent * timeInHours) / 1000
+      ); // Ensure non-negative
       newWatt = watt + kwh;
+
+      if (kwh <= 0) {
+        console.warn(
+          `Low/negative kWh calculation: ${kwh}. Check sensor values.`
+        );
+        // You might want to implement additional handling here
+      }
+
       console.log(`New watt value calculated: ${newWatt}`);
 
-      // Update usage records
-      await insertHourly(phoneno, kwh);
-      await insertDaily(phoneno, kwh);
-      await insertMonthly(phoneno, kwh);
+      // Update usage records only if kWh is positive
+      if (kwh > 0) {
+        await insertHourly(phoneno, kwh);
+        await insertDaily(phoneno, kwh);
+        await insertMonthly(phoneno, kwh);
+      }
     }
 
     // Fetch bill details
