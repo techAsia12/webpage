@@ -931,7 +931,7 @@ const sentData = asyncHandler(async (req, res, next) => {
       range: costDetailsResult,
     };
 
-    const totalCost = costCalc(newWatt, billDets);
+    let totalCost = costCalc(newWatt, billDets);
 
     // Fetch daily usage
     const [dailyUsageResult] = await db
@@ -941,8 +941,8 @@ const sentData = asyncHandler(async (req, res, next) => {
         [phoneno]
       );
 
-    const totalDailyUsage = dailyUsageResult[0].totalDailyUsage || 0;
-    const costToday = costCalc(totalDailyUsage, billDets);
+    const totalDailyUsage = dailyUsageResult[0].totalDailyUsage || 1;
+    let costToday = costCalc(totalDailyUsage, billDets);
 
     // Check threshold and send email if needed
     if (threshold < totalCost && emailSent === 0) {
@@ -961,12 +961,16 @@ const sentData = asyncHandler(async (req, res, next) => {
     }
 
     // Check if it's the last day of the month
-    const isLastDayOfMonth =
-      currentDate.date() === currentDate.endOf("month").date();
+    const isLastDayOfMonth = 
+    currentDate.date() === currentDate.endOf("month").date() && 
+    currentDate.hour() === 0 && 
+    currentDate.minute() === 0;
 
     // Reset values if it's the last day of the month
     if (isLastDayOfMonth) {
       newWatt = 0;
+      totalCost = 0;
+      costToday = 0;
       console.log("Resetting units for new month");
     }
 

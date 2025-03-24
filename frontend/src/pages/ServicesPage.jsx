@@ -1,5 +1,14 @@
 import React, { useEffect, useState } from "react";
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from "recharts";
+import {
+  LineChart,
+  Line,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  Legend,
+  ResponsiveContainer,
+} from "recharts";
 import { Button } from "@mui/material";
 import axios from "axios";
 import { toast, ToastContainer } from "react-toastify";
@@ -40,11 +49,24 @@ const Services = () => {
             name = `${hour} ${ampm}`;
             break;
           case "w":
-            const days = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
+            const days = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
             name = days[index] || index;
             break;
           case "y":
-            const months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+            const months = [
+              "Jan",
+              "Feb",
+              "Mar",
+              "Apr",
+              "May",
+              "Jun",
+              "Jul",
+              "Aug",
+              "Sep",
+              "Oct",
+              "Nov",
+              "Dec",
+            ];
             name = months[index] || index;
             break;
           default:
@@ -76,14 +98,21 @@ const Services = () => {
           name="description"
           content="View your usage statistics on Your App Name. Track daily, weekly, and yearly usage with interactive charts."
         />
-        <meta name="keywords" content="usage statistics, charts, daily usage, weekly usage, yearly usage, your app name" />
+        <meta
+          name="keywords"
+          content="usage statistics, charts, daily usage, weekly usage, yearly usage, your app name"
+        />
       </Helmet>
 
-      <h2 className={mode === "dark" ? "text-white" : "text-black"}>Usage Statistics</h2>
+      <h2 className={mode === "dark" ? "text-white" : "text-black"}>
+        Usage Statistics
+      </h2>
       <div className="h-96 lg:h-[500px]">
         {data.length === 0 ? (
           <div className="flex items-center justify-center h-full">
-            <p className={mode === "dark" ? "text-white" : "text-black"}>No data available</p>
+            <p className={mode === "dark" ? "text-white" : "text-black"}>
+              No data available
+            </p>
           </div>
         ) : (
           <ResponsiveContainer width="100%" height="100%">
@@ -92,16 +121,16 @@ const Services = () => {
               margin={{ top: 20, right: 30, left: 20, bottom: 5 }}
             >
               <CartesianGrid strokeDasharray="3 3" />
-              <XAxis 
-                dataKey="name" 
-                tick={{ fill: mode === "dark" ? "white" : "black" }} 
+              <XAxis
+                dataKey="name"
+                tick={{ fill: mode === "dark" ? "white" : "black" }}
               />
               <YAxis tick={{ fill: mode === "dark" ? "white" : "black" }} />
-              <Tooltip 
-                contentStyle={{ 
-                  backgroundColor: mode === "dark" ? "#333" : "#fff", 
-                  color: mode === "dark" ? "#fff" : "#333" 
-                }} 
+              <Tooltip
+                contentStyle={{
+                  backgroundColor: mode === "dark" ? "#333" : "#fff",
+                  color: mode === "dark" ? "#fff" : "#333",
+                }}
               />
               <Legend />
               <Line
