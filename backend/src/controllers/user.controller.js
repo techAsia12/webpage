@@ -946,9 +946,9 @@ const sentData = asyncHandler(async (req, res, next) => {
         "SELECT unit FROM daily_usage WHERE phoneno = ? AND DATE(time) = CURDATE()",
         [phoneno]
       );
-
+    
     const totalDailyUsage = dailyUsageResult[0].totalDailyUsage || 0;
-
+    console.log("Total Daily Usage:", totalDailyUsage);
     // Calculate cost for today (always calculate, regardless of hour change)
     const costToday = costCalc(totalDailyUsage, billDets);
 
