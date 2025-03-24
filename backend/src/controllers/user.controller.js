@@ -511,7 +511,7 @@ const insertHourly = asyncHandler(async (phoneno, unit) => {
       const newUnit = unit + existingEntry[0].unit;
       await db
         .promise()
-        .query("UPDATE daily_usage SET unit = ?, time = ? WHERE id = ?", [
+        .query("UPDATE daily_usage SET unit = ?, time = ? WHERE phoneno = ?", [
           newUnit,
           formattedTimestamp,
           existingEntry[0].id,
