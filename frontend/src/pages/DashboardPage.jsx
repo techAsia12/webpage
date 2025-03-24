@@ -148,7 +148,7 @@ const Dashboard = () => {
             <Meter
               color={"#ed9d00"}
               value={user?.watt || 0}
-              maxValue={350}
+              maxValue={10000}
               unit={"w"}
               initial={{ x: 100, opacity: 0 }}
               animate={{ x: 0, opacity: 1 }}

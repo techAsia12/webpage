@@ -903,22 +903,20 @@ const sentData = asyncHandler(async (req, res, next) => {
     console.log(`Current hour: ${currentHour}, Previous hour: ${prevHour}`);
     let newWatt = watt;
 
-    // Check if the hour has changed
+    // Always calculate newWatt based on the latest voltage and current values
+    const timeDifferenceInMs = currentDate - prevDate;
+    const timeInHours = timeDifferenceInMs / (1000 * 60 * 60);
+
+    console.log(`Time difference: ${timeInHours} hours`);
+
+    // Calculate newWatt
+    const kwh = (voltage * current * timeInHours) / 1000;
+    newWatt = watt + kwh;
+    console.log(`New watt value calculated: ${newWatt}`);
+
+    // Update hourly, daily, and monthly data if the hour has changed
     if (currentHour !== prevHour) {
-      console.log("New hour detected. Calculating new watt...");
-
-      // Calculate the time difference in hours
-      const timeDifferenceInMs = currentDate - prevDate;
-      const timeInHours = timeDifferenceInMs / (1000 * 60 * 60);
-
-      console.log(`Time difference: ${timeInHours} hours`);
-
-      // Calculate newWatt
-      const kwh = (voltage * current * timeInHours) / 1000;
-      newWatt = watt + kwh;
-      console.log(`New watt value calculated: ${newWatt}`);
-
-      // Update hourly, daily, and monthly data
+      console.log("New hour detected. Updating hourly, daily, and monthly data...");
       await insertHourly(phoneno, newWatt);
       await insertDaily(phoneno, newWatt);
       await insertMonthly(phoneno, newWatt);
@@ -961,7 +959,7 @@ const sentData = asyncHandler(async (req, res, next) => {
     const [dailyUsageResult] = await db
       .promise()
       .query(
-        "SELECT SUM(unit) AS totalDailyUsage FROM daily_usage WHERE phoneno = ? AND DATE(time) = CURDATE()",
+        "SELECT unit FROM daily_usage WHERE phoneno = ? AND DATE(time) = CURDATE()",
         [phoneno]
       );
 
