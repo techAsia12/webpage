@@ -37,4 +37,5 @@ const billDets = {
     return parseFloat(total.toFixed());
   };
 
-  console.log(costCalc(458, billDets)); // 143
+  console.log(costCalc(244
+    , billDets)); // 143

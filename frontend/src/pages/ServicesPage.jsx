@@ -53,6 +53,7 @@ const Services = () => {
         return { name, [label]: value };
       });
       setData(formattedData);
+      console.log("Data fetched successfully:", formattedData);
       toast.success("Data fetched successfully!");
     } catch (error) {
       console.error("Error fetching data:", error);
