@@ -941,7 +941,7 @@ const sentData = asyncHandler(async (req, res, next) => {
         [phoneno,currentHour]
       );
 
-    const totalDailyUsage = dailyUsageResult[0].totalDailyUsage || 1;
+    const totalDailyUsage = dailyUsageResult[0]?.unit || 1;
     let costToday = costCalc(totalDailyUsage, billDets);
 
     // Check threshold and send email if needed
