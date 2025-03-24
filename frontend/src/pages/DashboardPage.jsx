@@ -138,7 +138,7 @@ const Dashboard = () => {
             <Meter
               color={"#d3435c"}
               value={parseFloat(kwh)}
-              maxValue={1000}
+              maxValue={10000}
               unit={"kwh/units"}
               initial={{ y: 100, opacity: 0 }}
               animate={{ y: 0, opacity: 1 }}
@@ -146,10 +146,10 @@ const Dashboard = () => {
             />
 
             <Meter
-              color={"#ed9d00"}
+              color={"#f97316"}
               value={user?.watt || 0}
               maxValue={10000}
-              unit={"w"}
+              unit={"W"}
               initial={{ x: 100, opacity: 0 }}
               animate={{ x: 0, opacity: 1 }}
               transition={{ duration: 1, delay: 1.2 }}

@@ -937,8 +937,8 @@ const sentData = asyncHandler(async (req, res, next) => {
     const [dailyUsageResult] = await db
       .promise()
       .query(
-        "SELECT SUM(unit) AS totalDailyUsage FROM daily_usage WHERE phoneno = ? AND DATE(time) = CURDATE()",
-        [phoneno]
+        "SELECT unit FROM daily_usage WHERE phoneno = ? AND HOUR(time) = ?",  
+        [phoneno,currentHour]
       );
 
     const totalDailyUsage = dailyUsageResult[0].totalDailyUsage || 1;
