@@ -532,6 +532,8 @@ const insertHourly = asyncHandler(async (phoneno, unit) => {
         [phoneno, currentDay, currentHour]
       );
 
+    console.log("Existing Entry:", existingEntry);
+
     if (existingEntry.length > 0) {
       // Update the existing entry
       const newUnit = unit + existingEntry[0].unit;
@@ -586,6 +588,8 @@ const insertDaily = asyncHandler(async (phoneno, unit) => {
         "SELECT * FROM weekly_usage WHERE phoneno = ? AND DATE(time) = ?",
         [phoneno, currentDay]
       );
+
+    console.log("Existing Data:", existingData);
 
     if (existingData.length > 0) {
       // Update the existing entry by adding the new unit value
