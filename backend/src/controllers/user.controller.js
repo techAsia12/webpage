@@ -531,7 +531,7 @@ const insertHourly = asyncHandler(async (phoneno, unit) => {
         "SELECT * FROM daily_usage WHERE phoneno = ? AND DATE(time) = ? AND HOUR(time) = ?",
         [phoneno, currentDay, currentHour]
       );
-
+    console.log("Existing Entry:", existingEntry);
     if (existingEntry.length > 0) {
       // Update the existing entry
       const newUnit = unit + existingEntry[0].unit;
