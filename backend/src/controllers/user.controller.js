@@ -539,6 +539,7 @@ const insertHourly = asyncHandler(async (phoneno, unit) => {
       );
 
     const newUnit = unit + (existingEntry[0]?.unit || 0);
+    console.log(newUnit);
 
     const [hourlyEntry] = await db
       .promise()
