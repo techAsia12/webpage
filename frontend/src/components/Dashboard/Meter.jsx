@@ -4,10 +4,10 @@ import { motion } from "framer-motion";
 
 /**
  * Meter Component
- * 
+ *
  * A circular progress meter that visually represents a value relative to a maximum value.
  * It uses segments to indicate progress and supports responsive design for small screens.
- * 
+ *
  * @param {Object} props - Component props
  * @param {string} props.color - Color of the filled segments
  * @param {number} props.value - Current value to display
@@ -123,10 +123,16 @@ const Meter = ({ color, value, maxValue, unit, initial, animate }) => {
                 color: color,
                 position: "relative",
                 zIndex: 3,
+                wordWrap: "break-word",
+                overflow:"visible",
+                whiteSpace:"normal",
               }}
               aria-label={`Current value: ${Math.round(value)}${unit}`}
             >
-              {`${Math.round(value)}${unit}`}
+              <div>{Math.round(value)}</div> {/* Displaying the number */}
+              <div>
+                {unit}
+              </div> {/* Displaying the unit below the number */}{" "}
             </Typography>
           </Box>
         </Box>

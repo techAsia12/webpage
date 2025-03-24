@@ -42,7 +42,7 @@ const BarChart = ({ data }) => {
       role="figure"
       aria-label="Bar chart displaying data"
     >
-      <ResponsiveContainer width="100%" height={505}>
+      <ResponsiveContainer width="100%" height={700}>
         <RechartsBarChart
           data={rechartsData}
           margin={{

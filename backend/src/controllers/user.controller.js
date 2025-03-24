@@ -7,6 +7,7 @@ import jwt from "jsonwebtoken";
 import { uploadOnCloudinary } from "../utils/cloudinary.js";
 import nodemailer from "nodemailer";
 import axios from "axios";
+import moment from "moment-timezone";
 
 const options = {
   httpOnly: true,
@@ -146,7 +147,7 @@ const login = asyncHandler(async (req, res, next) => {
       return next(new ApiError(400, "reCAPTCHA verification failed"));
     }
 
-    const user = await db
+    const [user] = await db
       .promise()
       .query("SELECT * FROM users WHERE email = ? AND role = ?", [email, role]);
 
@@ -864,22 +865,10 @@ const costCalc = (unit, billDets) => {
 
 const sentData = asyncHandler(async (req, res, next) => {
   const { phoneno, voltage, current, MACadd } = req.query;
-  const currentDate = new Date();
 
-  const mysqlTimestamp = `${currentDate.getFullYear()}-${(
-    currentDate.getMonth() + 1
-  )
-    .toString()
-    .padStart(2, "0")}-${currentDate
-    .getDate()
-    .toString()
-    .padStart(2, "0")} ${currentDate
-    .getHours()
-    .toString()
-    .padStart(2, "0")}:${currentDate
-    .getMinutes()
-    .toString()
-    .padStart(2, "0")}:${currentDate.getSeconds().toString().padStart(2, "0")}`;
+  // Get current date and time in Asia/Kolkata timezone
+  const currentDate = moment().tz('Asia/Kolkata');
+  const mysqlTimestamp = currentDate.format('YYYY-MM-DD HH:mm:ss');
 
   console.log(
     `Received data: phoneno=${phoneno}, voltage=${voltage}, current=${current}, MACadd=${MACadd}`
@@ -905,11 +894,11 @@ const sentData = asyncHandler(async (req, res, next) => {
     let threshold = result[0].threshold;
     let emailSent = result[0].email_sent;
 
-    const prevDate = new Date(prevtime);
+    const prevDate = moment(prevtime).tz('Asia/Kolkata');
 
     // Get the current hour and the previous hour
-    const currentHour = currentDate.getHours();
-    const prevHour = prevDate.getHours();
+    const currentHour = currentDate.hour();
+    const prevHour = prevDate.hour();
 
     console.log(`Current hour: ${currentHour}, Previous hour: ${prevHour}`);
     let newWatt = watt;
@@ -995,6 +984,16 @@ const sentData = asyncHandler(async (req, res, next) => {
         emailSent = 0;
         threshold *= 10;
       }
+    }
+
+    // Check if it's the last day of the month
+    const isLastDayOfMonth = currentDate.date() === currentDate.endOf('month').date();
+
+    // Reset totalCost, units, and watt if it's the last day of the month
+    if (isLastDayOfMonth) {
+      newWatt = 0;
+      totalCost = 0;
+      console.log("Resetting totalCost, units, and watt for the new month.");
     }
 
     // Update client_dets table (always update, regardless of hour change)

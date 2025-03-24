@@ -9,10 +9,10 @@ import { useDispatch } from "react-redux";
 
 /**
  * Dashboard Component
- * 
+ *
  * A dashboard component that displays real-time energy usage data, including meters,
  * cost information, and a bar chart for hourly usage.
- * 
+ *
  * @returns {JSX.Element} - Rendered Dashboard component
  */
 const Dashboard = () => {
@@ -20,7 +20,6 @@ const Dashboard = () => {
   const [kwh, setKwh] = useState(0);
   const [totalCost, setTotalCost] = useState(0);
   const [cost, setCost] = useState(0);
-  const [costPerMonth, setCostPerMonth] = useState(0);
   const [maxKwh, setMaxKwh] = useState(0);
   const [data, setData] = useState({
     labels: Array.from({ length: 24 }, (_, i) => `${i}:00`), // 24-hour labels
@@ -52,7 +51,6 @@ const Dashboard = () => {
       setKwh(parseFloat(userData.units.toFixed(3)));
       setTotalCost(userData.totalCost);
       setCost(userData.costToday);
-      setCostPerMonth((userData.totalCost / 12).toFixed(2));
       dispatch(login(userData)); // Update Redux store
     } catch (err) {
       console.error("User data error:", err.response?.data?.message || err);
@@ -108,7 +106,7 @@ const Dashboard = () => {
     <div className="w-full min-h-screen bg-transparent p-4 lg:p-10">
       {/* Top Section: Cost Cards */}
       <div className="flex flex-col lg:flex-row lg:space-x-10 space-y-6 lg:space-y-0">
-        <div className="w-full lg:w-[20%] flex flex-col space-y-4">
+        <div className="w-full lg:w-[45%] flex flex-col space-y-4">
           <motion.div
             initial={{ y: -100, opacity: 0 }}
             animate={{ y: 0, opacity: 1 }}
@@ -141,25 +139,17 @@ const Dashboard = () => {
               color={"#d3435c"}
               value={parseFloat(kwh)}
               maxValue={1000}
-              unit={"kwh"}
+              unit={"kwh/units"}
               initial={{ y: 100, opacity: 0 }}
               animate={{ y: 0, opacity: 1 }}
               transition={{ duration: 1, delay: 1.2 }}
             />
-            <Meter
-              color={"#ed9d00"}
-              value={user?.voltage || 0}
-              maxValue={350}
-              unit={"v"}
-              initial={{ x: 100, opacity: 0 }}
-              animate={{ x: 0, opacity: 1 }}
-              transition={{ duration: 1, delay: 1.2 }}
-            />
+
             <Meter
               color={"#ed9d00"}
               value={user?.watt || 0}
               maxValue={350}
-              unit={"v"}
+              unit={"w"}
               initial={{ x: 100, opacity: 0 }}
               animate={{ x: 0, opacity: 1 }}
               transition={{ duration: 1, delay: 1.2 }}
@@ -179,6 +169,16 @@ const Dashboard = () => {
           {/* Additional Meters and Cost Card */}
           <div className="w-full lg:w-1/3 flex flex-col space-y-6 py-2">
             <Meter
+              color={"#ed9d00"}
+              value={user?.voltage || 0}
+              maxValue={350}
+              unit={"v"}
+              initial={{ x: 100, opacity: 0 }}
+              animate={{ x: 0, opacity: 1 }}
+              transition={{ duration: 1, delay: 1.2 }}
+            />
+
+            <Meter
               color={"#34d399"}
               value={user?.current || 0}
               maxValue={30}
@@ -187,18 +187,6 @@ const Dashboard = () => {
               animate={{ x: 0, opacity: 1 }}
               transition={{ duration: 1, delay: 1.2 }}
             />
-            <motion.div
-              initial={{ x: 100, opacity: 0 }}
-              animate={{ x: 0, opacity: 1 }}
-              transition={{ duration: 1, delay: 1.2 }}
-            >
-              <CardTemp
-                name={"COST/MONTH"}
-                value={costPerMonth}
-                color={"text-rose-500"}
-                hidden={"hidden"}
-              />
-            </motion.div>
           </div>
         </div>
       </div>
