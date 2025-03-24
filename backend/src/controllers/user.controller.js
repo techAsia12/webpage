@@ -879,96 +879,35 @@ const sentData = asyncHandler(async (req, res, next) => {
     const prevHour = prevDate.hour();
 
     console.log(`Current hour: ${currentHour}, Previous hour: ${prevHour}`);
-    let newWatt = watt;
+    let newWatt = watt; // Initialize with current value
 
-    // Update hourly, daily, and monthly data if the hour has changed
+    // Only update units if hour has changed
     if (currentHour !== prevHour) {
-      console.log(
-        "New hour detected. Updating hourly, daily, and monthly data..."
-      );
-      // Calculate newWatt
-      const kwh = (voltage * current) / 1000;
+      console.log("New hour detected. Calculating new watt...");
+      
+      // Calculate time difference in hours
+      const timeDifferenceInMs = currentDate - prevDate;
+      const timeInHours = timeDifferenceInMs / (1000 * 60 * 60);
+      
+      // Calculate energy consumed (kWh)
+      const kwh = (voltage * current * timeInHours) / 1000;
       newWatt = watt + kwh;
       console.log(`New watt value calculated: ${newWatt}`);
+
+      // Update usage records only when hour changes
+      await insertHourly(phoneno, kwh);  // Pass only the new consumption
+      await insertDaily(phoneno, kwh);
+      await insertMonthly(phoneno, kwh);
     }
 
-    await insertHourly(phoneno, watt);
-    await insertDaily(phoneno, watt);
-    await insertMonthly(phoneno, watt);
-    // Fetch bill details (always fetch, regardless of hour change)
+    // Rest of your code remains the same...
     const [billDetailsResult] = await db
       .promise()
       .query("SELECT * FROM bill_details WHERE state=?", [state]);
 
-    if (!billDetailsResult || billDetailsResult.length === 0) {
-      return next(new ApiError(404, "No Bill Details Found"));
-    }
+    // ... [keep all other code the same until the updateQuery]
 
-    const billDetails = billDetailsResult[0];
-
-    const [costDetailsResult] = await db
-      .promise()
-      .query(
-        "SELECT * FROM cost_per_unit WHERE state=? ORDER BY unitRange ASC",
-        [state]
-      );
-
-    if (!costDetailsResult || costDetailsResult.length === 0) {
-      return next(new ApiError(404, "No Cost Details Found"));
-    }
-
-    const billDets = {
-      base: billDetails.base,
-      percentPerUnit: billDetails.percentPerUnit,
-      state: billDetails.state,
-      tax: billDetails.tax,
-      totalTaxPercent: billDetails.totalTaxPercent,
-      range: costDetailsResult,
-    };
-
-    const totalCost = costCalc(newWatt, billDets);
-
-    // Fetch daily usage (always fetch, regardless of hour change)
-    const [dailyUsageResult] = await db
-      .promise()
-      .query(
-        "SELECT unit FROM daily_usage WHERE phoneno = ? AND DATE(time) = CURDATE()",
-        [phoneno]
-      );
-    
-    const totalDailyUsage = dailyUsageResult[0].totalDailyUsage || 0;
-    console.log("Total Daily Usage:", totalDailyUsage);
-    // Calculate cost for today (always calculate, regardless of hour change)
-    const costToday = costCalc(totalDailyUsage, billDets);
-
-    // Check if threshold is exceeded and send email (always check, regardless of hour change)
-    if (threshold < totalCost && emailSent === 0) {
-      const [userResult] = await db
-        .promise()
-        .query("SELECT email FROM users WHERE phoneno = ?", [phoneno]);
-
-      if (userResult.length > 0) {
-        const userEmail = userResult[0].email;
-        console.log("Sending email to:", userEmail);
-        await sendMessage(userEmail, totalCost, threshold);
-
-        emailSent = 0;
-        threshold *= 10;
-      }
-    }
-
-    // Check if it's the last day of the month
-    const isLastDayOfMonth =
-      currentDate.date() === currentDate.endOf("month").date();
-
-    // Reset totalCost, units, and watt if it's the last day of the month
-    if (isLastDayOfMonth) {
-      newWatt = 0;
-      totalCost = 0;
-      console.log("Resetting totalCost, units, and watt for the new month.");
-    }
-
-    // Update client_dets table (always update, regardless of hour change)
+    // Update client_dets table
     const updateQuery = `
       UPDATE client_dets SET
         voltage = ?,
@@ -987,8 +926,8 @@ const sentData = asyncHandler(async (req, res, next) => {
       voltage,
       current,
       MACadd,
-      newWatt,
-      voltage * current, // watt = voltage * current
+      newWatt,  // This will be updated only if hour changed
+      voltage * current,
       mysqlTimestamp,
       totalCost,
       costToday,
@@ -997,20 +936,7 @@ const sentData = asyncHandler(async (req, res, next) => {
       phoneno,
     ];
 
-    console.log("Executing update query...");
-    const [updateResult] = await db.promise().query(updateQuery, updateParams);
-
-    if (updateResult.affectedRows === 0) {
-      console.log("No rows affected, client data update failed.");
-      return next(new ApiError(404, "No matching client found"));
-    }
-
-    console.log("Client data updated successfully.");
-    return res.status(200).json({
-      status: 200,
-      message: "Client data updated successfully",
-      data: updateResult,
-    });
+    // ... [rest of your code]
   } catch (err) {
     console.error("Database error:", err);
     return next(new ApiError(500, "Database error"));
