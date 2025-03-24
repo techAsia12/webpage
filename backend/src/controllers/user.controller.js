@@ -523,8 +523,8 @@ const insertHourly = asyncHandler(async (phoneno, unit) => {
       await db
         .promise()
         .query(
-          "UPDATE daily_usage SET unit = ?, time = ? WHERE id = ?",
-          [newUnit, formattedTimestamp, existingEntry[0].id]
+          "UPDATE daily_usage SET unit = ?, time = ? WHERE phoneno = ?",
+          [newUnit, formattedTimestamp, existingEntry[0].phoneno]
         );
       console.log("Hourly data updated successfully");
     } else {
@@ -544,24 +544,18 @@ const insertHourly = asyncHandler(async (phoneno, unit) => {
 });
 
 const insertDaily = asyncHandler(async (phoneno, unit) => {
+  // Get current date in IST (Asia/Kolkata)
   const currentDate = new Date();
-  const currentDay = currentDate.toLocaleString("en-US", {
-    timeZone: "Asia/Kolkata",
-    year: "numeric",
-    month: "2-digit",
-    day: "2-digit",
-  });
+  const istOffset = 5.5 * 60 * 60 * 1000; // IST is UTC+5:30
+  const istDate = new Date(currentDate.getTime() + istOffset);
+  
+  // Format date for MySQL (YYYY-MM-DD)
+  const currentDay = istDate.toISOString().split('T')[0];
+  console.log("Current Day (IST):", currentDay);
 
-  const days = [
-    "Sunday",
-    "Monday",
-    "Tuesday",
-    "Wednesday",
-    "Thursday",
-    "Friday",
-    "Saturday",
-  ];
-  const day = days[currentDate.getDay()];
+  const days = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
+  const day = days[istDate.getDay()];
+  console.log("Current Day of Week:", day);
 
   try {
     // Check if an entry already exists for the current day
@@ -575,7 +569,7 @@ const insertDaily = asyncHandler(async (phoneno, unit) => {
     console.log("Existing Data:", existingData);
 
     if (existingData.length > 0) {
-      // Update the existing entry by adding the new unit value
+      // Update existing entry
       const newUnit = unit + existingData[0].unit;
       await db
         .promise()
@@ -585,18 +579,20 @@ const insertDaily = asyncHandler(async (phoneno, unit) => {
         );
       console.log("Weekly data updated successfully");
     } else {
-      // Insert a new entry
+      // Insert new entry with properly formatted timestamp
+      const timestamp = `${currentDay} 00:00:00`; // Midnight of current day
       await db
         .promise()
         .query(
           "INSERT INTO weekly_usage (phoneno, unit, time) VALUES (?, ?, ?)",
-          [phoneno, unit, currentDay]
+          [phoneno, unit, timestamp]
         );
       console.log("Weekly data inserted successfully");
     }
 
-    // Handle Sunday (reset weekly data)
+    // Handle Sunday reset
     if (day === "Sunday") {
+      const timestamp = `${currentDay} 00:00:00`;
       await db
         .promise()
         .query(
@@ -607,7 +603,7 @@ const insertDaily = asyncHandler(async (phoneno, unit) => {
     }
   } catch (err) {
     console.error("Error inserting/updating weekly data:", err);
-    throw err; // Propagate the error for handling in the calling function
+    throw err;
   }
 });
 
