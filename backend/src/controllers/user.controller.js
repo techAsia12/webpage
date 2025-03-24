@@ -586,7 +586,7 @@ const insertDaily = asyncHandler(async (phoneno, unit) => {
         "SELECT * FROM weekly_usage WHERE phoneno = ? AND DATE(time) = ?",
         [phoneno, currentDay]
       );
-
+    console.log("Existing Data:", existingData);
     if (existingData.length > 0) {
       // Update the existing entry by adding the new unit value
       const newUnit = unit + existingData[0].unit;
