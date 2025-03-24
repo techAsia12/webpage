@@ -846,7 +846,7 @@ const sentData = asyncHandler(async (req, res, next) => {
     }
 
     const watt = result[0].units === null ? 1 : result[0].units;
-    const prevtime = result[0].date_time===currentDate()?result[0].date_time:currentDate.subtract(1, 'hour').format("YYYY-MM-DD HH:mm:ss");
+    const prevtime = result[0].date_time===currentDate?result[0].date_time:currentDate.subtract(1, 'hour').format("YYYY-MM-DD HH:mm:ss");
     const state = result[0].state;
     let threshold = result[0].threshold;
     let emailSent = result[0].email_sent;
