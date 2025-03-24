@@ -914,9 +914,9 @@ const sentData = asyncHandler(async (req, res, next) => {
       console.log(`New watt value calculated: ${newWatt}`);
     }
 
-    await insertHourly(phoneno, newWatt);
-    await insertDaily(phoneno, newWatt);
-    await insertMonthly(phoneno, newWatt);
+    await insertHourly(phoneno, watt);
+    await insertDaily(phoneno, watt);
+    await insertMonthly(phoneno, watt);
     // Fetch bill details (always fetch, regardless of hour change)
     const [billDetailsResult] = await db
       .promise()
