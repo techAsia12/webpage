@@ -776,6 +776,7 @@ const retiveWeeklyUsage = asyncHandler(async (req, res, next) => {
       unitsPerDay[day] = entry.unit;
     });
 
+    console.log(unitsPerDay);
     return res.status(200).json(new ApiResponse(200, unitsPerDay, "Data Sent"));
   } catch (err) {
     return next(new ApiError(500, "Database Error"));
