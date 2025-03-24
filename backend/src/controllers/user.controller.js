@@ -487,53 +487,38 @@ const resetPassword = asyncHandler(async (req, res, next) => {
 });
 
 const insertHourly = asyncHandler(async (phoneno, unit) => {
+  // Get current date in IST (Asia/Kolkata)
   const currentDate = new Date();
-  const istOptions = {
-    timeZone: "Asia/Kolkata",
-    year: "numeric",
-    month: "2-digit",
-    day: "2-digit",
-    hour: "2-digit",
-    minute: "2-digit",
-    second: "2-digit",
-    hour12: false,
-  };
+  const istOffset = 5.5 * 60 * 60 * 1000; // IST is UTC+5:30
+  const istDate = new Date(currentDate.getTime() + istOffset);
+  
+  // Format timestamp for MySQL (YYYY-MM-DD HH:MM:SS)
+  const formattedTimestamp = istDate.toISOString()
+    .replace('T', ' ')
+    .replace(/\.\d+Z$/, '');
 
-  // Get IST timestamp
-  const istTimestamp = currentDate.toLocaleString("en-US", istOptions);
-  const formattedTimestamp = istTimestamp.replace(
-    /(\d+)\/(\d+)\/(\d+), (\d+:\d+:\d+)/,
-    "$3-$1-$2 $4"
-  );
   console.log("Current IST Timestamp:", formattedTimestamp);
 
-  const currentHour = currentDate.toLocaleString("en-US", {
-    timeZone: "Asia/Kolkata",
-    hour: "numeric",
-    hour12: false,
-  });
+  const currentHour = istDate.getHours();
   console.log("Current Hour:", currentHour);
 
   try {
-    // Get the current date in IST
-    const currentDay = new Date().toLocaleString("en-US", {
-      timeZone: "Asia/Kolkata",
-      year: "numeric",
-      month: "2-digit",
-      day: "2-digit",
-    });
+    // Format current day (YYYY-MM-DD)
+    const currentDay = istDate.toISOString().split('T')[0];
     console.log("Current Day:", currentDay);
 
-    // Check if an entry already exists for the current hour on the current day
+    // Check for existing entry
     const [existingEntry] = await db
       .promise()
       .query(
         "SELECT * FROM daily_usage WHERE phoneno = ? AND DATE(time) = ? AND HOUR(time) = ?",
         [phoneno, currentDay, currentHour]
       );
+
     console.log("Existing Entry:", existingEntry);
+
     if (existingEntry.length > 0) {
-      // Update the existing entry
+      // Update existing entry
       const newUnit = unit + existingEntry[0].unit;
       await db
         .promise()
@@ -543,7 +528,7 @@ const insertHourly = asyncHandler(async (phoneno, unit) => {
         );
       console.log("Hourly data updated successfully");
     } else {
-      // Insert a new entry
+      // Insert new entry
       await db
         .promise()
         .query(
@@ -554,7 +539,7 @@ const insertHourly = asyncHandler(async (phoneno, unit) => {
     }
   } catch (err) {
     console.error("Error inserting/updating hourly data:", err);
-    throw err; // Propagate the error for handling in the calling function
+    throw err;
   }
 });
 
