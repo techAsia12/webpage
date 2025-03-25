@@ -8,7 +8,6 @@ app.use(
     origin: [
       "http://localhost:5173", 
       "https://smartenergymeter.techasiamechatronics.com", 
-      "https://webpage-pearl-sigma.vercel.app", 
     ],
     credentials: true, 
   })
