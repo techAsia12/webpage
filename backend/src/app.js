@@ -10,7 +10,6 @@ app.use(
       "https://smartenergymeter.techasiamechatronics.com", 
       "https://webpage-pearl-sigma.vercel.app", 
     ],
-    methods: "GET,POST,PUT,DELETE", 
     credentials: true, 
   })
 );
