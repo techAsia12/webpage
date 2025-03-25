@@ -167,7 +167,7 @@ const Dashboard = () => {
           </div>
 
           {/* Additional Meters and Cost Card */}
-          <div className="w-full lg:w-1/3 flex flex-col space-y-6 py-2">
+          <div className="w-full lg:w-1/3 flex flex-col space-y-10 lg:space-y-6 py-2">
             <Meter
               color={"#ed9d00"}
               value={user?.voltage || 0}

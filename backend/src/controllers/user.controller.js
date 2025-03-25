@@ -508,6 +508,7 @@ const insertHourly = asyncHandler(async (phoneno, unit) => {
       );
 
     if (existingEntry.length > 0) {
+      console.log("Updating existing hourly entry...");
       const newUnit = unit + existingEntry[0].unit;
       await db
         .promise()
@@ -517,6 +518,7 @@ const insertHourly = asyncHandler(async (phoneno, unit) => {
           existingEntry[0].id,
         ]);
     } else {
+      console.log("Inserting new hourly entry...");
       await db
         .promise()
         .query(
@@ -555,6 +557,7 @@ const insertDaily = asyncHandler(async (phoneno, unit) => {
       );
 
     if (existingData.length > 0) {
+      console.log("Updating existing daily entry...");
       const newUnit = unit + existingData[0].unit;
       await db
         .promise()
@@ -563,6 +566,7 @@ const insertDaily = asyncHandler(async (phoneno, unit) => {
           [newUnit, phoneno, currentDay]
         );
     } else {
+      console.log("Inserting new daily entry...");
       const timestamp = `${currentDay} 00:00:00`;
       await db
         .promise()
@@ -572,14 +576,14 @@ const insertDaily = asyncHandler(async (phoneno, unit) => {
         );
     }
 
-    if (day === "Sunday") {
-      await db
-        .promise()
-        .query(
-          "UPDATE weekly_usage SET unit = ? WHERE phoneno = ? AND DATE(time) = ?",
-          [0, phoneno, currentDay]
-        );
-    }
+    // if (day === "Sunday") {
+    //   await db
+    //     .promise()
+    //     .query(
+    //       "UPDATE weekly_usage SET unit = ? WHERE phoneno = ? AND DATE(time) = ?",
+    //       [0, phoneno, currentDay]
+    //     );
+    // }
   } catch (err) {
     console.error("Error in insertDaily:", err);
     throw err;
@@ -616,6 +620,7 @@ const insertMonthly = asyncHandler(async (phoneno, unit) => {
 
     const newUnit = unit + (existingData[0]?.unit || 0);
     if (existingData.length > 0) {
+      console.log("Updating existing monthly entry...");
       await db
         .promise()
         .query(
@@ -624,6 +629,7 @@ const insertMonthly = asyncHandler(async (phoneno, unit) => {
         );
       console.log("Monthly data updated for yearly tracking");
     } else {
+      console.log("Inserting new monthly entry...");
       await db
         .promise()
         .query(
@@ -806,6 +812,7 @@ const costCalc = (unit, billDets) => {
 
     return { base, total };
   };
+
   let { base, total } = { base: 0, total: 0 };
 
   if (unit > billDets.range[3].unitRange) {
@@ -823,205 +830,295 @@ const costCalc = (unit, billDets) => {
 const sentData = asyncHandler(async (req, res, next) => {
   const { phoneno, voltage, current, MACadd } = req.query;
 
+  // Validate input parameters
+  if (!phoneno || !voltage || !current) {
+    return next(new ApiError(400, "Missing required parameters"));
+  }
+
+  // Convert to numbers and validate
+  const validVoltage = parseFloat(voltage);
+  const validCurrent = parseFloat(current);
+  if (isNaN(validVoltage) || isNaN(validCurrent)) {
+    return next(new ApiError(400, "Invalid voltage or current values"));
+  }
+
   // Get current date and time in Asia/Kolkata timezone
   const currentDate = moment().tz("Asia/Kolkata");
   const mysqlTimestamp = currentDate.format("YYYY-MM-DD HH:mm:ss");
-
-  console.log(
-    `Received data: phoneno=${phoneno}, voltage=${voltage}, current=${current}, MACadd=${MACadd}`
-  );
+  const currentHour = currentDate.hours();
+  const currentDay = currentDate.format("YYYY-MM-DD");
+  const currentMonth = currentDate.month() + 1;
+  const currentYear = currentDate.year();
 
   try {
-    console.log("Fetching current watt value from database...");
-    const [result] = await db
-      .promise()
-      .query(
-        "SELECT units, date_time, state, threshold, emailSent FROM client_dets WHERE phoneno = ?",
+    // Get client data in a transaction to ensure consistency
+    const connection = await db.promise().getConnection();
+    await connection.beginTransaction();
+
+    try {
+      const [clientResult] = await connection.query(
+        "SELECT units, state, threshold, emailSent FROM client_dets WHERE phoneno = ? FOR UPDATE",
         [phoneno]
       );
 
-    if (result.length === 0) {
-      console.log("Client not found in database");
-      return next(new ApiError(404, "Client not found"));
-    }
+      if (clientResult.length === 0) {
+        await connection.rollback();
+        return next(new ApiError(404, "Client not found"));
+      }
 
-    const watt = result[0].units === null ? 1 : result[0].units;
-    const prevtime = result[0].date_time===currentDate?result[0].date_time:currentDate.subtract(1, 'hour').format("YYYY-MM-DD HH:mm:ss");
-    const state = result[0].state;
-    let threshold = result[0].threshold;
-    let emailSent = result[0].email_sent;
+      const clientData = clientResult[0];
+      const currentUnits = clientData.units || 0;
+      const state = clientData.state;
+      let threshold = clientData.threshold;
+      let emailSent = clientData.emailSent;
 
-    const prevDate = moment(prevtime).tz("Asia/Kolkata");
-
-    // Get the current hour and the previous hour
-    const currentHour = currentDate.hour();
-    const prevHour = prevDate.hour();
-
-    console.log(`Current hour: ${currentHour}, Previous hour: ${prevHour}`);
-    let newWatt = watt;
-
-    // Only calculate and update if hour has changed
-
-    if (currentHour !== prevHour) {
-      console.log("New hour detected. Calculating new watt...");
-
-      // Calculate time difference in hours with safeguards
-      const timeDifferenceInMs = Math.max(0, currentDate - prevDate); // Prevent negative time
-      const timeInHours = timeDifferenceInMs / (1000 * 60 * 60);
-
-      // Validate voltage and current
-      const validVoltage = Math.max(0, parseFloat(voltage));
-      const validCurrent = Math.max(0, parseFloat(current));
-
-      console.log(`Time difference: ${timeInHours} hours`);
-      console.log(`Voltage: ${validVoltage}V, Current: ${validCurrent}A`);
-
-      // Calculate newWatt (energy in kWh) with validation
+      // Calculate energy consumption for 15-second interval (in kWh)
+      const intervalHours = 15 / 3600; // Convert 15 seconds to hours
       const kwh = Math.max(
         0,
-        (validVoltage * validCurrent * timeInHours) / 1000
-      ); // Ensure non-negative
-      newWatt = watt + kwh;
+        (validVoltage * validCurrent * intervalHours) / 1000
+      );
+      const newUnits = currentUnits + kwh;
 
       if (kwh <= 0) {
         console.warn(
           `Low/negative kWh calculation: ${kwh}. Check sensor values.`
         );
-        // You might want to implement additional handling here
       }
-
-      console.log(`New watt value calculated: ${newWatt}`);
 
       // Update usage records only if kWh is positive
       if (kwh > 0) {
-        await insertHourly(phoneno, kwh);
-        await insertDaily(phoneno, kwh);
-        await insertMonthly(phoneno, kwh);
+        // Update hourly usage (for current hour)
+        await updateHourlyUsage(
+          connection,
+          phoneno,
+          kwh,
+          currentDay,
+          currentHour,
+          mysqlTimestamp
+        );
+
+        // Update daily usage (for current day)
+        await updateDailyUsage(connection, phoneno, kwh, currentDay);
+
+        // Update monthly usage (for current month)
+        await updateMonthlyUsage(
+          connection,
+          phoneno,
+          kwh,
+          currentYear,
+          currentMonth,
+          mysqlTimestamp
+        );
       }
-    }
 
-    // Fetch bill details
-    const [billDetailsResult] = await db
-      .promise()
-      .query("SELECT * FROM bill_details WHERE state=?", [state]);
-
-    if (!billDetailsResult || billDetailsResult.length === 0) {
-      return next(new ApiError(404, "No Bill Details Found"));
-    }
-
-    const billDetails = billDetailsResult[0];
-
-    const [costDetailsResult] = await db
-      .promise()
-      .query(
-        "SELECT * FROM cost_per_unit WHERE state=? ORDER BY unitRange ASC",
+      // Fetch bill details
+      const [billDetailsResult] = await connection.query(
+        "SELECT * FROM bill_details WHERE state = ?",
         [state]
       );
 
-    if (!costDetailsResult || costDetailsResult.length === 0) {
-      return next(new ApiError(404, "No Cost Details Found"));
-    }
+      if (!billDetailsResult || billDetailsResult.length === 0) {
+        await connection.rollback();
+        return next(new ApiError(404, "No Bill Details Found"));
+      }
 
-    const billDets = {
-      base: billDetails.base,
-      percentPerUnit: billDetails.percentPerUnit,
-      state: billDetails.state,
-      tax: billDetails.tax,
-      totalTaxPercent: billDetails.totalTaxPercent,
-      range: costDetailsResult,
-    };
+      const billDetails = billDetailsResult[0];
 
-    let totalCost = costCalc(newWatt, billDets);
-
-    // Fetch daily usage
-    const [dailyUsageResult] = await db
-      .promise()
-      .query(
-        "SELECT unit FROM daily_usage WHERE phoneno = ? AND HOUR(time) = ?",  
-        [phoneno,currentHour]
+      const [costDetailsResult] = await connection.query(
+        "SELECT * FROM cost_per_unit WHERE state = ? ORDER BY unitRange ASC",
+        [state]
       );
 
-    const totalDailyUsage = dailyUsageResult[0]?.unit || 1;
-    let costToday = costCalc(totalDailyUsage, billDets);
-
-    // Check threshold and send email if needed
-    if (threshold < totalCost && emailSent === 0) {
-      const [userResult] = await db
-        .promise()
-        .query("SELECT email FROM users WHERE phoneno = ?", [phoneno]);
-
-      if (userResult.length > 0) {
-        const userEmail = userResult[0].email;
-        console.log("Sending email to:", userEmail);
-        await sendMessage(userEmail, totalCost, threshold);
-
-        emailSent = 1; // Mark email as sent
-        threshold *= 1.5; // Increase threshold by 50%
+      if (!costDetailsResult || costDetailsResult.length === 0) {
+        await connection.rollback();
+        return next(new ApiError(404, "No Cost Details Found"));
       }
+
+      const billDets = {
+        base: billDetails.base,
+        percentPerUnit: billDetails.percentPerUnit,
+        state: billDetails.state,
+        tax: billDetails.tax,
+        totalTaxPercent: billDetails.totalTaxPercent,
+        range: costDetailsResult,
+      };
+
+      // Calculate costs
+      const totalCost = costCalc(newUnits, billDets);
+
+      // Get today's total usage for cost calculation
+      const [dailyUsageResult] = await connection.query(
+        "SELECT SUM(unit) as total FROM daily_usage WHERE phoneno = ? AND DATE(time) = ?",
+        [phoneno, currentDay]
+      );
+
+      const totalDailyUsage = dailyUsageResult[0]?.total || 0;
+      const costToday = costCalc(totalDailyUsage, billDets);
+
+      // Check threshold and send email if needed
+      if (threshold < totalCost && emailSent === 0) {
+        const [userResult] = await connection.query(
+          "SELECT email FROM users WHERE phoneno = ?",
+          [phoneno]
+        );
+
+        if (userResult.length > 0) {
+          const userEmail = userResult[0].email;
+          await sendMessage(userEmail, totalCost, threshold);
+
+          emailSent = 1; // Mark email as sent
+          threshold = Math.floor(threshold * 1.5); // Increase threshold by 50%
+        }
+      }
+
+      // Check if it's the last day of the month at midnight
+      const isLastDayOfMonth =
+        currentDate.date() === currentDate.endOf("month").date() &&
+        currentDate.hour() === 0 &&
+        currentDate.minute() === 0;
+
+      // Update client_dets table
+      const updateQuery = `
+        UPDATE client_dets SET
+          voltage = ?,
+          current = ?,
+          MACadd = ?,
+          units = ?,
+          watt = ?,
+          date_time = ?,
+          totalCost = ?,
+          costToday = ?,
+          threshold = ?,
+          emailSent = ?,
+          state = ?
+        WHERE phoneno = ?
+      `;
+
+      const updateParams = [
+        validVoltage,
+        validCurrent,
+        MACadd,
+        isLastDayOfMonth ? 0 : newUnits, // Reset if last day of month
+        validVoltage * validCurrent,
+        mysqlTimestamp,
+        isLastDayOfMonth ? 0 : totalCost, // Reset if last day of month
+        isLastDayOfMonth ? 0 : costToday, // Reset if last day of month
+        threshold,
+        emailSent,
+        state,
+        phoneno,
+      ];
+
+      await connection.query(updateQuery, updateParams);
+      await connection.commit();
+
+      console.log("Client data updated successfully.");
+      return res.status(200).json({
+        status: 200,
+        message: "Client data updated successfully",
+        data: {
+          phoneno,
+          newUnits: isLastDayOfMonth ? 0 : newUnits,
+          totalCost: isLastDayOfMonth ? 0 : totalCost,
+          costToday: isLastDayOfMonth ? 0 : costToday,
+        },
+      });
+    } catch (err) {
+      await connection.rollback();
+      console.error("Database error in transaction:", err);
+      throw err;
+    } finally {
+      connection.release();
     }
-
-    // Check if it's the last day of the month
-    const isLastDayOfMonth = 
-    currentDate.date() === currentDate.endOf("month").date() && 
-    currentDate.hour() === 0 && 
-    currentDate.minute() === 0;
-
-    // Reset values if it's the last day of the month
-    if (isLastDayOfMonth) {
-      newWatt = 0;
-      totalCost = 0;
-      costToday = 0;
-      console.log("Resetting units for new month");
-    }
-
-    // Update client_dets table
-    const updateQuery = `
-      UPDATE client_dets SET
-        voltage = ?,
-        current = ?,
-        MACadd = ?,
-        units = ?, 
-        watt = ?,
-        date_time = ?,
-        totalCost = ?,
-        costToday = ?,
-        threshold = ?,
-        emailSent = ?
-      WHERE phoneno = ?
-    `;
-    const updateParams = [
-      voltage,
-      current,
-      MACadd,
-      newWatt,
-      voltage * current,
-      mysqlTimestamp,
-      totalCost,
-      costToday,
-      threshold,
-      emailSent,
-      phoneno,
-    ];
-
-    console.log("Executing update query...");
-    const [updateResult] = await db.promise().query(updateQuery, updateParams);
-
-    if (updateResult.affectedRows === 0) {
-      console.log("No rows affected, client data update failed.");
-      return next(new ApiError(404, "No matching client found"));
-    }
-
-    console.log("Client data updated successfully.");
-    return res.status(200).json({
-      status: 200,
-      message: "Client data updated successfully",
-      data: updateResult,
-    });
   } catch (err) {
     console.error("Database error:", err);
     return next(new ApiError(500, "Database error"));
   }
 });
+
+// Helper function to update hourly usage
+async function updateHourlyUsage(
+  connection,
+  phoneno,
+  kwh,
+  currentDay,
+  currentHour,
+  timestamp
+) {
+  // Check for existing record for this hour
+  const [existing] = await connection.query(
+    `SELECT * FROM daily_usage WHERE phoneno = ? AND DATE(time) = ? AND HOUR(time) = ?`,
+    [phoneno, currentDay, currentHour]
+  );
+
+  if (existing.length > 0) {
+    // Update existing record
+    await connection.query(
+      `UPDATE daily_usage SET unit = unit + ?, time = ? WHERE phoneno = ? AND DATE(time) = ? AND HOUR(time) = ?`,
+      [kwh, timestamp, phoneno, currentDay, currentHour]
+    );
+  } else {
+    // Insert new record
+    await connection.query(
+      `INSERT INTO daily_usage (phoneno, unit, time) VALUES (?, ?, ?)`,
+      [phoneno, kwh, timestamp]
+    );
+  }
+}
+
+// Helper function to update daily usage
+async function updateDailyUsage(connection, phoneno, kwh, currentDay) {
+  // Check for existing record for today
+  const [existing] = await connection.query(
+    `SELECT * FROM weekly_usage WHERE phoneno = ? AND DATE(time) = ?`,
+    [phoneno, currentDay]
+  );
+
+  if (existing.length > 0) {
+    // Update existing record
+    await connection.query(
+      `UPDATE weekly_usage SET unit = unit + ? WHERE phoneno = ? AND DATE(time) = ?`,
+      [kwh, phoneno, currentDay]
+    );
+  } else {
+    // Insert new record
+    await connection.query(
+      `INSERT INTO weekly_usage (phoneno, unit, time) VALUES (?, ?, ?)`,
+      [phoneno, kwh, `${currentDay} 00:00:00`]
+    );
+  }
+}
+
+// Helper function to update monthly usage
+async function updateMonthlyUsage(
+  connection,
+  phoneno,
+  kwh,
+  currentYear,
+  currentMonth,
+  timestamp
+) {
+  // Check for existing record for this month
+  const [existing] = await connection.query(
+    `SELECT * FROM yearly_usage WHERE phoneno = ? AND YEAR(time) = ? AND MONTH(time) = ?`,
+    [phoneno, currentYear, currentMonth]
+  );
+
+  if (existing.length > 0) {
+    // Update existing record
+    await connection.query(
+      `UPDATE yearly_usage SET unit = unit + ?, time = ? WHERE phoneno = ? AND YEAR(time) = ? AND MONTH(time) = ?`,
+      [kwh, timestamp, phoneno, currentYear, currentMonth]
+    );
+  } else {
+    // Insert new record
+    await connection.query(
+      `INSERT INTO yearly_usage (phoneno, unit, time) VALUES (?, ?, ?)`,
+      [phoneno, kwh, timestamp]
+    );
+  }
+}
 
 const getUserData = asyncHandler(async (req, res, next) => {
   try {
