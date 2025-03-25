@@ -86,7 +86,6 @@ const Dashboard = () => {
   // Fetch user data and hourly usage on component mount
   useEffect(() => {
     fetchUserData();
-    fetchHourlyUsage();
 
     const interval = setInterval(() => {
       fetchUserData();
@@ -97,6 +96,7 @@ const Dashboard = () => {
 
   // Update maxKwh if kwh exceeds the current max
   useEffect(() => {
+    fetchHourlyUsage(); 
     if (kwh > maxKwh) {
       setMaxKwh(Math.ceil(kwh / 10000) * 100000);
     }

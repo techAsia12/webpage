@@ -29,4 +29,4 @@ while True:
     except requests.exceptions.RequestException as e:
         print(f"Error: {e}")
 
-    time.sleep(5)
+    time.sleep(15)
