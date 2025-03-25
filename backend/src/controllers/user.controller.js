@@ -797,7 +797,17 @@ const sentData = asyncHandler(async (req, res, next) => {
       );
 
       const totalDailyUsage = dailyUsageResult[0]?.total || 0;
-      const costToday = costCalc(totalDailyUsage, billDets);
+      let costToday = 0;
+      if (totalDailyUsage > costDetailsResult[3].unitRange) {
+        costToday = costDetailsResult[3].cost * totalDailyUsage;
+      } else if (totalDailyUsage > costDetailsResult[2].unitRange) {
+        costToday = costDetailsResult[2].cost * totalDailyUsage;
+      } else if (totalDailyUsage > costDetailsResult[1].unitRange) {
+        costToday = costDetailsResult[1].cost * totalDailyUsage;
+      } else {
+        costToday = costDetailsResult[0].cost * totalDailyUsage;
+      }
+      // const costToday = costCalc(totalDailyUsage, billDets);
 
       // Check threshold and send email if needed
       if (threshold < totalCost && emailSent === 0) {
