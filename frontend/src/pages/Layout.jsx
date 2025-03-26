@@ -60,7 +60,7 @@ const Layout = () => {
       <Navbar navLinks={navLinks} />
 
       {/* Main Content */}
-      <div className="z-10 text-center">
+      <div className="z-10 text-center overflow-hidden lg:overflow-auto">
         <Outlet />
 
         {/* Overlay for Update Component */}

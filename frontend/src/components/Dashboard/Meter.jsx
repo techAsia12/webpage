@@ -2,142 +2,209 @@ import { React, useState, useEffect } from "react";
 import { Box, Typography, CardContent } from "@mui/material";
 import { motion } from "framer-motion";
 
-/**
- * Meter Component
- *
- * A circular progress meter that visually represents a value relative to a maximum value.
- * It uses segments to indicate progress and supports responsive design for small screens.
- *
- * @param {Object} props - Component props
- * @param {string} props.color - Color of the filled segments
- * @param {number} props.value - Current value to display
- * @param {number} props.maxValue - Maximum value for the meter
- * @param {string} props.unit - Unit of the value (e.g., "%", "°C")
- * @param {Object} props.initial - Initial animation state (Framer Motion)
- * @param {Object} props.animate - Target animation state (Framer Motion)
- * @returns {JSX.Element} - Rendered Meter component
- */
-const Meter = ({ color, value, maxValue, unit, initial, animate }) => {
-  // Calculate the progress percentage
-  const progress = (value / maxValue) * 100;
 
-  // Track screen width for responsive design
+const Meter = ({
+  outerColor = "#ed9d00",       
+  innerColor = "#34d399",       
+  outerValue = 0,               
+  innerValue = 0,               
+  outerMax = 350,               
+  innerMax = 30,                
+  outerUnit = "V",              
+  innerUnit = "A",              
+  outerLabel = "Voltage",       
+  innerLabel = "Current",        
+  initial = { y: 100, opacity: 0 },
+  animate = { y: 0, opacity: 1 },
+  transition = { duration: 1, delay: 1.2 },
+  date                           
+}) => {
   const [screenWidth, setScreenWidth] = useState(window.innerWidth);
 
-  // Total number of segments in the meter
-  const totalSegments = 30;
+  const outerProgress = Math.min((outerValue / outerMax) * 100, 100);
+  const innerProgress = Math.min((innerValue / innerMax) * 100, 100);
 
-  // Number of filled segments based on progress
-  const filledSegments = Math.round((progress / 100) * totalSegments);
+  const displayDate = date || new Date().toLocaleDateString('en-US', { 
+    month: 'long', 
+    day: 'numeric', 
+    year: 'numeric' 
+  });
 
-  // Update screen width on window resize
   useEffect(() => {
-    const handleResize = () => {
-      setScreenWidth(window.innerWidth);
-    };
+    const handleResize = () => setScreenWidth(window.innerWidth);
     window.addEventListener("resize", handleResize);
-
-    // Cleanup event listener on unmount
-    return () => {
-      window.removeEventListener("resize", handleResize);
-    };
+    return () => window.removeEventListener("resize", handleResize);
   }, []);
 
-  // Check if the screen is small (less than 600px)
   const isSmallScreen = screenWidth < 600;
+  const size = isSmallScreen ? 220 : 320;
+  const outerRadius = size / 2;
+  const innerRadius = outerRadius * 0.75;
+  const ringWidth = isSmallScreen ? 10 : 14;
 
   return (
     <motion.Card
-      className={`w-full shadow-lg rounded-3xl bg-white dark:bg-neutral-900 dark:text-neutral-400 border`}
+      className="w-full shadow-none rounded-3xl bg-transparent"
       initial={initial}
       animate={animate}
-      transition={{ duration: 1 }}
-      role="figure"
-      aria-label="Circular progress meter"
+      transition={transition}
     >
-      <CardContent>
-        <Box
-          sx={{
+      <CardContent sx={{ p: 0 }}>
+        <Box sx={{
+          position: "relative",
+          display: "flex",
+          flexDirection: "column",
+          alignItems: "center",
+          justifyContent: "center",
+          width: "100%",
+        }}>
+         
+          <Box sx={{
             position: "relative",
+            width: size,
+            height: size,
             display: "flex",
-            flexDirection: "column",
             alignItems: "center",
             justifyContent: "center",
-            width: "100%",
-          }}
-        >
-          {/* Circular Meter Container */}
-          <Box
-            sx={{
-              position: "relative",
-              width: isSmallScreen ? "200px" : "300px",
-              height: isSmallScreen ? "200px" : "300px",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-            }}
-            aria-label="Meter visualization"
-          >
-            {/* Render Segments */}
-            {Array.from({ length: totalSegments }).map((_, index) => (
-              <Box
-                key={index}
-                sx={{
-                  position: "absolute",
-                  width: "8px",
-                  height: "50%",
-                  backgroundColor:
-                    index < filledSegments ? color : "rgba(224, 224, 224, 0.5)",
-                  borderRadius: "2px",
-                  transform: `rotate(${(360 / totalSegments) * index}deg)`,
-                  transformOrigin: "bottom center",
-                  top: "1%",
-                  left: "50%",
-                  zIndex: 1,
-                }}
-                aria-hidden="true" // Hide from screen readers (visual-only element)
-              />
-            ))}
-
-            {/* Inner Circle */}
-            <Box
-              sx={{
-                position: "absolute",
-                width: "60%",
-                height: "60%",
-                borderRadius: "50%",
-                boxShadow: "inset 0 0 10px rgba(0, 0, 0, 0.1)",
-                zIndex: 2,
-              }}
-              className="bg-white bg-[radial-gradient(ellipse_80%_80%_at_50%_-20%,rgba(0,0,0,0.2),rgba(0,0,0,0))] dark:bg-neutral-950 dark:bg-[radial-gradient(ellipse_80%_80%_at_50%_-20%,rgba(120,119,198,0.3),rgba(255,255,255,0))]"
-              aria-hidden="true" // Hide from screen readers (visual-only element)
+          }}>
+            {/* Voltage Ring (Orange) - Outer */}
+            <Ring 
+              radius={outerRadius}
+              width={ringWidth}
+              progress={outerProgress}
+              color={outerColor}
+            />
+            
+            {/* Current Ring (Green) - Inner */}
+            <Ring 
+              radius={innerRadius}
+              width={ringWidth}
+              progress={innerProgress}
+              color={innerColor}
+              offset={30}
             />
 
-            {/* Display Value */}
-            <Typography
-              variant="h4"
-              component="div"
-              sx={{
-                fontSize: isSmallScreen ? "1.5rem" : "2rem",
+            {/* Center Display */}
+            <Box sx={{
+              position: "absolute",
+              width: innerRadius * 0.9,
+              height: innerRadius * 0.9,
+              borderRadius: "50%",
+              zIndex: 4,
+              display: "flex",
+              flexDirection: "column",
+              alignItems: "center",
+              justifyContent: "center",
+              backgroundColor: "transparent",
+            }}>
+              <Typography variant="h6" sx={{ 
                 fontWeight: "bold",
-                color: color,
-                position: "relative",
-                zIndex: 3,
-                wordWrap: "break-word",
-                overflow:"visible",
-                whiteSpace:"normal",
-              }}
-              aria-label={`Current value: ${Math.round(value)}${unit}`}
-            >
-              <div>{Math.round(value)}</div> {/* Displaying the number */}
-              <div>
-                {unit}
-              </div> {/* Displaying the unit below the number */}{" "}
-            </Typography>
+                color: outerColor,
+                fontSize: isSmallScreen ? "1.8rem" : "2.5rem",
+                lineHeight: 1
+              }}>
+                {outerValue.toFixed(1)}
+              </Typography>
+              <Typography variant="caption" sx={{ 
+                color: outerColor,
+                fontSize: isSmallScreen ? "0.7rem" : "0.9rem",
+                mb: 1
+              }}>
+                {outerUnit}
+              </Typography>
+              
+              <Typography variant="h6" sx={{ 
+                fontWeight: "bold",
+                color: innerColor,
+                fontSize: isSmallScreen ? "1.8rem" : "2.5rem",
+                lineHeight: 1,
+                mt: 1
+              }}>
+                {innerValue.toFixed(1)}
+              </Typography>
+              <Typography variant="caption" sx={{ 
+                color: innerColor,
+                fontSize: isSmallScreen ? "0.7rem" : "0.9rem"
+              }}>
+                {innerUnit}
+              </Typography>
+            </Box>
+          </Box>
+
+          {/* Labels and Date */}
+          <Box sx={{
+            display: "flex",
+            justifyContent: "space-around",
+            width: "100%",
+            mt: 1
+          }}>
+            <Box sx={{ display: "flex", alignItems: "center" }}>
+              <Box sx={{
+                width: 12,
+                height: 12,
+                borderRadius: "50%",
+                backgroundColor: outerColor,
+                marginRight: 1
+              }} />
+              <Typography variant="caption" color={outerColor}>{outerLabel}</Typography>
+            </Box>
+            <Box sx={{ display: "flex", alignItems: "center" }}>
+              <Box sx={{
+                width: 12,
+                height: 12,
+                borderRadius: "50%",
+                backgroundColor: innerColor,
+                marginRight: 1
+              }} />
+              <Typography variant="caption" color={innerColor}>{innerLabel}</Typography>
+            </Box>
           </Box>
         </Box>
       </CardContent>
     </motion.Card>
+  );
+};
+
+// Ring component using SVG for perfect circles
+const Ring = ({ radius, width, progress, color, offset = 0 }) => {
+  const circumference = 2 * Math.PI * (radius - width/2);
+  const strokeDashoffset = circumference - (progress / 100) * circumference;
+
+  return (
+    <Box sx={{
+      position: "absolute",
+      width: radius * 2,
+      height: radius * 2,
+    }}>
+      <svg
+        width={radius * 2}
+        height={radius * 2}
+        style={{ transform: `rotate(${offset}deg)` }}
+      >
+        {/* Background circle */}
+        <circle
+          cx={radius}
+          cy={radius}
+          r={radius - width/2}
+          fill="none"
+          stroke={`${color}30`}
+          strokeWidth={width}
+        />
+        {/* Progress circle */}
+        <circle
+          cx={radius}
+          cy={radius}
+          r={radius - width/2}
+          fill="none"
+          stroke={color}
+          strokeWidth={width}
+          strokeDasharray={circumference}
+          strokeDashoffset={strokeDashoffset}
+          strokeLinecap="round"
+          transform={`rotate(-90 ${radius} ${radius})`}
+        />
+      </svg>
+    </Box>
   );
 };
 

@@ -6,6 +6,7 @@ import Barchart from "../components/Dashboard/Barchart.jsx";
 import { motion } from "framer-motion";
 import { login } from "../Features/auth/auth.slice.js";
 import { useDispatch } from "react-redux";
+import SemiCircularProgress from "../components/Dashboard/SemiCircularProgress.jsx";
 
 /**
  * Dashboard Component
@@ -19,6 +20,7 @@ const Dashboard = () => {
   const [user, setUser] = useState({});
   const [kwh, setKwh] = useState(0);
   const [totalCost, setTotalCost] = useState(0);
+  const [threshold, setThreshold] = useState(0);
   const [cost, setCost] = useState(0);
   const [maxKwh, setMaxKwh] = useState(0);
   const [data, setData] = useState({
@@ -51,6 +53,7 @@ const Dashboard = () => {
       setKwh(parseFloat(userData.units.toFixed(3)));
       setTotalCost(userData.totalCost);
       setCost(userData.costToday);
+      setThreshold(userData.threshold);
       dispatch(login(userData)); // Update Redux store
     } catch (err) {
       console.error("User data error:", err.response?.data?.message || err);
@@ -96,21 +99,22 @@ const Dashboard = () => {
 
   // Update maxKwh if kwh exceeds the current max
   useEffect(() => {
-    fetchHourlyUsage(); 
+    fetchHourlyUsage();
     if (kwh > maxKwh) {
       setMaxKwh(Math.ceil(kwh / 10000) * 100000);
     }
   }, [kwh]);
 
   return (
-    <div className="w-full min-h-screen bg-transparent p-4 lg:p-10">
+    <div className="w-full min-h-screen bg-transparent p-4 lg:p-10 ">
       {/* Top Section: Cost Cards */}
-      <div className="flex flex-col lg:flex-row lg:space-x-10 space-y-6 lg:space-y-0">
+      <div className="flex flex-col lg:flex-row lg:space-x-10 space-y-6 lg:space-y-0 ">
         <div className="w-full lg:w-[45%] flex flex-col space-y-4">
           <motion.div
             initial={{ y: -100, opacity: 0 }}
             animate={{ y: 0, opacity: 1 }}
             transition={{ duration: 1, delay: 1.2 }}
+            className="flex justify-center"
           >
             <CardTemp
               name={"COST TODAY"}
@@ -124,34 +128,45 @@ const Dashboard = () => {
             animate={{ x: 0, opacity: 1 }}
             transition={{ duration: 1, delay: 1.2 }}
           >
-            <CardTemp
-              name={"TOTAL COST"}
-              value={totalCost}
-              color={"text-sky-500"}
-            />
+            <SemiCircularProgress 
+            value={totalCost}
+            max={1000+(threshold*0.2)}
+            initialThreshold={threshold}/>
           </motion.div>
         </div>
 
         {/* Middle Section: Meters */}
-        <div className="w-full lg:w-1/3 flex flex-col space-y-6">
+        <div className="w-full lg:w-1/3 flex flex-col space-y-6 pt-0 lg:pt-12">
           <div className="flex flex-col lg:flex-row lg:space-x-6 space-y-6 lg:space-y-0 h-80">
             <Meter
-              color={"#d3435c"}
-              value={parseFloat(kwh)}
-              maxValue={10000}
-              unit={"kwh/units"}
+              outerColor={"#d3435c"}
+              innerColor={"#f97316"}
+              outerValue={parseFloat(kwh)}
+              innerValue={user?.watt || 0}
+              outerMax={10000}
+              innerMax={10000}
+              outerUnit={"kwh/units"}
+              innerUnit={"W"}
+              outerLabel={"Units"}
+              innerLabel={"Power"}
               initial={{ y: 100, opacity: 0 }}
               animate={{ y: 0, opacity: 1 }}
               transition={{ duration: 1, delay: 1.2 }}
             />
 
             <Meter
-              color={"#f97316"}
-              value={user?.watt || 0}
-              maxValue={10000}
-              unit={"W"}
-              initial={{ x: 100, opacity: 0 }}
-              animate={{ x: 0, opacity: 1 }}
+              outerColor={"#ed9d00"}
+              innerColor={"#34d399"}
+              outerValue={user?.voltage || 0}
+              innerValue={user?.current || 0}
+              outerMax={350}
+              innerMax={30}
+              outerUnit={"v"}
+              innerUnit={"A"}
+              outerLabel={"Voltage"}
+              innerLabel={"Current"}
+              initial={{ y: 100, opacity: 0 }}
+              animate={{ y: 0, opacity: 1 }}
               transition={{ duration: 1, delay: 1.2 }}
             />
           </div>
@@ -164,29 +179,6 @@ const Dashboard = () => {
           {/* Bar Chart */}
           <div className="w-full">
             <Barchart data={data} />
-          </div>
-
-          {/* Additional Meters and Cost Card */}
-          <div className="w-full lg:w-1/3 flex flex-col space-y-10 lg:space-y-6 py-2">
-            <Meter
-              color={"#ed9d00"}
-              value={user?.voltage || 0}
-              maxValue={350}
-              unit={"v"}
-              initial={{ x: 100, opacity: 0 }}
-              animate={{ x: 0, opacity: 1 }}
-              transition={{ duration: 1, delay: 1.2 }}
-            />
-
-            <Meter
-              color={"#34d399"}
-              value={user?.current || 0}
-              maxValue={30}
-              unit={"A"}
-              initial={{ x: 100, opacity: 0 }}
-              animate={{ x: 0, opacity: 1 }}
-              transition={{ duration: 1, delay: 1.2 }}
-            />
           </div>
         </div>
       </div>
