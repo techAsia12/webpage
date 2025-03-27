@@ -34,7 +34,9 @@ const SemiCircularProgress = ({
   // Initialize with safe defaults
   const safeValue = isNaN(value) ? 0 : Math.max(0, value);
   const safeMax = isNaN(max) ? 10000 : Math.max(1, max);
-  const safeThreshold = isNaN(threshold) ? initialThreshold : Math.max(0, threshold);
+  const safeThreshold = isNaN(threshold)
+    ? initialThreshold
+    : Math.max(0, threshold);
 
   const handleSetThreshold = async () => {
     if (!inputValue || isNaN(inputValue)) {
@@ -82,7 +84,9 @@ const SemiCircularProgress = ({
   const centerY = responsiveSize / 2 + responsiveThickness / 2;
 
   // Define the arc path
-  const arcPath = `M ${centerX - radius},${centerY} A ${radius} ${radius} 0 0 1 ${centerX + radius},${centerY}`;
+  const arcPath = `M ${
+    centerX - radius
+  },${centerY} A ${radius} ${radius} 0 0 1 ${centerX + radius},${centerY}`;
 
   // Threshold marker calculations
   const thresholdAngle = Math.PI * (1 - thresholdRatio);
@@ -102,9 +106,11 @@ const SemiCircularProgress = ({
   );
 
   const formatCurrency = (amount) => {
-    return isNaN(amount) ? "0" : new Intl.NumberFormat("en-IN", {
-      maximumFractionDigits: 0,
-    }).format(amount);
+    return isNaN(amount)
+      ? "0"
+      : new Intl.NumberFormat("en-IN", {
+          maximumFractionDigits: 0,
+        }).format(amount);
   };
 
   useEffect(() => {
@@ -122,13 +128,15 @@ const SemiCircularProgress = ({
 
   if (isLoading) {
     return (
-      <Box sx={{ 
-        width: responsiveSize, 
-        height: responsiveSize / 2,
-        display: "flex",
-        justifyContent: "center",
-        alignItems: "center"
-      }}>
+      <Box
+        sx={{
+          width: responsiveSize,
+          height: responsiveSize / 2,
+          display: "flex",
+          justifyContent: "center",
+          alignItems: "center",
+        }}
+      >
         <Typography>Loading...</Typography>
       </Box>
     );
@@ -211,21 +219,31 @@ const SemiCircularProgress = ({
             {showThresholdMarker && safeThreshold > 0 && (
               <>
                 <line
-                  x1={thresholdPosition.x}
-                  y1={thresholdPosition.y}
+                  x1={
+                    isMobile
+                      ? thresholdPosition.x - 16
+                      : thresholdPosition.x - 40
+                  }
+                  y1={thresholdPosition.y + 20}
                   x2={markerTipPosition.x}
-                  y2={markerTipPosition.y}
+                  y2={markerTipPosition.y + 9}
                   stroke={thresholdColor}
-                  strokeWidth={2}
-                  strokeDasharray="10 10"
+                  strokeWidth={isMobile ? 5 : 10}
+                  strokeDasharray="1 0.5" // More subtle dashed line
                 />
-                <circle
-                  cx={markerTipPosition.x}
-                  cy={markerTipPosition.y}
-                  r={6}
+                <path
+                  d={`M ${markerTipPosition.x} ${markerTipPosition.y} 
+         L ${markerTipPosition.x + 15} ${markerTipPosition.y - 10}
+         L ${markerTipPosition.x + 15} ${markerTipPosition.y + 10} Z`}
                   fill={thresholdColor}
                   stroke="#fff"
-                  strokeWidth={1}
+                  strokeWidth={1.5}
+                  transform={`rotate(${thresholdAngle * (180 / Math.PI) + 90} ${
+                    markerTipPosition.x
+                  } ${markerTipPosition.y})`}
+                  style={{
+                    filter: "drop-shadow(0 0 2px rgba(0,0,0,0.3))", // Adds subtle shadow for better visibility
+                  }}
                 />
               </>
             )}
@@ -240,7 +258,7 @@ const SemiCircularProgress = ({
                 top: `${(labelPosition.y / responsiveSize) * 100}%`,
                 transform: isMobile
                   ? "translate(-99%,-200%)"
-                  : "translate(-120%, -50%)",
+                  : "translate(-160%, -50%)",
                 color: thresholdColor,
                 fontSize: theme.typography.pxToRem(12),
                 fontWeight: 600,
@@ -292,7 +310,10 @@ const SemiCircularProgress = ({
                 {formatCurrency(displayValue)}
                 {unit}
               </Typography>
-              <Typography variant="body2" sx={{ color: "text.secondary", mt: 1 }}>
+              <Typography
+                variant="body2"
+                sx={{ color: "text.secondary", mt: 1 }}
+              >
                 of {formatCurrency(safeMax)}
                 {unit}
               </Typography>
