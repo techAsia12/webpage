@@ -239,7 +239,7 @@ const SemiCircularProgress = ({
                 left: `${(labelPosition.x / responsiveSize) * 100}%`,
                 top: `${(labelPosition.y / responsiveSize) * 100}%`,
                 transform: isMobile
-                  ? "translate(-85%,-150%)"
+                  ? "translate(-99%,-200%)"
                   : "translate(-120%, -50%)",
                 color: thresholdColor,
                 fontSize: theme.typography.pxToRem(12),
