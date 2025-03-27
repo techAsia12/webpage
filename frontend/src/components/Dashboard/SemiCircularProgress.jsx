@@ -43,6 +43,7 @@ const SemiCircularProgress = ({
       toast.error("Please enter a valid threshold value.");
       return;
     }
+    
     const newThreshold = Number(inputValue);
     try {
       setIsLoading(true);

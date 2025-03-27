@@ -564,7 +564,9 @@ const retiveHourlyUsage = asyncHandler(async (req, res, next) => {
       unitsPerHour[row.hour] = parseFloat(row.total_units.toFixed(3));
     });
 
-    return res.status(200).json(new ApiResponse(200, unitsPerHour, "Hourly data sent"));
+    return res
+      .status(200)
+      .json(new ApiResponse(200, unitsPerHour, "Hourly data sent"));
   } catch (err) {
     return next(new ApiError(500, "Database Error"));
   }
@@ -578,8 +580,8 @@ const retiveWeeklyUsage = asyncHandler(async (req, res, next) => {
   if (!date) return next(new ApiError(400, "Date parameter is required"));
 
   try {
-    const [startDate, endDate] = date.split('_');
-    
+    const [startDate, endDate] = date.split("_");
+
     const [result] = await db.promise().query(
       `SELECT DAYOFWEEK(time) - 1 AS dayIndex, 
               SUM(unit) AS total_units
@@ -596,7 +598,9 @@ const retiveWeeklyUsage = asyncHandler(async (req, res, next) => {
       unitsPerDay[row.dayIndex] = parseFloat(row.total_units.toFixed(3));
     });
 
-    return res.status(200).json(new ApiResponse(200, unitsPerDay, "Weekly data sent"));
+    return res
+      .status(200)
+      .json(new ApiResponse(200, unitsPerDay, "Weekly data sent"));
   } catch (err) {
     return next(new ApiError(500, "Database Error"));
   }
@@ -626,7 +630,9 @@ const retiveYearlyUsage = asyncHandler(async (req, res, next) => {
       unitsPerMonth[row.monthIndex] = parseFloat(row.total_units.toFixed(3));
     });
 
-    return res.status(200).json(new ApiResponse(200, unitsPerMonth, "Yearly data sent"));
+    return res
+      .status(200)
+      .json(new ApiResponse(200, unitsPerMonth, "Yearly data sent"));
   } catch (err) {
     return next(new ApiError(500, "Database Error"));
   }
@@ -804,11 +810,13 @@ const sentData = asyncHandler(async (req, res, next) => {
         );
 
         if (userResult.length > 0) {
-          const userEmail = userResult[0].email;
-          await sendMessage(userEmail, totalCost, threshold);
+          if (userResult[0].totalCost > threshold) {
+            const userEmail = userResult[0].email;
+            await sendMessage(userEmail, totalCost, threshold);
 
-          emailSent = 1; // Mark email as sent
-          threshold = Math.floor(threshold * 1.5); // Increase threshold by 50%
+            emailSent = 1; // Mark email as sent
+            threshold = Math.floor(threshold * 1.5); // Increase threshold by 50%
+          }
         }
       }
 
