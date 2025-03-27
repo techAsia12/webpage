@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef, useLayoutEffect } from "react";
 import { Box, Typography, useTheme, useMediaQuery } from "@mui/material";
 import { motion } from "framer-motion";
 import axios from "axios";
@@ -27,19 +27,23 @@ const SemiCircularProgress = ({
   const [threshold, setThreshold] = useState(initialThreshold);
   const [showModal, setShowModal] = useState(false);
   const [inputValue, setInputValue] = useState("");
+  const progressPathRef = useRef(null);
+  const [pathLength, setPathLength] = useState(0);
+  const [isLoading, setIsLoading] = useState(true);
 
-  useEffect(() => {
-    setThreshold(initialThreshold);
-  }, [initialThreshold]);
+  // Initialize with safe defaults
+  const safeValue = isNaN(value) ? 0 : Math.max(0, value);
+  const safeMax = isNaN(max) ? 10000 : Math.max(1, max);
+  const safeThreshold = isNaN(threshold) ? initialThreshold : Math.max(0, threshold);
 
   const handleSetThreshold = async () => {
     if (!inputValue || isNaN(inputValue)) {
       toast.error("Please enter a valid threshold value.");
       return;
     }
-
     const newThreshold = Number(inputValue);
     try {
+      setIsLoading(true);
       await axios.post(
         `${import.meta.env.VITE_BACKEND_URL}/api/user/set-threshold`,
         { threshold: newThreshold },
@@ -51,6 +55,8 @@ const SemiCircularProgress = ({
       setInputValue("");
     } catch (err) {
       toast.error("Failed to set threshold. Please try again.");
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -61,18 +67,22 @@ const SemiCircularProgress = ({
   const radius = responsiveSize / 2 - responsiveThickness / 2;
   const circumference = Math.PI * radius;
 
-  // Value calculations
-  const displayValue = Math.min(Math.max(value, 0), max);
-  const progressRatio = displayValue / max;
-  const thresholdRatio = threshold / max;
-  const isOverThreshold = displayValue > threshold;
+  // Safe value calculations
+  const displayValue = Math.min(Math.max(safeValue, 0), safeMax);
+  const progressRatio = Math.min(displayValue / safeMax, 1);
+  const thresholdRatio = Math.min(safeThreshold / safeMax, 1);
+  const isOverThreshold = displayValue > safeThreshold;
 
-  // Progress dash offset calculation
-  const progressDashOffset = circumference - progressRatio * circumference;
+  // Use measured path length if available, otherwise fallback to calculation
+  const effectiveLength = pathLength || circumference;
+  const progressDashOffset = effectiveLength * (1 - progressRatio);
 
   // Center point calculation
   const centerX = responsiveSize / 2;
   const centerY = responsiveSize / 2 + responsiveThickness / 2;
+
+  // Define the arc path
+  const arcPath = `M ${centerX - radius},${centerY} A ${radius} ${radius} 0 0 1 ${centerX + radius},${centerY}`;
 
   // Threshold marker calculations
   const thresholdAngle = Math.PI * (1 - thresholdRatio);
@@ -92,10 +102,37 @@ const SemiCircularProgress = ({
   );
 
   const formatCurrency = (amount) => {
-    return new Intl.NumberFormat("en-IN", {
+    return isNaN(amount) ? "0" : new Intl.NumberFormat("en-IN", {
       maximumFractionDigits: 0,
     }).format(amount);
   };
+
+  useEffect(() => {
+    setThreshold(initialThreshold);
+    setIsLoading(false);
+  }, [initialThreshold]);
+
+  // Measure the actual path length after render
+  useLayoutEffect(() => {
+    if (progressPathRef.current) {
+      const length = progressPathRef.current.getTotalLength();
+      setPathLength(length);
+    }
+  }, [responsiveSize, responsiveThickness]);
+
+  if (isLoading) {
+    return (
+      <Box sx={{ 
+        width: responsiveSize, 
+        height: responsiveSize / 2,
+        display: "flex",
+        justifyContent: "center",
+        alignItems: "center"
+      }}>
+        <Typography>Loading...</Typography>
+      </Box>
+    );
+  }
 
   return (
     <>
@@ -124,7 +161,7 @@ const SemiCircularProgress = ({
           <FaPlus
             className="text-neutral-400 cursor-pointer hover:text-neutral-600"
             onClick={() => {
-              setInputValue(threshold.toString());
+              setInputValue(safeThreshold.toString());
               setShowModal(true);
             }}
             aria-label="Set threshold"
@@ -148,8 +185,7 @@ const SemiCircularProgress = ({
           >
             {/* Background Track */}
             <path
-              d={`M ${centerX - radius},${centerY} 
-                 A ${radius} ${radius} 0 0 1 ${centerX + radius},${centerY}`}
+              d={arcPath}
               fill="none"
               stroke={backgroundColor}
               strokeWidth={responsiveThickness}
@@ -158,21 +194,21 @@ const SemiCircularProgress = ({
 
             {/* Progress Track */}
             <motion.path
-              d={`M ${centerX - radius},${centerY} 
-                 A ${radius} ${radius} 0 0 1 ${centerX + radius},${centerY}`}
+              ref={progressPathRef}
+              d={arcPath}
               fill="none"
               stroke={isOverThreshold ? thresholdColor : color}
               strokeWidth={responsiveThickness}
               strokeLinecap="round"
-              strokeDasharray={circumference}
+              strokeDasharray={effectiveLength}
               strokeDashoffset={progressDashOffset}
-              initial={{ strokeDashoffset: circumference }}
+              initial={{ strokeDashoffset: effectiveLength }}
               animate={{ strokeDashoffset: progressDashOffset }}
               transition={{ duration: animationDuration }}
             />
 
             {/* Threshold Marker */}
-            {showThresholdMarker && threshold > 0 && (
+            {showThresholdMarker && safeThreshold > 0 && (
               <>
                 <line
                   x1={thresholdPosition.x}
@@ -196,7 +232,7 @@ const SemiCircularProgress = ({
           </svg>
 
           {/* Threshold Label */}
-          {showThresholdMarker && threshold > 0 && (
+          {showThresholdMarker && safeThreshold > 0 && (
             <div
               style={{
                 position: "absolute",
@@ -216,7 +252,7 @@ const SemiCircularProgress = ({
                 border: `1px solid ${thresholdColor}`,
               }}
             >
-              Limit: {formatCurrency(threshold)}
+              Limit: {formatCurrency(safeThreshold)}
               {unit}
             </div>
           )}
@@ -256,16 +292,13 @@ const SemiCircularProgress = ({
                 {formatCurrency(displayValue)}
                 {unit}
               </Typography>
-              <Typography
-                variant="body2"
-                sx={{ color: "text.secondary", mt: 1 }}
-              >
-                of {formatCurrency(max)}
+              <Typography variant="body2" sx={{ color: "text.secondary", mt: 1 }}>
+                of {formatCurrency(safeMax)}
                 {unit}
               </Typography>
               {isOverThreshold && (
                 <Typography variant="caption" sx={{ color: thresholdColor }}>
-                  {formatCurrency(displayValue - threshold)}
+                  {formatCurrency(displayValue - safeThreshold)}
                   {unit} over
                 </Typography>
               )}
@@ -284,9 +317,9 @@ const SemiCircularProgress = ({
               value={inputValue}
               onChange={(e) => setInputValue(e.target.value)}
               className="border p-2 w-full mb-4 dark:bg-gray-600"
-              placeholder={`Enter threshold (0-${max})`}
+              placeholder={`Enter threshold (0-${safeMax})`}
               min="0"
-              max={max}
+              max={safeMax}
             />
             <div className="flex justify-end">
               <button
