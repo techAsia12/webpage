@@ -126,6 +126,7 @@ const Dashboard = () => {
               value={cost}
               color={"text-indigo-400"}
               hidden={"hidden"}
+              unit={"₹"}
             />
           </motion.div>
           <motion.div
@@ -144,16 +145,16 @@ const Dashboard = () => {
         <div className="w-full lg:w-1/3 flex flex-col space-y-6 pt-0 lg:pt-16">
           <div className="flex flex-col lg:flex-row lg:space-x-6 space-y-6 lg:space-y-0 h-80">
             <Meter
-              outerColor={"#d3435c"}
-              innerColor={"#f97316"}
-              outerValue={parseFloat(kwh)}
-              innerValue={user?.watt || 0}
-              outerMax={10000}
-              innerMax={10000}
-              outerUnit={"kwh/units"}
-              innerUnit={"W"}
-              outerLabel={"Units"}
-              innerLabel={"Power"}
+              outerColor={"#f97316"}
+              innerColor={"#d3435c"}
+              outerValue={user?.watt || 0}
+              innerValue={parseFloat(kwh)}
+              outerMax={5000}
+              innerMax={100}
+              outerUnit={"W"}
+              innerUnit={"kwh/units"}
+              outerLabel={"Power"}
+              innerLabel={"Units"}
               initial={{ y: 100, opacity: 0 }}
               animate={{ y: 0, opacity: 1 }}
               transition={{ duration: 1, delay: 1.2 }}

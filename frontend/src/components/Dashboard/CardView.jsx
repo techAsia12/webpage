@@ -13,25 +13,6 @@ const CardTemp = ({ color, name, value, unit, totalValue, hidden }) => {
     withCredentials: true,
   };
 
-  const handleSetThreshold = async () => {
-    if (!inputValue) {
-      toast.error("Please enter a valid threshold value.");
-      return;
-    }
-
-    try {
-      await axios.post(
-        `${import.meta.env.VITE_BACKEND_URL}/api/user/set-threshold`,
-        { threshold: inputValue },
-        options
-      );
-      toast.success("Threshold set successfully!");
-      setShowModal(false);
-    } catch (err) {
-      toast.error("Failed to set threshold. Please try again.");
-    }
-  };
-
   return (
     <>
       <Card
@@ -62,30 +43,17 @@ const CardTemp = ({ color, name, value, unit, totalValue, hidden }) => {
 
               {/* Main Value Section */}
               <div className="flex items-baseline justify-center gap-2 mb-4">
+                <span className="text-5xl lg:text-6xl text-gray-500 dark:text-gray-400">
+                  {unit}
+                </span>
                 <span className={`text-5xl lg:text-6xl font-semibold ${color}`}>
                   {value || 0}
-                </span>
-                <span className="text-sm text-gray-500 dark:text-gray-400">
-                  {unit}
                 </span>
               </div>
             </div>
           </div>
         </CardContent>
       </Card>
-
-      <ToastContainer
-        position="top-right"
-        autoClose={5000}
-        hideProgressBar={false}
-        newestOnTop={false}
-        closeOnClick
-        rtl={false}
-        pauseOnFocusLoss
-        draggable
-        pauseOnHover
-        theme="colored"
-      />
     </>
   );
 };

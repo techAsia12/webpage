@@ -16,7 +16,7 @@ const SemiCircularProgress = ({
   thresholdColor = "#FF0000",
   backgroundColor = "#f5f5f5",
   showValue = true,
-  unit = "Rs",
+  unit = " ₹",
   label = "Total Cost",
   animationDuration = 0.8,
   showThresholdMarker = true,
@@ -270,8 +270,7 @@ const SemiCircularProgress = ({
                 border: `1px solid ${thresholdColor}`,
               }}
             >
-              Limit: {formatCurrency(safeThreshold)}
-              {unit}
+              Limit:{unit} {formatCurrency(safeThreshold)}
             </div>
           )}
         </Box>
@@ -305,22 +304,22 @@ const SemiCircularProgress = ({
                   color: isOverThreshold ? thresholdColor : color,
                   lineHeight: 1.1,
                 }}
-                marginTop={isMobile ? "-150%" : "-220%"}
+                marginTop={isMobile ? "-200%" : "-280%"}
               >
-                {formatCurrency(displayValue)}
                 {unit}
+                {formatCurrency(displayValue)}
               </Typography>
               <Typography
                 variant="body2"
                 sx={{ color: "text.secondary", mt: 1 }}
               >
-                of {formatCurrency(safeMax)}
                 {unit}
+                of {formatCurrency(safeMax)}
               </Typography>
               {isOverThreshold && (
                 <Typography variant="caption" sx={{ color: thresholdColor }}>
-                  {formatCurrency(displayValue - safeThreshold)}
                   {unit} over
+                  {formatCurrency(displayValue - safeThreshold)}
                 </Typography>
               )}
             </motion.div>
