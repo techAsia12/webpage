@@ -136,7 +136,7 @@ const Dashboard = () => {
         </div>
 
         {/* Middle Section: Meters */}
-        <div className="w-full lg:w-1/3 flex flex-col space-y-6 pt-0 lg:pt-12">
+        <div className="w-full lg:w-1/3 flex flex-col space-y-6 pt-0 lg:pt-16">
           <div className="flex flex-col lg:flex-row lg:space-x-6 space-y-6 lg:space-y-0 h-80">
             <Meter
               outerColor={"#d3435c"}
