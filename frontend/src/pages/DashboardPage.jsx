@@ -17,7 +17,7 @@ const Dashboard = () => {
   const [maxKwh, setMaxKwh] = useState(0);
   const [selectedDate, setSelectedDate] = useState(() => {
     const date = new Date();
-    return date.toISOString().split('T')[0];
+    return date.toISOString().split("T")[0];
   });
   const [data, setData] = useState({
     labels: Array.from({ length: 24 }, (_, i) => `${i}:00`),
@@ -42,8 +42,8 @@ const Dashboard = () => {
         {
           ...options,
           params: {
-            date
-          }
+            date,
+          },
         }
       );
       const userData = response.data.data;
@@ -66,7 +66,7 @@ const Dashboard = () => {
           ...options,
           params: {
             date,
-          }
+          },
         }
       );
       if (response.status === 200) {
@@ -108,7 +108,7 @@ const Dashboard = () => {
     newDate.setDate(newDate.getDate() + days);
     const today = new Date();
     if (newDate > today) return;
-    setSelectedDate(newDate.toISOString().split('T')[0]);
+    setSelectedDate(newDate.toISOString().split("T")[0]);
   };
 
   return (
@@ -133,10 +133,11 @@ const Dashboard = () => {
             animate={{ x: 0, opacity: 1 }}
             transition={{ duration: 1, delay: 1.2 }}
           >
-            <SemiCircularProgress 
+            <SemiCircularProgress
               value={totalCost}
-              max={1000+(threshold*0.2)}
-              initialThreshold={threshold}/>
+              max={threshold * 1.1}
+              initialThreshold={threshold}
+            />
           </motion.div>
         </div>
 
@@ -180,8 +181,8 @@ const Dashboard = () => {
       <div className="w-full lg:mt-10 mt-60">
         <div className="flex flex-col lg:flex-row lg:space-x-10 space-y-6 lg:space-y-0">
           <div className="w-full">
-            <Barchart 
-              data={data} 
+            <Barchart
+              data={data}
               selectedDate={selectedDate}
               onPrevDate={() => handleDateChange(-1)}
               onNextDate={() => handleDateChange(1)}

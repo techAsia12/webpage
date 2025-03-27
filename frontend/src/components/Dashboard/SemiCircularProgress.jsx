@@ -39,11 +39,6 @@ const SemiCircularProgress = ({
     }
 
     const newThreshold = Number(inputValue);
-    if (newThreshold <= 0 || newThreshold > max) {
-      toast.error(`Threshold must be between 0 and ${max}`);
-      return;
-    }
-
     try {
       await axios.post(
         `${import.meta.env.VITE_BACKEND_URL}/api/user/set-threshold`,
@@ -109,7 +104,7 @@ const SemiCircularProgress = ({
           position: "relative",
           width: "100%",
           maxWidth: responsiveSize,
-          height: isMobile?responsiveSize/2:responsiveSize / 2.5 ,
+          height: isMobile ? responsiveSize / 2 : responsiveSize / 2.5,
           display: "flex",
           flexDirection: "column",
           alignItems: "center",
@@ -119,7 +114,11 @@ const SemiCircularProgress = ({
       >
         {/* Header Section */}
         <div className="flex justify-between items-center w-full mb-2">
-          <Typography variant="h6" className="dark:text-white" ml={responsiveTextSize}>
+          <Typography
+            variant="h6"
+            className="dark:text-white"
+            ml={responsiveTextSize}
+          >
             {label}
           </Typography>
           <FaPlus
@@ -203,7 +202,9 @@ const SemiCircularProgress = ({
                 position: "absolute",
                 left: `${(labelPosition.x / responsiveSize) * 100}%`,
                 top: `${(labelPosition.y / responsiveSize) * 100}%`,
-                transform:isMobile?"translate(-85%,-150%)" : "translate(-120%, -50%)",
+                transform: isMobile
+                  ? "translate(-85%,-150%)"
+                  : "translate(-120%, -50%)",
                 color: thresholdColor,
                 fontSize: theme.typography.pxToRem(12),
                 fontWeight: 600,
@@ -250,7 +251,7 @@ const SemiCircularProgress = ({
                   color: isOverThreshold ? thresholdColor : color,
                   lineHeight: 1.1,
                 }}
-                marginTop={isMobile?"-150%":"-220%"}
+                marginTop={isMobile ? "-150%" : "-220%"}
               >
                 {formatCurrency(displayValue)}
                 {unit}
@@ -276,13 +277,13 @@ const SemiCircularProgress = ({
       {/* Threshold Setting Modal */}
       {showModal && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50">
-          <div className="bg-white p-6 rounded-lg w-80">
+          <div className="bg-white dark:bg-gray-900 dark:text-white p-6 rounded-lg w-80">
             <h2 className="text-lg font-bold mb-4">Set Threshold</h2>
             <input
               type="number"
               value={inputValue}
               onChange={(e) => setInputValue(e.target.value)}
-              className="border p-2 w-full mb-4"
+              className="border p-2 w-full mb-4 dark:bg-gray-600"
               placeholder={`Enter threshold (0-${max})`}
               min="0"
               max={max}
@@ -290,13 +291,13 @@ const SemiCircularProgress = ({
             <div className="flex justify-end">
               <button
                 onClick={() => setShowModal(false)}
-                className="mr-2 px-4 py-2 bg-gray-300 rounded"
+                className="mr-2 px-4 py-2 bg-gray-300 dark:bg-gray-800 rounded border"
               >
                 Cancel
               </button>
               <button
                 onClick={handleSetThreshold}
-                className="px-4 py-2 bg-blue-500 text-white rounded"
+                className="px-4 py-2 bg-blue-500 dark:bg-black border text-white rounded"
               >
                 Set
               </button>
