@@ -5,7 +5,10 @@ const app = express();
 
 app.use(
   cors({
-    origin: process.env.ORIGIN,
+    origin: [
+      "http://localhost:5173", 
+      "https://smartenergymeter.techasiamechatronics.com", 
+    ],
     credentials: true,
   })
 );
