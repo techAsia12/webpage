@@ -8,14 +8,6 @@ import { login } from "../Features/auth/auth.slice.js";
 import { useDispatch } from "react-redux";
 import SemiCircularProgress from "../components/Dashboard/SemiCircularProgress.jsx";
 
-/**
- * Dashboard Component
- *
- * A dashboard component that displays real-time energy usage data, including meters,
- * cost information, and a bar chart for hourly usage.
- *
- * @returns {JSX.Element} - Rendered Dashboard component
- */
 const Dashboard = () => {
   const [user, setUser] = useState({});
   const [kwh, setKwh] = useState(0);
@@ -23,12 +15,16 @@ const Dashboard = () => {
   const [threshold, setThreshold] = useState(0);
   const [cost, setCost] = useState(0);
   const [maxKwh, setMaxKwh] = useState(0);
+  const [selectedDate, setSelectedDate] = useState(() => {
+    const date = new Date();
+    return date.toISOString().split('T')[0];
+  });
   const [data, setData] = useState({
-    labels: Array.from({ length: 24 }, (_, i) => `${i}:00`), // 24-hour labels
+    labels: Array.from({ length: 24 }, (_, i) => `${i}:00`),
     datasets: [
       {
         label: "Units Used Today",
-        data: Array(24).fill(0), // Initialize with 24 zeros
+        data: Array(24).fill(0),
         backgroundColor: "rgba(75, 192, 192, 0.2)",
         borderColor: "rgba(75, 192, 192, 1)",
         borderWidth: 1,
@@ -39,14 +35,16 @@ const Dashboard = () => {
   const dispatch = useDispatch();
   const options = { withCredentials: true };
 
-  /**
-   * Fetch user data and update state.
-   */
-  const fetchUserData = async () => {
+  const fetchUserData = async (date = selectedDate) => {
     try {
       const response = await axios.get(
         `${import.meta.env.VITE_BACKEND_URL}/api/user/data`,
-        options
+        {
+          ...options,
+          params: {
+            date
+          }
+        }
       );
       const userData = response.data.data;
       setUser(userData);
@@ -54,20 +52,22 @@ const Dashboard = () => {
       setTotalCost(userData.totalCost);
       setCost(userData.costToday);
       setThreshold(userData.threshold);
-      dispatch(login(userData)); // Update Redux store
+      dispatch(login(userData));
     } catch (err) {
       console.error("User data error:", err.response?.data?.message || err);
     }
   };
 
-  /**
-   * Fetch hourly usage data and update the bar chart.
-   */
-  const fetchHourlyUsage = async () => {
+  const fetchHourlyUsage = async (date = selectedDate) => {
     try {
       const response = await axios.get(
         `${import.meta.env.VITE_BACKEND_URL}/api/user/retrive-hourly`,
-        options
+        {
+          ...options,
+          params: {
+            date,
+          }
+        }
       );
       if (response.status === 200) {
         const unitsPerHour = response.data.data;
@@ -86,28 +86,33 @@ const Dashboard = () => {
     }
   };
 
-  // Fetch user data and hourly usage on component mount
   useEffect(() => {
     fetchUserData();
+    fetchHourlyUsage();
 
     const interval = setInterval(() => {
       fetchUserData();
-    }, 5000); // Refresh data every 5 seconds
+    }, 5000);
 
-    return () => clearInterval(interval); // Cleanup interval on unmount
-  }, []);
+    return () => clearInterval(interval);
+  }, [selectedDate]);
 
-  // Update maxKwh if kwh exceeds the current max
   useEffect(() => {
-    fetchHourlyUsage();
     if (kwh > maxKwh) {
       setMaxKwh(Math.ceil(kwh / 10000) * 100000);
     }
   }, [kwh]);
 
+  const handleDateChange = (days) => {
+    const newDate = new Date(selectedDate);
+    newDate.setDate(newDate.getDate() + days);
+    const today = new Date();
+    if (newDate > today) return;
+    setSelectedDate(newDate.toISOString().split('T')[0]);
+  };
+
   return (
     <div className="w-full min-h-screen bg-transparent p-4 lg:p-10 ">
-      {/* Top Section: Cost Cards */}
       <div className="flex flex-col lg:flex-row lg:space-x-10 space-y-6 lg:space-y-0 ">
         <div className="w-full lg:w-[45%] flex flex-col space-y-4">
           <motion.div
@@ -129,13 +134,12 @@ const Dashboard = () => {
             transition={{ duration: 1, delay: 1.2 }}
           >
             <SemiCircularProgress 
-            value={totalCost}
-            max={1000+(threshold*0.2)}
-            initialThreshold={threshold}/>
+              value={totalCost}
+              max={1000+(threshold*0.2)}
+              initialThreshold={threshold}/>
           </motion.div>
         </div>
 
-        {/* Middle Section: Meters */}
         <div className="w-full lg:w-1/3 flex flex-col space-y-6 pt-0 lg:pt-16">
           <div className="flex flex-col lg:flex-row lg:space-x-6 space-y-6 lg:space-y-0 h-80">
             <Meter
@@ -173,12 +177,15 @@ const Dashboard = () => {
         </div>
       </div>
 
-      {/* Bottom Section: Bar Chart and Additional Meters */}
       <div className="w-full lg:mt-10 mt-60">
         <div className="flex flex-col lg:flex-row lg:space-x-10 space-y-6 lg:space-y-0">
-          {/* Bar Chart */}
           <div className="w-full">
-            <Barchart data={data} />
+            <Barchart 
+              data={data} 
+              selectedDate={selectedDate}
+              onPrevDate={() => handleDateChange(-1)}
+              onNextDate={() => handleDateChange(1)}
+            />
           </div>
         </div>
       </div>

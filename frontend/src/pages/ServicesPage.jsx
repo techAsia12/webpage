@@ -19,11 +19,10 @@ import { Helmet } from "react-helmet";
 const Services = () => {
   const options = { withCredentials: true };
   const mode = useSelector((state) => state.theme.mode);
-
   const [data, setData] = useState([]);
   const [btnState, setBtnState] = useState("d");
+  const [selectedDate, setSelectedDate] = useState(new Date());
 
-  // Constants for labels and endpoints
   const LABELS = {
     d: "Units Used Today",
     w: "Units Used This Week",
@@ -36,59 +35,101 @@ const Services = () => {
     y: `${import.meta.env.VITE_BACKEND_URL}/api/user/retrive-yearly`,
   };
 
-  // Fetch data based on the current button state
-  const fetchData = async (endpoint, label, currentBtnState) => {
+  // Helper functions for date formatting
+  const formatDate = (date) => {
+    return date.toLocaleDateString("en-US", {
+      month: "short",
+      day: "numeric",
+    });
+  };
+
+  const getWeekRange = (date) => {
+    const start = new Date(date);
+    start.setDate(date.getDate() - date.getDay()); // Start of week (Sunday)
+    const end = new Date(start);
+    end.setDate(start.getDate() + 6); // End of week (Saturday)
+    return { start, end };
+  };
+
+  const formatDateParam = (date, period) => {
+    switch (period) {
+      case "d": return date.toISOString().split("T")[0];
+      case "w": {
+        const weekRange = getWeekRange(date);
+        return `${weekRange.start.toISOString().split("T")[0]}_${weekRange.end.toISOString().split("T")[0]}`;
+      }
+      case "y": return date.getFullYear();
+      default: return date.toISOString().split("T")[0];
+    }
+  };
+
+  const fetchData = async (endpoint, label, period) => {
     try {
-      const res = await axios.get(endpoint, options);
-      const formattedData = res.data.data.map((value, index) => {
-        let name;
-        switch (currentBtnState) {
-          case "d":
-            const hour = index % 12 === 0 ? 12 : index % 12;
-            const ampm = index < 12 ? "AM" : "PM";
-            name = `${hour} ${ampm}`;
-            break;
-          case "w":
-            const days = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
-            name = days[index] || index;
-            break;
-          case "y":
-            const months = [
-              "Jan",
-              "Feb",
-              "Mar",
-              "Apr",
-              "May",
-              "Jun",
-              "Jul",
-              "Aug",
-              "Sep",
-              "Oct",
-              "Nov",
-              "Dec",
-            ];
-            name = months[index] || index;
-            break;
-          default:
-            name = index;
-        }
-        return { name, [label]: value };
+      const dateParam = formatDateParam(selectedDate, period);
+      const res = await axios.get(endpoint, {
+        ...options,
+        params: { date: dateParam }
       });
+
+      const formattedData = res.data.data.map((value, index) => ({
+        name: getLabelName(index, period),
+        [label]: value
+      }));
+
       setData(formattedData);
-      console.log("Data fetched successfully:", formattedData);
-      toast.success("Data fetched successfully!");
     } catch (error) {
       console.error("Error fetching data:", error);
-      setData([]);
       toast.error(error.response?.data?.message || "Error fetching data");
+      setData([]);
+    }
+  };
+
+  const getLabelName = (index, period) => {
+    switch (period) {
+      case "d":
+        const hour = index % 12 || 12;
+        return `${hour} ${index < 12 ? "AM" : "PM"}`;
+      case "w":
+        return ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"][index];
+      case "y":
+        return ["Jan", "Feb", "Mar", "Apr", "May", "Jun", 
+                "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"][index];
+      default: return index;
+    }
+  };
+
+  const handleDateChange = (direction) => {
+    const newDate = new Date(selectedDate);
+    switch (btnState) {
+      case "d": newDate.setDate(newDate.getDate() + direction); break;
+      case "w": newDate.setDate(newDate.getDate() + (7 * direction)); break;
+      case "y": newDate.setFullYear(newDate.getFullYear() + direction); break;
+    }
+    setSelectedDate(newDate);
+  };
+
+  const isNextDisabled = () => {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    
+    switch (btnState) {
+      case "d": 
+        return selectedDate.toDateString() === today.toDateString();
+      case "w": {
+        const currentWeekRange = getWeekRange(today);
+        const selectedWeekRange = getWeekRange(selectedDate);
+        return selectedWeekRange.end >= currentWeekRange.start;
+      }
+      case "y": 
+        return selectedDate.getFullYear() === today.getFullYear();
+      default: 
+        return false;
     }
   };
 
   useEffect(() => {
-    const endpoint = ENDPOINTS[btnState];
-    const label = LABELS[btnState];
-    fetchData(endpoint, label, btnState);
-  }, [btnState, mode]);
+    fetchData(ENDPOINTS[btnState], LABELS[btnState], btnState);
+  }, [btnState, selectedDate, mode]);
 
   return (
     <div className="w-full lg:w-4/5 h-fit lg:ml-44 lg:pt-10 p-4">
@@ -104,9 +145,60 @@ const Services = () => {
         />
       </Helmet>
 
-      <h2 className={mode === "dark" ? "text-white" : "text-black"}>
-        Usage Statistics
-      </h2>
+      <div className="flex items-center justify-between mb-4">
+        <h2 className={mode === "dark" ? "text-white" : "text-black"}>
+          Usage Statistics
+        </h2>
+        <div className="flex items-center gap-4">
+          <button
+            onClick={() => handleDateChange(-1)}
+            className="p-2 rounded-full bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600"
+          >
+            <svg
+              className="w-6 h-6 text-gray-700 dark:text-gray-200"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+            </svg>
+          </button>
+          <span className={mode === "dark" ? "text-white" : "text-black"}>
+            {btnState === "y" 
+              ? selectedDate.getFullYear()
+              : btnState === "w"
+              ? (() => {
+                  const { start, end } = getWeekRange(selectedDate);
+                  return `${formatDate(start)} - ${formatDate(end)}`;
+                })()
+              : selectedDate.toLocaleDateString()}
+          </span>
+          <button
+            onClick={() => handleDateChange(1)}
+            disabled={isNextDisabled()}
+            className={`p-2 rounded-full ${
+              isNextDisabled() 
+                ? "bg-gray-100 dark:bg-gray-800 cursor-not-allowed"
+                : "bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600"
+            }`}
+          >
+            <svg
+              className={`w-6 h-6 ${
+                isNextDisabled()
+                  ? "text-gray-400 dark:text-gray-600"
+                  : "text-gray-700 dark:text-gray-200"
+              }`}
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+            </svg>
+          </button>
+        </div>
+      </div>
+
+      {/* Rest of the component remains the same */}
       <div className="h-96 lg:h-[500px]">
         {data.length === 0 ? (
           <div className="flex items-center justify-center h-full">
@@ -116,10 +208,7 @@ const Services = () => {
           </div>
         ) : (
           <ResponsiveContainer width="100%" height="100%">
-            <LineChart
-              data={data}
-              margin={{ top: 20, right: 30, left: 20, bottom: 5 }}
-            >
+            <LineChart data={data} margin={{ top: 20, right: 30, left: 20, bottom: 5 }}>
               <CartesianGrid strokeDasharray="3 3" />
               <XAxis
                 dataKey="name"
@@ -145,26 +234,15 @@ const Services = () => {
           </ResponsiveContainer>
         )}
       </div>
+
       <div className="pt-10 flex flex-col sm:flex-row justify-center space-y-4 sm:space-y-0 sm:space-x-10">
-        <Button
-          variant="contained"
-          className="w-full sm:w-44 h-10 text-base sm:text-lg"
-          onClick={() => setBtnState("d")}
-        >
+        <Button variant="contained" onClick={() => setBtnState("d")}>
           Daily Usage
         </Button>
-        <Button
-          variant="contained"
-          className="w-full sm:w-44 h-10 text-base sm:text-lg"
-          onClick={() => setBtnState("w")}
-        >
+        <Button variant="contained" onClick={() => setBtnState("w")}>
           Weekly Usage
         </Button>
-        <Button
-          variant="contained"
-          className="w-full sm:w-44 h-10 text-base sm:text-lg"
-          onClick={() => setBtnState("y")}
-        >
+        <Button variant="contained" onClick={() => setBtnState("y")}>
           Yearly Usage
         </Button>
       </div>

@@ -543,35 +543,28 @@ const retiveCostToday = asyncHandler(async (req, res, next) => {
 
 const retiveHourlyUsage = asyncHandler(async (req, res, next) => {
   const user = req?.user;
+  const { date } = req.query;
 
-  if (!user) {
-    return next(new ApiError(400, "User not authenticated"));
-  }
+  if (!user) return next(new ApiError(400, "User not authenticated"));
+  if (!date) return next(new ApiError(400, "Date parameter is required"));
 
   try {
     const [result] = await db.promise().query(
-      `SELECT unit, time 
-         FROM daily_usage 
-         WHERE phoneno = ? 
-         AND DATE(time) = CURDATE() 
-         ORDER BY time ASC`,
-      [user.id]
+      `SELECT HOUR(time) AS hour, SUM(unit) AS total_units
+       FROM daily_usage 
+       WHERE phoneno = ? 
+       AND DATE(time) = ?
+       GROUP BY HOUR(time)
+       ORDER BY hour ASC`,
+      [user.id, date]
     );
 
-    if (result.length === 0) {
-      return next(new ApiError(404, "No hourly data found"));
-    }
-
-    let unitsPerHour = new Array(24).fill(0);
-
-    result.forEach((entry) => {
-      const hour = new Date(entry.time).getHours();
-      unitsPerHour[hour] = entry.unit;
+    let unitsPerHour = Array.from({ length: 24 }, (_, i) => 0);
+    result.forEach((row) => {
+      unitsPerHour[row.hour] = parseFloat(row.total_units.toFixed(3));
     });
-    console.log("Hourly Usage:", unitsPerHour);
-    return res
-      .status(200)
-      .json(new ApiResponse(200, unitsPerHour, "Data Sent"));
+
+    return res.status(200).json(new ApiResponse(200, unitsPerHour, "Hourly data sent"));
   } catch (err) {
     return next(new ApiError(500, "Database Error"));
   }
@@ -579,33 +572,31 @@ const retiveHourlyUsage = asyncHandler(async (req, res, next) => {
 
 const retiveWeeklyUsage = asyncHandler(async (req, res, next) => {
   const user = req?.user;
+  const { date } = req.query;
 
-  if (!user) {
-    return next(new ApiError(400, "User not authenticated"));
-  }
+  if (!user) return next(new ApiError(400, "User not authenticated"));
+  if (!date) return next(new ApiError(400, "Date parameter is required"));
 
   try {
+    const [startDate, endDate] = date.split('_');
+    
     const [result] = await db.promise().query(
-      `SELECT unit, time FROM weekly_usage 
-        WHERE phoneno = ? 
-        AND YEARWEEK(time) = YEARWEEK(CURDATE()) 
-        ORDER BY time ASC`,
-      [user.id]
+      `SELECT DAYOFWEEK(time) - 1 AS dayIndex, 
+              SUM(unit) AS total_units
+       FROM weekly_usage 
+       WHERE phoneno = ? 
+       AND DATE(time) BETWEEN ? AND ?
+       GROUP BY DAYOFWEEK(time)
+       ORDER BY time ASC`,
+      [user.id, startDate, endDate]
     );
 
-    if (result.length === 0) {
-      return next(new ApiError(404, "No weekly data found"));
-    }
-
-    let unitsPerDay = new Array(7).fill(0);
-
-    result.forEach((entry) => {
-      const day = new Date(entry.time).getDay();
-      unitsPerDay[day] = entry.unit;
+    let unitsPerDay = Array.from({ length: 7 }, (_, i) => 0);
+    result.forEach((row) => {
+      unitsPerDay[row.dayIndex] = parseFloat(row.total_units.toFixed(3));
     });
 
-    console.log(unitsPerDay);
-    return res.status(200).json(new ApiResponse(200, unitsPerDay, "Data Sent"));
+    return res.status(200).json(new ApiResponse(200, unitsPerDay, "Weekly data sent"));
   } catch (err) {
     return next(new ApiError(500, "Database Error"));
   }
@@ -613,33 +604,29 @@ const retiveWeeklyUsage = asyncHandler(async (req, res, next) => {
 
 const retiveYearlyUsage = asyncHandler(async (req, res, next) => {
   const user = req?.user;
+  const { date } = req.query;
 
-  if (!user) {
-    return next(new ApiError(400, "User not authenticated"));
-  }
+  if (!user) return next(new ApiError(400, "User not authenticated"));
+  if (!date) return next(new ApiError(400, "Year parameter is required"));
 
   try {
-    const [result] = await db
-      .promise()
-      .query(
-        "SELECT unit, time FROM yearly_usage WHERE phoneno = ? ORDER BY time ASC",
-        [user.id]
-      );
+    const [result] = await db.promise().query(
+      `SELECT MONTH(time) - 1 AS monthIndex, 
+              SUM(unit) AS total_units
+       FROM yearly_usage 
+       WHERE phoneno = ? 
+       AND YEAR(time) = ?
+       GROUP BY MONTH(time)
+       ORDER BY time ASC`,
+      [user.id, date]
+    );
 
-    if (result.length === 0) {
-      return next(new ApiError(404, "No yearly data found"));
-    }
-
-    let unitsPerMonth = new Array(12).fill(0);
-
-    result.forEach((entry) => {
-      const month = new Date(entry.time).getMonth();
-      unitsPerMonth[month] = entry.unit;
+    let unitsPerMonth = Array.from({ length: 12 }, (_, i) => 0);
+    result.forEach((row) => {
+      unitsPerMonth[row.monthIndex] = parseFloat(row.total_units.toFixed(3));
     });
 
-    return res
-      .status(200)
-      .json(new ApiResponse(200, unitsPerMonth, "Data Sent"));
+    return res.status(200).json(new ApiResponse(200, unitsPerMonth, "Yearly data sent"));
   } catch (err) {
     return next(new ApiError(500, "Database Error"));
   }
