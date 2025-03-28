@@ -124,7 +124,7 @@ const BarChart = ({ data, selectedDate, onPrevDate, onNextDate }) => {
           <Bar
             dataKey="value"
             name={data.datasets[0].label}
-            fill={isDarkMode ? "#8884d8" : "#82ca9d"}
+            fill={isDarkMode ? "#8884d8" : "#1976D2"}
           />
         </RechartsBarChart>
       </ResponsiveContainer>

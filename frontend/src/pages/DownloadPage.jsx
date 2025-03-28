@@ -42,16 +42,13 @@ const Download = () => {
           initial={{ scale: 0.8 }}
           animate={{ scale: 1 }}
           transition={{ duration: 0.5 }}
-          className="text-center"
+          className="lg:ml-20"
         >
           <Button
             variant="contained"
-            className="w-56 text-lg hover:bg-gray-400 hover:text-white dark:bg-neutral-950"
+            className="w-56 text-lg dark:bg-[#3f51b5] dark:hover:bg-[#4963c7]"
             sx={{
               border: "1px solid #ffffff",
-              ":hover": {
-                backgroundColor: "#374151",
-              },
             }}
             aria-label="Download Mobile App"
           >

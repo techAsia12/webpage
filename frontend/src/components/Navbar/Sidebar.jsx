@@ -277,7 +277,8 @@ const Sidebar = () => {
       {/* Delete and Logout Buttons */}
       <Button
         variant="contained"
-        className="border border-neutral-900 w-44 h-9 text-xl bg-red-500 text-white hover:bg-white hover:text-black dark:bg-red-700 dark:hover:bg-red-600"
+        className="border border-neutral-900 w-44 h-9 text-xl text-white hover:bg-red-500"
+        color="error"
         onClick={() =>
           handleClickOpen("Are you sure you want to delete your account?")
         }

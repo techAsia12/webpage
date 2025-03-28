@@ -43,13 +43,6 @@ const Contact = () => {
     },
   };
 
-  // Styles for the submit button based on theme
-  const buttonStyles = {
-    backgroundColor: mode === "dark" ? "#374151" : "#000000",
-    "&:hover": {
-      backgroundColor: mode === "dark" ? "#000000" : "#374151",
-    },
-  };
 
   /**
    * Handle form submission.
@@ -183,15 +176,9 @@ const Contact = () => {
           {/* Submit Button */}
           <Button
             variant="contained"
-            className="w-44 h-9 text-xl text-center"
+            className="w-44 h-9 text-xl text-center dark:bg-[#3f51b5] dark:hover:bg-[#4963c7]"
             sx={{
-              ...buttonStyles,
-              backgroundColor: mode === "dark" ? "black" : "",
               border: "1px solid white",
-              color: "white",
-              "&:hover": {
-                backgroundColor: mode === "dark" ? "#374151" : "black",
-              },
             }}
             type="submit"
             aria-label="Submit Button"

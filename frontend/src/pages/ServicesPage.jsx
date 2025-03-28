@@ -53,13 +53,18 @@ const Services = () => {
 
   const formatDateParam = (date, period) => {
     switch (period) {
-      case "d": return date.toISOString().split("T")[0];
+      case "d":
+        return date.toISOString().split("T")[0];
       case "w": {
         const weekRange = getWeekRange(date);
-        return `${weekRange.start.toISOString().split("T")[0]}_${weekRange.end.toISOString().split("T")[0]}`;
+        return `${weekRange.start.toISOString().split("T")[0]}_${
+          weekRange.end.toISOString().split("T")[0]
+        }`;
       }
-      case "y": return date.getFullYear();
-      default: return date.toISOString().split("T")[0];
+      case "y":
+        return date.getFullYear();
+      default:
+        return date.toISOString().split("T")[0];
     }
   };
 
@@ -68,12 +73,12 @@ const Services = () => {
       const dateParam = formatDateParam(selectedDate, period);
       const res = await axios.get(endpoint, {
         ...options,
-        params: { date: dateParam }
+        params: { date: dateParam },
       });
 
       const formattedData = res.data.data.map((value, index) => ({
         name: getLabelName(index, period),
-        [label]: value
+        [label]: value,
       }));
 
       setData(formattedData);
@@ -92,18 +97,37 @@ const Services = () => {
       case "w":
         return ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"][index];
       case "y":
-        return ["Jan", "Feb", "Mar", "Apr", "May", "Jun", 
-                "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"][index];
-      default: return index;
+        return [
+          "Jan",
+          "Feb",
+          "Mar",
+          "Apr",
+          "May",
+          "Jun",
+          "Jul",
+          "Aug",
+          "Sep",
+          "Oct",
+          "Nov",
+          "Dec",
+        ][index];
+      default:
+        return index;
     }
   };
 
   const handleDateChange = (direction) => {
     const newDate = new Date(selectedDate);
     switch (btnState) {
-      case "d": newDate.setDate(newDate.getDate() + direction); break;
-      case "w": newDate.setDate(newDate.getDate() + (7 * direction)); break;
-      case "y": newDate.setFullYear(newDate.getFullYear() + direction); break;
+      case "d":
+        newDate.setDate(newDate.getDate() + direction);
+        break;
+      case "w":
+        newDate.setDate(newDate.getDate() + 7 * direction);
+        break;
+      case "y":
+        newDate.setFullYear(newDate.getFullYear() + direction);
+        break;
     }
     setSelectedDate(newDate);
   };
@@ -111,18 +135,18 @@ const Services = () => {
   const isNextDisabled = () => {
     const today = new Date();
     today.setHours(0, 0, 0, 0);
-    
+
     switch (btnState) {
-      case "d": 
+      case "d":
         return selectedDate.toDateString() === today.toDateString();
       case "w": {
         const currentWeekRange = getWeekRange(today);
         const selectedWeekRange = getWeekRange(selectedDate);
         return selectedWeekRange.end >= currentWeekRange.start;
       }
-      case "y": 
+      case "y":
         return selectedDate.getFullYear() === today.getFullYear();
-      default: 
+      default:
         return false;
     }
   };
@@ -160,11 +184,16 @@ const Services = () => {
               stroke="currentColor"
               viewBox="0 0 24 24"
             >
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M15 19l-7-7 7-7"
+              />
             </svg>
           </button>
           <span className={mode === "dark" ? "text-white" : "text-black"}>
-            {btnState === "y" 
+            {btnState === "y"
               ? selectedDate.getFullYear()
               : btnState === "w"
               ? (() => {
@@ -177,7 +206,7 @@ const Services = () => {
             onClick={() => handleDateChange(1)}
             disabled={isNextDisabled()}
             className={`p-2 rounded-full ${
-              isNextDisabled() 
+              isNextDisabled()
                 ? "bg-gray-100 dark:bg-gray-800 cursor-not-allowed"
                 : "bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600"
             }`}
@@ -192,7 +221,12 @@ const Services = () => {
               stroke="currentColor"
               viewBox="0 0 24 24"
             >
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M9 5l7 7-7 7"
+              />
             </svg>
           </button>
         </div>
@@ -208,7 +242,10 @@ const Services = () => {
           </div>
         ) : (
           <ResponsiveContainer width="100%" height="100%">
-            <LineChart data={data} margin={{ top: 20, right: 30, left: 20, bottom: 5 }}>
+            <LineChart
+              data={data}
+              margin={{ top: 20, right: 30, left: 20, bottom: 5 }}
+            >
               <CartesianGrid strokeDasharray="3 3" />
               <XAxis
                 dataKey="name"
@@ -225,7 +262,7 @@ const Services = () => {
               <Line
                 type="monotone"
                 dataKey={LABELS[btnState]}
-                stroke="#8884d8"
+                stroke={mode === "dark" ? "#8884d8" : "#1976D2"} 
                 strokeWidth={2}
                 dot={{ r: 4 }}
                 activeDot={{ r: 8 }}
@@ -236,13 +273,25 @@ const Services = () => {
       </div>
 
       <div className="pt-10 flex flex-col sm:flex-row justify-center space-y-4 sm:space-y-0 sm:space-x-10">
-        <Button variant="contained" onClick={() => setBtnState("d")}>
+        <Button
+          variant="contained"
+          onClick={() => setBtnState("d")}
+          className="dark:bg-[#3f51b5] dark:hover:bg-[#4963c7]"
+        >
           Daily Usage
         </Button>
-        <Button variant="contained" onClick={() => setBtnState("w")}>
+        <Button
+          variant="contained"
+          onClick={() => setBtnState("w")}
+          className="dark:bg-[#3f51b5] dark:hover:bg-[#4963c7]"
+        >
           Weekly Usage
         </Button>
-        <Button variant="contained" onClick={() => setBtnState("y")}>
+        <Button
+          variant="contained"
+          onClick={() => setBtnState("y")}
+          className="dark:bg-[#3f51b5] dark:hover:bg-[#4963c7]"
+        >
           Yearly Usage
         </Button>
       </div>

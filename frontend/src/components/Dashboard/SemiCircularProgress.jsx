@@ -14,7 +14,7 @@ const SemiCircularProgress = ({
   thickness = 80,
   color = "#4BB543",
   thresholdColor = "#FF0000",
-  backgroundColor = "#f5f5f5",
+  backgroundColor = "#d1d5db",
   showValue = true,
   unit = " ₹",
   label = "Total Cost",
@@ -345,13 +345,13 @@ const SemiCircularProgress = ({
             <div className="flex justify-end">
               <button
                 onClick={() => setShowModal(false)}
-                className="mr-2 px-4 py-2 bg-gray-300 dark:bg-gray-800 rounded border"
+                className="mr-2 px-4 py-2 bg-blue-500 hover:bg-blue-600 text-white dark:bg-black dark:hover:bg-gray-900 rounded border"
               >
                 Cancel
               </button>
               <button
                 onClick={handleSetThreshold}
-                className="px-4 py-2 bg-blue-500 dark:bg-black border text-white rounded"
+                className="px-4 py-2 bg-blue-500 hover:bg-blue-600 dark:bg-black border dark:hover:bg-gray-900 text-white rounded"
               >
                 Set
               </button>
