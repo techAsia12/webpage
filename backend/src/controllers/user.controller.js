@@ -693,7 +693,7 @@ const sentData = asyncHandler(async (req, res, next) => {
 
     try {
       const [clientResult] = await connection.query(
-        "SELECT units, state, threshold, emailSent FROM client_dets WHERE phoneno = ? FOR UPDATE",
+        "SELECT units, state, threshold FROM client_dets WHERE phoneno = ? FOR UPDATE",
         [phoneno]
       );
 
@@ -706,8 +706,7 @@ const sentData = asyncHandler(async (req, res, next) => {
       const currentUnits = clientData.units || 0;
       const state = clientData.state;
       let threshold = clientData.threshold;
-      let emailSent = clientData.emailSent;
-
+      console.log(threshold);
       // Calculate energy consumption for 15-second interval (in kWh)
       const intervalHours = 15 / 3600; // Convert 15 seconds to hours
       const kwh = Math.max(
@@ -803,20 +802,17 @@ const sentData = asyncHandler(async (req, res, next) => {
       // const costToday = costCalc(totalDailyUsage, billDets);
 
       // Check threshold and send email if needed
-      if (threshold < totalCost && emailSent === 0) {
+      if (threshold < totalCost ) {
         const [userResult] = await connection.query(
           "SELECT email FROM users WHERE phoneno = ?",
           [phoneno]
         );
 
         if (userResult.length > 0) {
-          if (userResult[0].totalCost > threshold) {
-            const userEmail = userResult[0].email;
-            await sendMessage(userEmail, totalCost, threshold);
-
-            emailSent = 1; // Mark email as sent
-            threshold = Math.floor(threshold * 1.5); // Increase threshold by 50%
-          }
+          const userEmail = userResult[0].email;
+          await sendMessage(userEmail, totalCost, threshold);
+          console.log("Email sent.....");
+          threshold = Math.floor(threshold * 1.5); 
         }
       }
 
@@ -838,7 +834,6 @@ const sentData = asyncHandler(async (req, res, next) => {
           totalCost = ?,
           costToday = ?,
           threshold = ?,
-          emailSent = ?,
           state = ?
         WHERE phoneno = ?
       `;
@@ -853,7 +848,6 @@ const sentData = asyncHandler(async (req, res, next) => {
         isLastDayOfMonth ? 0 : totalCost, // Reset if last day of month
         isLastDayOfMonth ? 0 : costToday, // Reset if last day of month
         threshold,
-        emailSent,
         state,
         phoneno,
       ];
@@ -1220,7 +1214,7 @@ const setThershold = asyncHandler(async (req, res, next) => {
     );
 
     const updateQuery = `
-      UPDATE client_dets SET threshold=?
+      UPDATE client_dets SET threshold=? 
       WHERE phoneno = ?
     `;
     const updateParams = [threshold, phone];

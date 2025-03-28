@@ -5,8 +5,8 @@ import random
 url = "http://localhost:8000/api/user/sentData"  
 
 params = {
-    'phoneno': '1234567890',  
-    'MACadd': '00:52:22:01:23:43',  
+    'phoneno': '1212121212',  
+    'MACadd': '00:52:22:01:23:45',  
 }
 
 while True:
