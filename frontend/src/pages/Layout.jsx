@@ -30,10 +30,10 @@ const Layout = () => {
 
   // Actions for the floating action button (FAB)
   const actions = [
-    { icon: <HomeIcon />, name: "Home", path: "/dashboard" },
-    { icon: <TimelineIcon />, name: "Usage", path: "/dashboard/services" },
-    { icon: <InfoIcon />, name: "About", path: "/dashboard/about" },
     { icon: <LocationOnIcon />, name: "Contact", path: "/dashboard/contact" },
+    { icon: <InfoIcon />, name: "About", path: "/dashboard/about" },
+    { icon: <TimelineIcon />, name: "Usage", path: "/dashboard/services" },
+    { icon: <HomeIcon />, name: "Home", path: "/dashboard" },
   ];
 
   const isUpdate = useSelector((state) => state.pages?.isUpdate);

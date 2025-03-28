@@ -41,8 +41,8 @@ const AdminLayout = () => {
 
   // Actions for the floating action button (FAB)
   const actions = [
-    { icon: <HomeIcon />, name: "Home", path: "/admin/home" },
     { icon: <ArticleIcon />, name: "BillDets", path: "/admin/home/billdets" },
+    { icon: <HomeIcon />, name: "Home", path: "/admin/home" },
   ];
 
   // Update visibility states based on Redux state changes
