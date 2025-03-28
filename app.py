@@ -2,7 +2,7 @@ import requests
 import time
 import random
 
-url = "http://localhost:8000/api/user/sentData"  
+url = "https://webpage-fh3k.onrender.com/api/user/sentData"  
 
 params = {
     'phoneno': '1212121212',  
