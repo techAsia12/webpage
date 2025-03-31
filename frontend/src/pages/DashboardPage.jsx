@@ -4,7 +4,7 @@ import CardTemp from "../components/Dashboard/CardView.jsx";
 import axios from "axios";
 import Barchart from "../components/Dashboard/Barchart.jsx";
 import { motion } from "framer-motion";
-import { login } from "../Features/auth/auth.slice.js";
+import { login,setRole } from "../Features/auth/auth.slice.js";
 import { useDispatch } from "react-redux";
 import SemiCircularProgress from "../components/Dashboard/SemiCircularProgress.jsx";
 
@@ -55,6 +55,7 @@ const Dashboard = () => {
       setThreshold(userData.threshold);
       setPowerFactor(userData.power_factor);
       dispatch(login(userData));
+      dispatch(setRole("Client"));
     } catch (err) {
       console.error("User data error:", err.response?.data?.message || err);
     }

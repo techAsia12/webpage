@@ -16,7 +16,7 @@ import VisibilityOff from "@mui/icons-material/VisibilityOff";
 import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import { useDispatch, useSelector } from "react-redux";
-import { login } from "../Features/auth/auth.slice";
+import { login, setRole } from "../Features/auth/auth.slice";
 import SideBarAnimation from "../components/SideBarAnimation";
 import ElectricBoltIcon from "@mui/icons-material/ElectricBolt";
 import LogoutIcon from "@mui/icons-material/Logout";
@@ -76,6 +76,7 @@ const Login = () => {
           const user = res.data.data;
           setTimeout(() => {
             dispatch(login(user));
+            dispatch(setRole(role));
           }, 2000);
         }
       })

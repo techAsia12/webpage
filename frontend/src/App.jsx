@@ -8,7 +8,7 @@ function App() {
   const dispatch = useDispatch();
   const themeMode = useSelector((state) => state.theme.mode);
   const authStatus = useSelector((state) => state.auth?.status);
-  const role = useSelector((state) => state.auth?.userData?.role);
+  const role = useSelector((state) => state.auth?.role);
   const navigate = useNavigate();
   console.log("authStatus", authStatus);
   console.log(role);
