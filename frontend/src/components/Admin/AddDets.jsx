@@ -56,6 +56,7 @@ const AddDets = () => {
   const [totalTaxPercent, setTotalTaxPercent] = useState("");
   const [tax, setTax] = useState("");
   const [state, setState] = useState("");
+  const [serviceProvider, setServiceProvider] = useState("");
   const dispatch = useDispatch();
   const theme = useSelector((state) => state.theme.mode);
   const [loading, setLoading] = useState(false);
@@ -64,13 +65,20 @@ const AddDets = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    if (!base || !percentPerUnit || !totalTaxPercent || !tax || !state) {
+    if (
+      !base ||
+      !percentPerUnit ||
+      !totalTaxPercent ||
+      !tax ||
+      !state ||
+      !serviceProvider
+    ) {
       toast.error("All fields are required.");
       return;
     }
 
     setLoading(true);
-
+    const state_Service_provider = serviceProvider + "_" + state;
     try {
       const response = await axios.post(
         `${import.meta.env.VITE_BACKEND_URL}/api/admin/bill-dets`,
@@ -79,14 +87,14 @@ const AddDets = () => {
           percentPerUnit,
           totalTaxPercent,
           tax,
-          state,
+          state: state_Service_provider,
         },
         { withCredentials: true }
       );
 
       if (response?.data?.success === true) {
         toast.success("Bill details submitted successfully!");
-        dispatch(set(state));
+        dispatch(set(state_Service_provider));
         dispatch(billDetsPage());
         dispatch(costRangePage());
       }
@@ -99,7 +107,7 @@ const AddDets = () => {
   };
 
   return (
-    <div className="flex justify-center items-center dark:text-white lg:p-10 pt-20">
+    <div className="flex justify-center items-center dark:text-white lg:p-10 p-5">
       <SEO /> {/* Add SEO meta tags */}
       <CancelIcon
         className="absolute top-10 lg:top-6 right-1 lg:right-[30%] cursor-pointer"
@@ -107,8 +115,8 @@ const AddDets = () => {
         onClick={() => dispatch(billDetsPage())}
         fontSize="large"
       />
-      <Box className="flex flex-col items-center justify-center space-y-10 w-3/4 lg:w-1/3 lg:p-10 p-5 border rounded-3xl">
-        <h1 className="text-center text-2xl lg:text-4xl pt-10 lg:pt-20 text-black dark:text-white">
+      <Box className="flex flex-col items-center justify-center space-y-10 w-3/4 lg:w-1/3 border rounded-3xl p-5 pb-10">
+        <h1 className="text-center text-2xl lg:text-4xl pt-5 lg:pt-10 text-black dark:text-white">
           Bill Details
         </h1>
 
@@ -137,7 +145,13 @@ const AddDets = () => {
           theme={theme}
         />
         <FormInput
-          label="Enter Provider_State"
+          label="Enter Service Provider"
+          value={serviceProvider}
+          onChange={(e) => setServiceProvider(e.target.value)}
+          theme={theme}
+        />
+        <FormInput
+          label="Enter State"
           value={state}
           onChange={(e) => setState(e.target.value)}
           theme={theme}
@@ -148,7 +162,7 @@ const AddDets = () => {
         ) : (
           <Button
             variant="contained"
-            className="w-full lg:w-44 h-9 text-xl dark:hover:bg-gray-600 mt-4 lg:mt-0"
+            className="w-full lg:w-44 h-9 text-xl dark:hover:bg-gray-600 mt-4 "
             sx={{
               backgroundColor: theme === "dark" ? "black" : "",
               border: "1px solid white",

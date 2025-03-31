@@ -16,6 +16,7 @@ import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import { useDispatch, useSelector } from "react-redux";
 import { costRangePage } from "../../Features/pages/pages.slice";
+import CancelIcon from "@mui/icons-material/Cancel";
 
 // SEO Component to add meta tags
 const SEO = () => (
@@ -160,7 +161,8 @@ const CostRangePage = () => {
       axios
         .post(
           `${import.meta.env.VITE_BACKEND_URL}/api/admin/range-dets`,
-          rowData,{withCredentials:true}
+          rowData,
+          { withCredentials: true }
         )
         .then((res) => {
           if (res?.status === 200) {
@@ -190,6 +192,12 @@ const CostRangePage = () => {
         hideProgressBar={false}
         newestOnTop
         closeButton
+      />
+      <CancelIcon
+        className="absolute top-10 lg:top-20 right-1 lg:right-[10%] cursor-pointer"
+        color="error"
+        onClick={() => dispatch(costRangePage())}
+        fontSize="large"
       />
       <TableContainer className="lg:flex lg:justify-center w-1/2">
         <Table
@@ -223,7 +231,6 @@ const CostRangePage = () => {
           </TableBody>
         </Table>
       </TableContainer>
-
       <div className="mt-10 w-full flex justify-center">
         {loading ? (
           <CircularProgress color="primary" />
