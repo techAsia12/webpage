@@ -36,12 +36,12 @@ const AdminLayout = () => {
   // Navigation links for the navbar
   const navLinks = [
     { path: "/admin/home", label: "Home" },
-    { path: "/admin/home/billdets", label: "BillDets" },
+    { path: "/admin/home/billdets", label: "Bill Units" },
   ];
 
   // Actions for the floating action button (FAB)
   const actions = [
-    { icon: <ArticleIcon />, name: "BillDets", path: "/admin/home/billdets" },
+    { icon: <ArticleIcon />, name: "Bill Units", path: "/admin/home/billdets" },
     { icon: <HomeIcon />, name: "Home", path: "/admin/home" },
   ];
 

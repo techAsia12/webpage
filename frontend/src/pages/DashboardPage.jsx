@@ -143,7 +143,7 @@ const Dashboard = () => {
                 value={powerFactor}
                 color={"text-indigo-400"}
                 hidden={"hidden"}
-                unit={"λ"}
+                unit={""}
               />
             </motion.div>
           </div>

@@ -145,7 +145,7 @@ const Home = () => {
         cell: (info) => Number(info.getValue()).toFixed(2),
       }),
       columnHelper.accessor("power_factor", {
-        header: "Power Factor (λ)",
+        header: "Power Factor ",
         cell: (info) => Number(info.getValue()).toFixed(2),
       }),
       columnHelper.accessor("totalCost", {
