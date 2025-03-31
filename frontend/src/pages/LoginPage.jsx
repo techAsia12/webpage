@@ -16,7 +16,7 @@ import VisibilityOff from "@mui/icons-material/VisibilityOff";
 import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import { useDispatch, useSelector } from "react-redux";
-import { login, setRole } from "../Features/auth/auth.slice";
+import { login,setRole } from "../Features/auth/auth.slice";
 import SideBarAnimation from "../components/SideBarAnimation";
 import ElectricBoltIcon from "@mui/icons-material/ElectricBolt";
 import LogoutIcon from "@mui/icons-material/Logout";
@@ -27,7 +27,7 @@ const Login = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [recaptcha, setRecaptcha] = useState();
-  const [role, setRole] = useState("Client");
+  const [role, setrole] = useState("Client");
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const captchaRef = useRef();
@@ -40,7 +40,7 @@ const Login = () => {
 
   const handleRoleChange = (event, newRole) => {
     if (newRole) {
-      setRole(newRole);
+      setrole(newRole);
     }
   };
 
@@ -298,6 +298,7 @@ const Login = () => {
                       );
                     } else if (response?.status === 200) {
                       dispatch(login(response.data.data));
+                      dispatch(setRole(role));
                     }
                   }, 2000);
                 })
