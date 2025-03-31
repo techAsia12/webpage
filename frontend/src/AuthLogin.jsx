@@ -44,7 +44,7 @@ const AuthLogin = ({ children, authentication = true }) => {
           name="description"
           content="Dashboard page for Smart Energy Meter. Manage your profile and services."
         />
-        <meta name="keywords" content="dashboard, profile, your app name" />
+        <meta name="keywords" content="dashboard, profile, smart energy meter" />
       </Helmet>
       {children}
     </>

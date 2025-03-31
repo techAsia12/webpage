@@ -23,7 +23,7 @@ const SEO = () => (
       name="keywords"
       content="admin signup, admin registration, create admin account"
     />
-    <meta name="author" content="Your Company Name" />
+    <meta name="author" content="TechAsia Mechatronics Pvt Ltd" />
   </>
 );
 

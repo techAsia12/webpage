@@ -29,7 +29,7 @@ const SEO = () => (
       name="keywords"
       content="cost range, energy billing, tax per unit, unit range, admin panel"
     />
-    <meta name="author" content="Your Company Name" />
+    <meta name="author" content="TechAsia Mechatronics Pvt Ltd" />
   </>
 );
 

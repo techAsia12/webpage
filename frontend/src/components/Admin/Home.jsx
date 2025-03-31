@@ -32,7 +32,7 @@ const SEO = () => (
       name="keywords"
       content="client data, energy metrics, dashboard, admin panel"
     />
-    <meta name="author" content="Your Company Name" />
+    <meta name="author" content="TechAsia Mechatronics Pvt Ltd" />
   </>
 );
 

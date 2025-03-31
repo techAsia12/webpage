@@ -34,24 +34,24 @@ const AdminAuth = ({ children, authentication = true }) => {
   return loader ? (
     <>
       <Helmet>
-        <title>Loading - Your App Name</title>
+        <title>Loading - Smart Energy Meter</title>
         <meta
           name="description"
           content="Loading page for Your App Name. Please wait while we authenticate your session."
         />
-        <meta name="keywords" content="loading, authentication, your app name" />
+        <meta name="keywords" content="loading, authentication, smart energy meter" />
       </Helmet>
       <h1>Loading......</h1>
     </>
   ) : (
     <>
       <Helmet>
-        <title>Admin - Your App Name</title>
+        <title>Admin - Smart Energy Meter</title>
         <meta
           name="description"
-          content="Admin page for Your App Name. Manage your services and users."
+          content="Admin page for Smart Energy Meter. Manage your services and users."
         />
-        <meta name="keywords" content="admin, management, your app name" />
+        <meta name="keywords" content="admin, management, smart energy meter" />
       </Helmet>
       {children}
     </>

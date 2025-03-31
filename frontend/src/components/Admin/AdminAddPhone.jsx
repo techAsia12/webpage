@@ -16,7 +16,7 @@ const SEO = () => (
       name="keywords"
       content="admin phone number, admin setup, add phone number"
     />
-    <meta name="author" content="Your Company Name" />
+    <meta name="author" content="TechAsia Mechatronics Pvt Ltd" />
   </>
 );
 

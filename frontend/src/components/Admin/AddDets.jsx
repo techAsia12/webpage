@@ -22,7 +22,7 @@ const SEO = () => (
       name="keywords"
       content="bill details, tax management, admin panel, add bill details"
     />
-    <meta name="author" content="Your Company Name" />
+    <meta name="author" content="TechAsia Mechatronics Pvt Ltd" />
   </>
 );
 

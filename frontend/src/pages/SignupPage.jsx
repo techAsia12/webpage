@@ -119,7 +119,7 @@ const Signup = () => {
         />
         <meta
           name="keywords"
-          content="sign up, register, client, your app name"
+          content="sign up, register, client, smart energy meter"
         />
       </Helmet>
 
