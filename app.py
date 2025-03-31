@@ -13,7 +13,7 @@ while True:
     try:
         voltage = random.randint(100, 240)  
         current = random.randint(1, 15)     
-        power_factor = random.randint(0, 1)     
+        power_factor = random.randint(-1, 1)     
         
         params['voltage'] = voltage
         params['current'] = current

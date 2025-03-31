@@ -36,7 +36,7 @@ const SEO = () => (
   </>
 );
 
-// Table Header Component
+// Table Header Component with border-x
 const TableHeader = ({ table, theme }) => (
   <TableHead>
     {table.getHeaderGroups().map((headerGroup) => (
@@ -48,6 +48,14 @@ const TableHeader = ({ table, theme }) => (
             sx={{
               background: theme === "dark" ? "#030712" : "#e2e8f0",
               color: theme === "dark" ? "white" : "black",
+              borderLeft: theme === "dark" ? "1px solid #374151" : "1px solid #d1d5db",
+              borderRight: theme === "dark" ? "1px solid #374151" : "1px solid #d1d5db",
+              '&:first-of-type': {
+                borderLeft: theme === "dark" ? "1px solid #374151" : "1px solid #d1d5db",
+              },
+              '&:last-of-type': {
+                borderRight: theme === "dark" ? "1px solid #374151" : "1px solid #d1d5db",
+              }
             }}
           >
             {flexRender(header.column.columnDef.header, header.getContext())}
@@ -68,6 +76,10 @@ const TableBodyContent = ({ table }) => (
             key={cell.id}
             align="right"
             className="dark:bg-gray-950 dark:text-white"
+            sx={{
+              borderLeft: "1px solid transparent",
+              borderRight: "1px solid transparent"
+            }}
           >
             {flexRender(cell.column.columnDef.cell, cell.getContext())}
           </TableCell>
@@ -107,27 +119,51 @@ const Home = () => {
     fetchClientData();
   }, [fetchClientData]);
 
-  // Define table columns
+  // Define table columns based on SQL query
   const columnHelper = createColumnHelper();
   const columns = React.useMemo(
     () => [
       columnHelper.accessor("phoneno", { header: "Phone No" }),
       columnHelper.accessor("name", { header: "Name" }),
       columnHelper.accessor("email", { header: "Email" }),
+      columnHelper.accessor("role", { header: "Role" }),
       columnHelper.accessor("MACadd", { header: "MAC Address" }),
       columnHelper.accessor("voltage", {
-        header: "Voltage",
+        header: "Voltage (V)",
         cell: (info) => Number(info.getValue()).toFixed(2),
       }),
       columnHelper.accessor("current", {
-        header: "Current",
+        header: "Current (A)",
+        cell: (info) => Number(info.getValue()).toFixed(2),
+      }),
+      columnHelper.accessor("units", {
+        header: "Units (kWh)",
         cell: (info) => Number(info.getValue()).toFixed(2),
       }),
       columnHelper.accessor("watt", {
-        header: "Watt",
+        header: "Power (W)",
         cell: (info) => Number(info.getValue()).toFixed(2),
       }),
-      columnHelper.accessor("date_time", { header: "Date Time" }),
+      columnHelper.accessor("power_factor", {
+        header: "Power Factor (λ)",
+        cell: (info) => Number(info.getValue()).toFixed(2),
+      }),
+      columnHelper.accessor("totalCost", {
+        header: "Total Cost",
+        cell: (info) => `₹${Number(info.getValue()).toFixed(2)}`,
+      }),
+      columnHelper.accessor("costToday", {
+        header: "Today's Cost",
+        cell: (info) => `₹${Number(info.getValue()).toFixed(2)}`,
+      }),
+      columnHelper.accessor("threshold", {
+        header: "Threshold",
+        cell: (info) => `₹${Number(info.getValue()).toFixed(2)}`,
+      }),
+      columnHelper.accessor("date_time", { 
+        header: "Date & Time",
+        cell: (info) => new Date(info.getValue()).toLocaleString()
+      }),
       columnHelper.accessor("state", { header: "State" }),
     ],
     []
@@ -139,24 +175,45 @@ const Home = () => {
     columns,
     getCoreRowModel: getCoreRowModel(),
     getPaginationRowModel: getPaginationRowModel(),
+    initialState: {
+      pagination: {
+        pageSize: 10,
+      },
+    },
   });
 
   // Loading and error states
-  if (loading)
-    return <LoadingSpinner />;
-  if (error)
-    return <div className="text-center py-10 text-red-500">{error}</div>;
+  if (loading) return <LoadingSpinner />;
+  if (error) return <div className="text-center py-10 text-red-500">{error}</div>;
 
   return (
     <div className="w-screen flex justify-center items-center">
-      <SEO /> {/* Add SEO meta tags */}
+      <SEO />
       <div className="flex justify-center dark:text-white h-fit w-full mt-10">
         <ToastContainer />
         <Paper
           sx={{
             width: "90%",
             overflow: "hidden",
-            border: theme === "dark" ? "1px solid white" : "1px solid black",
+            border: theme === "dark" ? "1px solid #374151" : "1px solid #d1d5db",
+            '& .MuiTableContainer-root': {
+              '&::-webkit-scrollbar': {
+                height: '10px',
+                width: '10px',
+              },
+              '&::-webkit-scrollbar-track': {
+                background: theme === 'dark' ? '#030712' : '#f1f1f1',
+              },
+              '&::-webkit-scrollbar-thumb': {
+                background: theme === 'dark' ? '#4b5563' : '#888',
+                borderRadius: '10px',
+                '&:hover': {
+                  background: theme === 'dark' ? '#6b7280' : '#555',
+                },
+              },
+              scrollbarWidth: 'thin',
+              scrollbarColor: theme === 'dark' ? '#4b5563 #030712' : '#888 #f1f1f1',
+            },
           }}
           className="dark:text-white"
         >
@@ -180,6 +237,7 @@ const Home = () => {
             sx={{
               backgroundColor: theme === "dark" ? "#030712" : "",
               color: theme === "dark" ? "white" : "black",
+              borderTop: theme === "dark" ? "1px solid #374151" : "1px solid #d1d5db",
             }}
           />
         </Paper>

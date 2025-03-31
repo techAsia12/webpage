@@ -25,7 +25,7 @@ const SemiCircularProgress = ({
   innerMax = 100,
   innerColor = "#3b82f6",
   innerUnit = "₹",
-  innerLabel = "Utilization",
+  innerLabel = "Cost Today",
   showInnerRing = false,
 }) => {
   const theme = useTheme();
@@ -190,14 +190,7 @@ const SemiCircularProgress = ({
         }}
       >
         {/* Header Section */}
-        <div className="flex justify-between items-center w-full mb-2">
-          <Typography
-            variant="h6"
-            className="dark:text-white"
-            ml={responsiveTextSize}
-          >
-            {label}
-          </Typography>
+        <div className="flex justify-end w-full mb-2">
           <FaPlus
             className="text-neutral-400 cursor-pointer hover:text-neutral-600"
             onClick={() => {
@@ -271,7 +264,7 @@ const SemiCircularProgress = ({
                 strokeDashoffset={innerProgressDashOffset}
                 initial={{ strokeDashoffset: innerEffectiveLength }}
                 animate={{ strokeDashoffset: innerProgressDashOffset }}
-                transition={{ duration: animationDuration * 1.2 }} 
+                transition={{ duration: animationDuration * 1.2 }}
               />
             )}
 
@@ -317,7 +310,7 @@ const SemiCircularProgress = ({
                 left: `${(labelPosition.x / responsiveSize) * 100}%`,
                 top: `${(labelPosition.y / responsiveSize) * 100}%`,
                 transform: isMobile
-                  ? "translate(-99%,-200%)"
+                  ? "translate(-110%,-200%)"
                   : "translate(-160%, -50%)",
                 color: thresholdColor,
                 fontSize: theme.typography.pxToRem(12),
@@ -395,6 +388,46 @@ const SemiCircularProgress = ({
             </motion.div>
           )}
         </Box>
+
+        {/* Labels and Date */}
+        <Box
+          sx={{
+            display: "flex",
+            justifyContent: "space-around",
+            width: "100%",
+            mt:"-20%"
+          }}
+        >
+          <Box sx={{ display: "flex", alignItems: "center" }}>
+            <Box
+              sx={{
+                width: 12,
+                height: 12,
+                borderRadius: "50%",
+                backgroundColor: color,
+                marginRight: 1,
+              }}
+            />
+            <Typography variant="caption" color={color}>
+              {label}
+            </Typography>
+          </Box>
+          <Box sx={{ display: "flex", alignItems: "center" }}>
+            <Box
+              sx={{
+                width: 12,
+                height: 12,
+                borderRadius: "50%",
+                backgroundColor: innerColor,
+                marginRight: 1,
+              }}
+            />
+            <Typography variant="caption" color={innerColor}>
+              {innerLabel}
+            </Typography>
+          </Box>
+        </Box>
+
       </Box>
 
       {/* Threshold Setting Modal */}

@@ -40,7 +40,7 @@ const SEO = () => (
   </>
 );
 
-// Table Header Component
+// Table Header Component with border styling
 const TableHeader = ({ table, theme }) => (
   <TableHead>
     {table.getHeaderGroups().map((headerGroup) => (
@@ -51,6 +51,14 @@ const TableHeader = ({ table, theme }) => (
             sx={{
               background: theme === "dark" ? "#030712" : "",
               color: theme === "dark" ? "white" : "black",
+              borderLeft: theme === "dark" ? "1px solid #374151" : "1px solid #e5e7eb",
+              borderRight: theme === "dark" ? "1px solid #374151" : "1px solid #e5e7eb",
+              '&:first-of-type': {
+                borderLeft: theme === "dark" ? "1px solid #374151" : "1px solid #e5e7eb",
+              },
+              '&:last-of-type': {
+                borderRight: theme === "dark" ? "1px solid #374151" : "1px solid #e5e7eb",
+              }
             }}
             align="right"
           >
@@ -72,6 +80,10 @@ const TableBodyContent = ({ table, theme, editingRowIndex, editedValues, setEdit
             key={cell.id}
             className="dark:bg-gray-950 dark:text-white"
             align="right"
+            sx={{
+              borderLeft: "1px solid transparent",
+              borderRight: "1px solid transparent"
+            }}
           >
             {flexRender(cell.column.columnDef.cell, cell.getContext())}
           </TableCell>
@@ -372,19 +384,59 @@ const BillDets = () => {
   }
 
   return (
-    <div className="w-screen flex items-center ">
-      <SEO /> {/* Add SEO meta tags */}
+    <div className="w-screen flex items-center">
+      <SEO />
       <div className="flex justify-center dark:text-white h-fit w-full mt-20 lg:ml-40">
         <ToastContainer />
         <Paper
           sx={{
             width: "90%",
             overflow: "hidden",
-            border: theme === "dark" ? "1px solid white" : "1px solid black",
+            border: theme === "dark" ? "1px solid #374151" : "1px solid #e5e7eb",
+            '& .MuiTableContainer-root': {
+              '&::-webkit-scrollbar': {
+                width: '10px',
+                height: '10px',
+              },
+              '&::-webkit-scrollbar-track': {
+                background: theme === 'dark' ? '#1f2937' : '#f1f1f1',
+                borderRadius: '10px',
+              },
+              '&::-webkit-scrollbar-thumb': {
+                background: theme === 'dark' ? '#4b5563' : '#888',
+                borderRadius: '10px',
+                '&:hover': {
+                  background: theme === 'dark' ? '#6b7280' : '#555',
+                },
+              },
+              scrollbarWidth: 'thin',
+              scrollbarColor: theme === 'dark' ? '#4b5563 #1f2937' : '#888 #f1f1f1',
+            },
           }}
-          className=" dark:text-white"
+          className="dark:text-white"
         >
-          <TableContainer sx={{ maxHeight: 520 }}>
+          <TableContainer 
+            sx={{ 
+              maxHeight: 520,
+              '&::-webkit-scrollbar': {
+                width: '10px',
+                height: '10px',
+              },
+              '&::-webkit-scrollbar-track': {
+                background: theme === 'dark' ? '#1f2937' : '#f1f1f1',
+                borderRadius: '10px',
+              },
+              '&::-webkit-scrollbar-thumb': {
+                background: theme === 'dark' ? '#4b5563' : '#888',
+                borderRadius: '10px',
+                '&:hover': {
+                  background: theme === 'dark' ? '#6b7280' : '#555',
+                },
+              },
+              scrollbarWidth: 'thin',
+              scrollbarColor: theme === 'dark' ? '#4b5563 #1f2937' : '#888 #f1f1f1',
+            }}
+          >
             <Table stickyHeader aria-label="bill details table">
               <TableHeader table={table} theme={theme} />
               <TableBodyContent
@@ -409,7 +461,11 @@ const BillDets = () => {
             onRowsPerPageChange={(e) =>
               table.setPageSize(Number(e.target.value))
             }
-            className="dark:bg-gray-950 dark:text-white"
+            sx={{
+              backgroundColor: theme === "dark" ? "#030712" : "",
+              color: theme === "dark" ? "white" : "black",
+              borderTop: theme === "dark" ? "1px solid #374151" : "1px solid #e5e7eb",
+            }}
           />
         </Paper>
       </div>

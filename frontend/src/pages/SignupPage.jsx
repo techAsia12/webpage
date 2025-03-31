@@ -16,6 +16,7 @@ import "react-toastify/dist/ReactToastify.css";
 import SideBarAnimation from "../components/SideBarAnimation.jsx";
 import ElectricBoltIcon from "@mui/icons-material/ElectricBolt";
 import { Helmet } from "react-helmet";
+import LogoutIcon from "@mui/icons-material/Logout";
 
 const Signup = () => {
   const [name, setName] = useState("");
@@ -92,7 +93,9 @@ const Signup = () => {
   // Fetch states on component mount
   useEffect(() => {
     axios
-      .get(`${import.meta.env.VITE_BACKEND_URL}/api/user/retrive-stateDets`,{withCredentials:true})
+      .get(`${import.meta.env.VITE_BACKEND_URL}/api/user/retrive-stateDets`, {
+        withCredentials: true,
+      })
       .then((res) => setStates(res.data.data))
       .catch((err) => console.log(err));
   }, []);
@@ -114,7 +117,10 @@ const Signup = () => {
           name="description"
           content="Sign up for an account on Your App Name. Register as a client and start managing your services."
         />
-        <meta name="keywords" content="sign up, register, client, your app name" />
+        <meta
+          name="keywords"
+          content="sign up, register, client, your app name"
+        />
       </Helmet>
 
       <ToastContainer />
@@ -130,6 +136,11 @@ const Signup = () => {
           />
         </div>
       )}
+
+        <LogoutIcon
+          className="fixed top-10 right-10 z-50 cursor-pointer"
+          onClick={() => navigate("/")}
+        />
 
       <div
         className={`lg:w-3/4 w-4/5 h-fit lg:h-screen border rounded-3xl lg:border-none lg:pt-16 backdrop-blur-2xl `}
@@ -356,7 +367,7 @@ const Signup = () => {
           <Button
             variant="contained"
             type="submit"
-            className="w-44 h-9 text-xl"
+            className="w-44 h-9 text-xl dark:bg-black"
             sx={{ border: "1px solid #ffffff" }}
             disabled={loading}
           >

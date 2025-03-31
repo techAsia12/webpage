@@ -61,13 +61,12 @@ const Login = () => {
 
     setRecaptcha(token);
 
-    const url =
-      role === "Admin"
-        ? `${import.meta.env.VITE_BACKEND_URL}/api/admin/login`
-        : `${import.meta.env.VITE_BACKEND_URL}/api/user/login`;
-
     axios
-      .post(url, { email, password, role, recaptcha: token }, options)
+      .post(
+        `${import.meta.env.VITE_BACKEND_URL}/api/user/login`,
+        { email, password, role, recaptcha: token },
+        options
+      )
       .then((res) => {
         setLoading(false);
         if (res?.data?.success === true) {
@@ -77,7 +76,6 @@ const Login = () => {
           const user = res.data.data;
           setTimeout(() => {
             dispatch(login(user));
-            navigate("/dashboard");
           }, 2000);
         }
       })
@@ -101,7 +99,10 @@ const Login = () => {
           name="description"
           content="Login to your account on Your App Name. Access your dashboard and manage your profile."
         />
-        <meta name="keywords" content="login, account, dashboard, your app name" />
+        <meta
+          name="keywords"
+          content="login, account, dashboard, your app name"
+        />
       </Helmet>
 
       <ToastContainer />
@@ -123,7 +124,9 @@ const Login = () => {
           className="fixed top-4 right-10 z-50 cursor-pointer"
           onClick={() => navigate("/")}
         />
-        <h1 className="text-center text-4xl pt-10 lg:pt-24 dark:text-white">Login</h1>
+        <h1 className="text-center text-4xl pt-10 lg:pt-24 dark:text-white">
+          Login
+        </h1>
 
         <form className="self-center mx-10 space-y-3 flex flex-col justify-center items-center lg:h-2/3 h-3/4">
           <ToggleButtonGroup
@@ -280,7 +283,7 @@ const Login = () => {
               axios
                 .post(
                   `${import.meta.env.VITE_BACKEND_URL}/api/user/google-login`,
-                  { token: idToken,role },
+                  { token: idToken, role },
                   options
                 )
                 .then((response) => {
@@ -294,9 +297,6 @@ const Login = () => {
                       );
                     } else if (response?.status === 200) {
                       dispatch(login(response.data.data));
-                      navigate(
-                        `${response.data.data.role === "Client" ? `/dashboard` : `/admin/home`}`
-                      );
                     }
                   }, 2000);
                 })

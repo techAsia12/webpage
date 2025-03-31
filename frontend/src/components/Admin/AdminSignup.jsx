@@ -9,6 +9,7 @@ import SideBarAnimation from "../SideBarAnimation.jsx";
 import { useDispatch, useSelector } from "react-redux";
 import { GoogleLogin } from "@react-oauth/google";
 import { login } from "../../Features/auth/auth.slice.js";
+import LogoutIcon from "@mui/icons-material/Logout";
 
 // SEO Component to add meta tags
 const SEO = () => (
@@ -151,7 +152,6 @@ const AdminSignup = () => {
       <SEO /> {/* Add SEO meta tags */}
       <ToastContainer />
       <SideBarAnimation />
-
       {loading && (
         <div className="fixed top-0 left-0 w-full h-full bg-black/50 flex justify-center items-center z-50">
           <CircularProgress
@@ -161,7 +161,10 @@ const AdminSignup = () => {
           />
         </div>
       )}
-
+      <LogoutIcon
+        className="fixed top-10 right-10 z-50 cursor-pointer"
+        onClick={() => navigate("/")}
+      />
       <div
         className={`lg:w-3/4 w-4/5 h-fit lg:h-screen border rounded-3xl lg:border-none lg:pt-16 backdrop-blur-2xl `}
       >
@@ -236,7 +239,7 @@ const AdminSignup = () => {
           <p className="text-center text-xs lg:text-base">
             Already Have An Account?
             <Link
-              to={"/"}
+              to={"/login"}
               className="text-sm text-blue-400 underline text-center"
             >
               SignIn

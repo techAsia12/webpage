@@ -9,10 +9,10 @@ import SendIcon from "@mui/icons-material/Send";
 
 /**
  * Contact Component
- * 
+ *
  * A contact form component that allows users to send messages. It includes an address card,
  * a Google Maps embed, and a form with fields for name, phone number, email, and message.
- * 
+ *
  * @returns {JSX.Element} - Rendered Contact component
  */
 const Contact = () => {
@@ -43,10 +43,9 @@ const Contact = () => {
     },
   };
 
-
   /**
    * Handle form submission.
-   * 
+   *
    * @param {React.FormEvent} e - The form submission event
    */
   const handleSubmit = async (e) => {
@@ -55,10 +54,15 @@ const Contact = () => {
     try {
       const response = await axios.post(
         `${import.meta.env.VITE_BACKEND_URL}/api/user/send-Mail`,
-        { name, email, phoneno, message },{withCredentials:true}
+        { name, email, phoneno, message },
+        { withCredentials: true }
       );
 
       console.log(response);
+      setName("");
+      setPhoneno("");
+      setEmail("");
+      setMessage("");
       toast.success("Email sent successfully!");
     } catch (error) {
       console.log(error);
@@ -134,6 +138,7 @@ const Contact = () => {
             label="Name"
             variant="outlined"
             className="w-full"
+            value={name}
             sx={inputStyles}
             required
             onChange={(e) => setName(e.target.value)}
@@ -146,6 +151,7 @@ const Contact = () => {
               label="Mobile No"
               variant="outlined"
               className="lg:w-1/2 w-full"
+              value={phoneno}
               sx={inputStyles}
               required
               onChange={(e) => setPhoneno(e.target.value)}
@@ -154,6 +160,7 @@ const Contact = () => {
             <TextField
               label="Email"
               variant="outlined"
+              value={email}
               className="lg:w-1/2 w-full"
               sx={inputStyles}
               required
@@ -168,6 +175,7 @@ const Contact = () => {
             multiline
             rows={6}
             className="w-full"
+            value={message}
             sx={inputStyles}
             onChange={(e) => setMessage(e.target.value)}
             aria-label="Message Input"
