@@ -189,17 +189,6 @@ const SemiCircularProgress = ({
           px: isMobile ? 1 : 2,
         }}
       >
-        {/* Header Section */}
-        <div className="flex justify-end w-full mb-2">
-          <FaPlus
-            className="text-neutral-400 cursor-pointer hover:text-neutral-600"
-            onClick={() => {
-              setInputValue(safeThreshold.toString());
-              setShowModal(true);
-            }}
-            aria-label="Set threshold"
-          />
-        </div>
 
         {/* Progress Visualization */}
         <Box
@@ -322,6 +311,11 @@ const SemiCircularProgress = ({
                 whiteSpace: "nowrap",
                 border: `1px solid ${thresholdColor}`,
               }}
+              className="cursor-pointer"
+              onClick={() => {
+                setInputValue(safeThreshold.toString());
+                setShowModal(true);
+              }}
             >
               Limit:{unit} {formatCurrency(safeThreshold)}
             </div>
@@ -374,8 +368,8 @@ const SemiCircularProgress = ({
                     mt: 1,
                   }}
                 >
-                  {innerDisplayValue.toFixed(1)}
                   {innerUnit}
+                  {innerDisplayValue.toFixed(1)}
                 </Typography>
               )}
 
