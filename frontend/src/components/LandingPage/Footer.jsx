@@ -4,10 +4,10 @@ import EmailIcon from "@mui/icons-material/Email";
 
 /**
  * Footer Component
- * 
+ *
  * A footer section that displays contact information, including address, phone number, and email.
  * It uses Framer Motion for animations and supports dark mode.
- * 
+ *
  * @returns {JSX.Element} - Rendered Footer component
  */
 const Footer = () => {
@@ -40,8 +40,8 @@ const Footer = () => {
           className="my-4"
           aria-label="Address"
         >
-          A-101, Ganpati Krupa Niwas, Opp. NKGSB Bank, Pt. Dindayal Road,
-          Dombivli(W), Pin – 421202
+          302, Pandurang Smruti CHS, Dawadi Road, Shivsena Shakha, 
+          Dombivali East , Pin – 421203
         </motion.p>
 
         {/* Animated Phone Number */}

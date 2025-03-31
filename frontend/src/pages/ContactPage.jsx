@@ -84,8 +84,8 @@ const Contact = () => {
           <h1 className="my-10 text-center lg:text-5xl text-2xl">Address</h1>
           <div className="text-center font-thin">
             <p className="my-4 lg:text-xl px-5">
-              A-101, Ganpati Krupa Niwas, Opp. NKGSB Bank, Pt. Dindayal Road,
-              Dombivli(W), Pin – 421202
+              302, Pandurang Smruti CHS, Dawadi Road, Shivsena Shakha, Dombivali
+              East , Pin – 421203
             </p>
             <p className="my-4">+91 7666308198</p>
             <a
