@@ -8,9 +8,10 @@ function App() {
   const dispatch = useDispatch();
   const themeMode = useSelector((state) => state.theme.mode);
   const authStatus = useSelector((state) => state.auth?.status);
-  const role = useSelector((state) => state.auth?.role);
+  const role = useSelector((state) => state.auth?.userData?.role);
   const navigate = useNavigate();
   console.log("authStatus", authStatus);
+  console.log(role);
 
   // Initialize theme on component mount
   useEffect(() => {

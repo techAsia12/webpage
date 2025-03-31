@@ -286,7 +286,7 @@ const Update = () => {
         {/* Submit Button */}
         <Button
           variant="contained"
-          className="w-44 h-9 text-xl"
+          className="w-44 h-9 text-xl dark:bg-black"
           onClick={handleSubmit}
           sx={{
             backgroundColor: theme === "dark" ? "gray.700" : "white",
