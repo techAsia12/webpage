@@ -15,6 +15,7 @@ const Dashboard = () => {
   const [threshold, setThreshold] = useState(0);
   const [cost, setCost] = useState(0);
   const [maxKwh, setMaxKwh] = useState(0);
+  const [powerFactor, setPowerFactor] = useState(0);
   const [selectedDate, setSelectedDate] = useState(() => {
     const date = new Date();
     return date.toISOString().split("T")[0];
@@ -52,6 +53,7 @@ const Dashboard = () => {
       setTotalCost(userData.totalCost);
       setCost(userData.costToday);
       setThreshold(userData.threshold);
+      setPowerFactor(userData.power_factor);
       dispatch(login(userData));
     } catch (err) {
       console.error("User data error:", err.response?.data?.message || err);
@@ -114,21 +116,7 @@ const Dashboard = () => {
   return (
     <div className="w-full min-h-screen bg-transparent p-4 lg:p-10 ">
       <div className="flex flex-col lg:flex-row lg:space-x-10 space-y-6 lg:space-y-0 ">
-        <div className="w-full lg:w-[45%] flex flex-col space-y-4">
-          <motion.div
-            initial={{ y: -100, opacity: 0 }}
-            animate={{ y: 0, opacity: 1 }}
-            transition={{ duration: 1, delay: 1.2 }}
-            className="flex justify-center"
-          >
-            <CardTemp
-              name={"COST TODAY"}
-              value={cost}
-              color={"text-indigo-400"}
-              hidden={"hidden"}
-              unit={"₹"}
-            />
-          </motion.div>
+        <div className="w-full lg:w-[45%] flex flex-col space-y-10">
           <motion.div
             initial={{ x: -100, opacity: 0 }}
             animate={{ x: 0, opacity: 1 }}
@@ -138,6 +126,22 @@ const Dashboard = () => {
               value={totalCost}
               max={threshold * 1.1}
               initialThreshold={threshold}
+              innerValue={cost}
+              showInnerRing={true}
+            />
+          </motion.div>
+          <motion.div
+            initial={{ y: -100, opacity: 0 }}
+            animate={{ y: 0, opacity: 1 }}
+            transition={{ duration: 1, delay: 1.2 }}
+            className="flex justify-center"
+          >
+            <CardTemp
+              name={"Power Factor"}
+              value={powerFactor}
+              color={"text-indigo-400"}
+              hidden={"hidden"}
+              unit={"λ"}
             />
           </motion.div>
         </div>
@@ -155,6 +159,7 @@ const Dashboard = () => {
               innerUnit={"kwh/units"}
               outerLabel={"Power"}
               innerLabel={"Units"}
+              showThirdRing={true}
               initial={{ y: 100, opacity: 0 }}
               animate={{ y: 0, opacity: 1 }}
               transition={{ duration: 1, delay: 1.2 }}
@@ -179,17 +184,13 @@ const Dashboard = () => {
         </div>
       </div>
 
-      <div className="w-full lg:mt-10 mt-60">
-        <div className="flex flex-col lg:flex-row lg:space-x-10 space-y-6 lg:space-y-0">
-          <div className="w-full">
-            <Barchart
-              data={data}
-              selectedDate={selectedDate}
-              onPrevDate={() => handleDateChange(-1)}
-              onNextDate={() => handleDateChange(1)}
-            />
-          </div>
-        </div>
+      <div className="w-full ">
+        <Barchart
+          data={data}
+          selectedDate={selectedDate}
+          onPrevDate={() => handleDateChange(-1)}
+          onNextDate={() => handleDateChange(1)}
+        />
       </div>
     </div>
   );

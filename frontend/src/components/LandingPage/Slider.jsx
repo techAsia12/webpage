@@ -15,19 +15,19 @@ const Slider = () => {
   // Slide data
   const slides = [
     {
-      url: "https://res.cloudinary.com/misbackend/image/upload/v1741692864/Untitled_design_4_nygefr.png",
+      url: "https://res.cloudinary.com/dlfrbjye9/image/upload/v1743399377/kyvniyo8sqs4otiflzct.png",
       title: "Real-Time Monitoring",
       textLists:
         "Track your energy consumption instantly, allowing for informed decisions and energy savings.",
     },
     {
-      url: "https://res.cloudinary.com/misbackend/image/upload/v1741692985/Untitled_design_5_rf9a6k.png",
+      url: "https://vergiler.az/media/2019/11/05/e-qaime_yeni.jpg",
       title: "Accurate Billing",
       textLists:
         "Eliminate estimated bills with precise measurements, ensuring you only pay for what you use.",
     },
     {
-      url: "https://res.cloudinary.com/misbackend/image/upload/v1741692522/Untitled_design_jzgywl.png",
+      url: "https://astecit.com/wp-content/uploads/2021/03/cloud-phone-system.jpg",
       title: "Remote Access",
       textLists:
         "Monitor and manage your energy usage from anywhere with our user-friendly mobile app.",

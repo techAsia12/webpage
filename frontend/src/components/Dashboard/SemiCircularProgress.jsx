@@ -5,6 +5,7 @@ import axios from "axios";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import { FaPlus } from "react-icons/fa";
+import { useSelector } from "react-redux";
 
 const SemiCircularProgress = ({
   value = 0,
@@ -20,16 +21,26 @@ const SemiCircularProgress = ({
   label = "Total Cost",
   animationDuration = 0.8,
   showThresholdMarker = true,
+  innerValue = 0,
+  innerMax = 100,
+  innerColor = "#3b82f6",
+  innerUnit = "₹",
+  innerLabel = "Utilization",
+  showInnerRing = false,
 }) => {
   const theme = useTheme();
+  const mode = useSelector((state) => state.theme.mode);
   const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
   const isTablet = useMediaQuery(theme.breakpoints.between("sm", "md"));
   const [threshold, setThreshold] = useState(initialThreshold);
   const [showModal, setShowModal] = useState(false);
   const [inputValue, setInputValue] = useState("");
   const progressPathRef = useRef(null);
+  const innerProgressPathRef = useRef(null);
   const [pathLength, setPathLength] = useState(0);
+  const [innerPathLength, setInnerPathLength] = useState(0);
   const [isLoading, setIsLoading] = useState(true);
+  const [currentMax, setCurrentMax] = useState(innerMax);
 
   // Initialize with safe defaults
   const safeValue = isNaN(value) ? 0 : Math.max(0, value);
@@ -37,13 +48,15 @@ const SemiCircularProgress = ({
   const safeThreshold = isNaN(threshold)
     ? initialThreshold
     : Math.max(0, threshold);
+  const safeInnerValue = isNaN(innerValue) ? 0 : Math.max(0, innerValue);
+  const safeInnerMax = isNaN(currentMax) ? 100 : Math.max(1, currentMax);
 
   const handleSetThreshold = async () => {
     if (!inputValue || isNaN(inputValue)) {
       toast.error("Please enter a valid threshold value.");
       return;
     }
-    
+
     const newThreshold = Number(inputValue);
     try {
       setIsLoading(true);
@@ -63,33 +76,48 @@ const SemiCircularProgress = ({
     }
   };
 
-  // Responsive sizing calculations
+  useEffect(() => {
+    if (innerValue >= currentMax * 0.8) {
+      setCurrentMax((prevMax) => prevMax + prevMax * 0.5);
+    }
+  }, [innerValue]);
+
   const responsiveSize = isMobile ? 350 : isTablet ? 650 : size;
   const responsiveTextSize = isMobile ? "35%" : "40%";
   const responsiveThickness = isMobile ? 40 : isTablet ? 45 : thickness;
+  const innerThickness = responsiveThickness * 0.6;
   const radius = responsiveSize / 2 - responsiveThickness / 2;
+  const innerRadius = radius * 0.7;
   const circumference = Math.PI * radius;
+  const innerCircumference = Math.PI * innerRadius;
 
-  // Safe value calculations
   const displayValue = Math.min(Math.max(safeValue, 0), safeMax);
   const progressRatio = Math.min(displayValue / safeMax, 1);
   const thresholdRatio = Math.min(safeThreshold / safeMax, 1);
   const isOverThreshold = displayValue > safeThreshold;
 
-  // Use measured path length if available, otherwise fallback to calculation
-  const effectiveLength = pathLength || circumference;
-  const progressDashOffset = effectiveLength * (1 - progressRatio);
+  const innerDisplayValue = Math.min(Math.max(safeInnerValue, 0), safeInnerMax);
+  const innerProgressRatio = Math.min(innerDisplayValue / safeInnerMax, 1);
 
-  // Center point calculation
+  const effectiveLength = pathLength || circumference;
+  const innerEffectiveLength = innerPathLength || innerCircumference;
+  const progressDashOffset = effectiveLength * (1 - progressRatio);
+  const innerProgressDashOffset =
+    innerEffectiveLength * (1 - innerProgressRatio);
+
   const centerX = responsiveSize / 2;
   const centerY = responsiveSize / 2 + responsiveThickness / 2;
 
-  // Define the arc path
   const arcPath = `M ${
     centerX - radius
   },${centerY} A ${radius} ${radius} 0 0 1 ${centerX + radius},${centerY}`;
 
-  // Threshold marker calculations
+  const innerArcPath = `M ${
+    centerX - innerRadius
+  },${centerY} A ${innerRadius} ${innerRadius} 0 0 1 ${
+    centerX + innerRadius
+  },${centerY}`;
+
   const thresholdAngle = Math.PI * (1 - thresholdRatio);
   const getMarkerPosition = (angle, distanceFromArc) => ({
     x: centerX + (radius + distanceFromArc) * Math.cos(angle),
@@ -119,11 +147,14 @@ const SemiCircularProgress = ({
     setIsLoading(false);
   }, [initialThreshold]);
 
-  // Measure the actual path length after render
   useLayoutEffect(() => {
     if (progressPathRef.current) {
       const length = progressPathRef.current.getTotalLength();
       setPathLength(length);
+    }
+    if (innerProgressPathRef.current) {
+      const length = innerProgressPathRef.current.getTotalLength();
+      setInnerPathLength(length);
     }
   }, [responsiveSize, responsiveThickness]);
 
@@ -216,6 +247,34 @@ const SemiCircularProgress = ({
               transition={{ duration: animationDuration }}
             />
 
+            {/* Inner Ring - Background */}
+            {showInnerRing && (
+              <path
+                d={innerArcPath}
+                fill="none"
+                stroke={`${backgroundColor}80`} // Slightly transparent
+                strokeWidth={innerThickness}
+                strokeLinecap="round"
+              />
+            )}
+
+            {/* Inner Ring - Progress */}
+            {showInnerRing && (
+              <motion.path
+                ref={innerProgressPathRef}
+                d={innerArcPath}
+                fill="none"
+                stroke={innerColor}
+                strokeWidth={innerThickness}
+                strokeLinecap="round"
+                strokeDasharray={innerEffectiveLength}
+                strokeDashoffset={innerProgressDashOffset}
+                initial={{ strokeDashoffset: innerEffectiveLength }}
+                animate={{ strokeDashoffset: innerProgressDashOffset }}
+                transition={{ duration: animationDuration * 1.2 }} 
+              />
+            )}
+
             {/* Threshold Marker */}
             {showThresholdMarker && safeThreshold > 0 && (
               <>
@@ -230,7 +289,7 @@ const SemiCircularProgress = ({
                   y2={markerTipPosition.y + 9}
                   stroke={thresholdColor}
                   strokeWidth={isMobile ? 5 : 10}
-                  strokeDasharray="1 0.5" // More subtle dashed line
+                  strokeDasharray="1 0.5"
                 />
                 <path
                   d={`M ${markerTipPosition.x} ${markerTipPosition.y} 
@@ -243,7 +302,7 @@ const SemiCircularProgress = ({
                     markerTipPosition.x
                   } ${markerTipPosition.y})`}
                   style={{
-                    filter: "drop-shadow(0 0 2px rgba(0,0,0,0.3))", // Adds subtle shadow for better visibility
+                    filter: "drop-shadow(0 0 2px rgba(0,0,0,0.3))",
                   }}
                 />
               </>
@@ -310,13 +369,23 @@ const SemiCircularProgress = ({
                 {unit}
                 {formatCurrency(displayValue)}
               </Typography>
-              <Typography
-                variant="body2"
-                sx={{ color: "text.secondary", mt: 1 }}
-              >
-                {unit}
-                of {formatCurrency(safeMax)}
-              </Typography>
+
+              {/* Inner Ring Value Display */}
+              {showInnerRing && (
+                <Typography
+                  variant={isMobile ? "h6" : "h5"}
+                  sx={{
+                    fontWeight: 600,
+                    color: innerColor,
+                    lineHeight: 1,
+                    mt: 1,
+                  }}
+                >
+                  {innerDisplayValue.toFixed(1)}
+                  {innerUnit}
+                </Typography>
+              )}
+
               {isOverThreshold && (
                 <Typography variant="caption" sx={{ color: thresholdColor }}>
                   {unit} over

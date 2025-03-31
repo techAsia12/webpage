@@ -2,7 +2,6 @@ import { Button } from "@mui/material";
 import React from "react";
 import { motion } from "framer-motion";
 import DownloadIcon from "@mui/icons-material/Download";
-import image from "../assets/phone.png";
 
 /**
  * Download Component
@@ -60,7 +59,7 @@ const Download = () => {
 
       {/* Mobile App Image */}
       <motion.img
-        src={image}
+        src={"https://res.cloudinary.com/dlfrbjye9/image/upload/v1743398381/tbkxjb4avxltoxssthzq.png"}
         className="w-full lg:w-1/4 mt-10 lg:mt-0 lg:block p-5"
         initial={{ y: 50, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}

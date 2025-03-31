@@ -152,7 +152,7 @@ const Working = () => {
             </p>
           </div>
           <img
-            src="https://res.cloudinary.com/misbackend/image/upload/v1741687494/qqef6bhkcpgubb5lva8c.png"
+            src="https://res.cloudinary.com/dlfrbjye9/image/upload/v1743399501/dvusagh0dgtik2mqny93.png"
             className="w-full lg:w-1/2 shadow-lg shadow-black dark:shadow-white rounded-2xl"
             alt="User Dashboard"
             aria-label="User Dashboard Image"

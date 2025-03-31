@@ -317,7 +317,7 @@ const getData = asyncHandler(async (req, res, next) => {
     const [result] = await db
       .promise()
       .query(
-        "SELECT phoneno, MACadd, voltage, current, units,watt, date_time, state, totalCost, costToday, threshold FROM client_dets WHERE phoneno = ?",
+        "SELECT phoneno, MACadd, voltage, current, units,watt, date_time, state, totalCost, costToday, threshold, power_factor FROM client_dets WHERE phoneno = ?",
         [user.id]
       );
 
@@ -664,7 +664,7 @@ const costCalc = (unit, billDets) => {
 };
 
 const sentData = asyncHandler(async (req, res, next) => {
-  const { phoneno, voltage, current, MACadd } = req.query;
+  const { phoneno, voltage, current, MACadd, power_factor } = req.query;
 
   // Validate input parameters
   if (!phoneno || !voltage || !current) {
@@ -802,7 +802,7 @@ const sentData = asyncHandler(async (req, res, next) => {
       // const costToday = costCalc(totalDailyUsage, billDets);
 
       // Check threshold and send email if needed
-      if (threshold < totalCost ) {
+      if (threshold < totalCost) {
         const [userResult] = await connection.query(
           "SELECT email FROM users WHERE phoneno = ?",
           [phoneno]
@@ -812,7 +812,7 @@ const sentData = asyncHandler(async (req, res, next) => {
           const userEmail = userResult[0].email;
           await sendMessage(userEmail, totalCost, threshold);
           console.log("Email sent.....");
-          threshold = Math.floor(threshold * 1.5); 
+          threshold = Math.floor(threshold * 1.5);
         }
       }
 
@@ -834,6 +834,7 @@ const sentData = asyncHandler(async (req, res, next) => {
           totalCost = ?,
           costToday = ?,
           threshold = ?,
+          power_factor = ?,	
           state = ?
         WHERE phoneno = ?
       `;
@@ -848,6 +849,7 @@ const sentData = asyncHandler(async (req, res, next) => {
         isLastDayOfMonth ? 0 : totalCost, // Reset if last day of month
         isLastDayOfMonth ? 0 : costToday, // Reset if last day of month
         threshold,
+        power_factor,
         state,
         phoneno,
       ];
